@@ -1,0 +1,20 @@
+{
+"str":"string"
+,"flt":123.456
+,"int":1234
+,"bool":true
+
+,"obj":{
+	"str":"objstring"
+	,"flt":123.456
+	,"int":1234
+	,"bool":true
+	,"obj":null
+	,"arr":[1,{"int":12345},2]
+}
+
+,"inull":null
+,"snull":null
+,"fnull":null
+,"bnull":null
+}

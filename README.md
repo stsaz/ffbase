@@ -53,6 +53,9 @@ Atomic:
 * `atomic.h` - atomic operations
 * `lock.h` - spinlock
 
+Other:
+* `time.h` - date/time functions
+
 
 ## Requirements:
 

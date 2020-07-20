@@ -24,6 +24,7 @@ void test_ring();
 void test_json();
 void test_lock();
 void test_atomic();
+void test_time();
 void test_write_bitmap();
 void test_write_charmap();
 
@@ -97,6 +98,7 @@ static const struct test atests[] = {
 	T(list), T(rbtree), T(map), T(ring),
 	T(json),
 	T(atomic), T(lock),
+	T(time),
 };
 // tests not included in 'all'
 static const struct test natests[] = {

@@ -44,6 +44,7 @@ TEST_OBJ := \
 	\
 	$(TEST_OUTDIR)/json.o \
 	\
+	$(TEST_OUTDIR)/time.o \
 	$(TEST_OUTDIR)/compat.o
 
 all: $(TESTER)

@@ -132,6 +132,10 @@ void test_unicode_w_u()
 	char *sz = ffsz_alloc_wtou((wchar_t*)"\x1D\x0E");
 	x(!memcmp(sz, "\xE0\xB8\x9D\x00", 4));
 	ffmem_free(sz);
+
+	char *wz = ffsz_alloc_utow("\xE0\xB8\x9D\x00");
+	x(!memcmp(wz, "\x1D\x0E\x00\x00", 4));
+	ffmem_free(wz);
 #endif
 }
 

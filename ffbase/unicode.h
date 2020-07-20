@@ -517,4 +517,25 @@ static inline char* ffsz_alloc_wtou(const wchar_t *wsz)
 	}
 	return s;
 }
+
+/** Allocate memory and convert NULL-terminated UTF-8 string to a NULL-terminated UTF-16LE string
+Return UTF-16LE string */
+static inline wchar_t* ffsz_alloc_utow(const char *sz)
+{
+	ffsize len = ffsz_len(sz);
+	ffssize r = ffutf8_to_utf16(NULL, 0, sz, len + 1, FFUNICODE_UTF16LE);
+	if (r <= 0)
+		return NULL;
+
+	wchar_t *ws;
+	if (NULL == (ws = ffmem_alloc(r)))
+		return NULL;
+
+	r = ffutf8_to_utf16((char*)ws, r, sz, len + 1, FFUNICODE_UTF16LE);
+	if (r <= 0) {
+		ffmem_free(ws);
+		return NULL;
+	}
+	return ws;
+}
 #endif

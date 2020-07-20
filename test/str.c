@@ -174,9 +174,10 @@ void test_ffstr_cmp()
 	x(0 == ffstr_ifind2(&s, &s));
 	x(-1 == ffstr_ifindz(&s, "GHI#"));
 
-	x(7 == ffstr_findany(&s, "JH", 2));
-	x(7 == ffstr_findanyz(&s, "JHx"));
-	x(7 == ffstr_findanyz(&s, "xJH"));
+	xieq(7, ffstr_findany(&s, "JH", 2));
+	xieq(7, ffstr_findanyz(&s, "JHx"));
+	xieq(7, ffstr_findanyz(&s, "xJH"));
+	xieq(8, ffstr_rfindany(&s, "FI", 2));
 
 	xieq(6, ffs_rfindstr("abcdefab", 8, "ab", 2));
 	xieq(0, ffs_rfindstr("abcdefbc", 8, "abc", 3));
@@ -190,6 +191,7 @@ void test_ffstr_cmp()
 
 	xieq(-1, ffs_findany("abcdefab", 8, "zxv", 3));
 	xieq(0, ffs_findany("abcdefab", 8, "zba", 3));
+	xieq(5, ffs_rfindany("abcdefab", 8, "df", 2));
 }
 
 void test_ffstr_match()

@@ -3,6 +3,7 @@
 */
 
 #pragma once
+#define _FFBASE_STRING_H
 
 #ifndef _FFBASE_BASE_H
 #include <ffbase/base.h>
@@ -37,7 +38,7 @@ REVERSE MATCH
 	ffstr_irmatch ffstr_irmatch2 ffstr_irmatchcz
 FIND CHARACTER
 	ffstr_findchar ffstr_findany ffstr_findanyz
-	ffstr_rfindchar
+	ffstr_rfindchar ffstr_rfindany
 FIND SUBSTRING
 	ffstr_find ffstr_find2 ffstr_findz
 	ffstr_ifind ffstr_ifind2 ffstr_ifindstr ffstr_ifindz
@@ -69,7 +70,7 @@ ALGORITHMS
 	_ffs_copyz
 	ffs_cmpz ffs_icmp ffs_icmpz ffs_matchz
 	ffs_findstr ffs_ifindstr ffs_findchar ffs_findany
-	ffs_rfindchar ffs_rfindstr
+	ffs_rfindchar ffs_rfindstr ffs_rfindany
 	ffs_lower ffs_upper ffs_titlecase
 	ffs_wildcard
 */
@@ -265,7 +266,8 @@ static inline ffssize ffs_findchar(const char *s, ffsize len, int search)
 }
 
 /** Find character from the end
-Return -1 if not found */
+Return the position from the beginning
+  -1: not found */
 static inline ffssize ffs_rfindchar(const char *s, ffsize len, int search)
 {
 	for (ffssize i = len - 1;  i >= 0;  i--) {
@@ -286,8 +288,21 @@ static inline ffssize ffs_findany(const char *s, ffsize len, const char *anyof, 
 	return -1;
 }
 
+/** Find (from the end) the position of any byte from 'anyof' in 's'
+Return the position from the beginning
+  -1: not found */
+static inline ffssize ffs_rfindany(const char *s, ffsize len, const char *anyof, ffsize anyof_len)
+{
+	for (ffssize i = len - 1;  i >= 0;  i--) {
+		if (NULL != ffmem_findbyte(anyof, anyof_len, s[i]))
+			return i;
+	}
+	return -1;
+}
+
 /** Find substring from the end
-Return -1 if not found */
+Return the position from the beginning
+  -1: not found */
 static inline ffssize ffs_rfindstr(const char *s, ffsize len, const char *search, ffsize search_len)
 {
 	if (len < search_len)
@@ -686,7 +701,8 @@ static inline ffssize ffstr_findchar(const ffstr *s, int search)
 }
 
 /** Find character from the end
-Return -1 if not found */
+Return the position from the beginning
+  -1: not found */
 static inline ffssize ffstr_rfindchar(const ffstr *s, int search)
 {
 	for (ffssize i = s->len - 1;  i >= 0;  i--) {
@@ -701,6 +717,18 @@ Return -1 if not found */
 static inline ffssize ffstr_findany(const ffstr *s, const char *anyof, ffsize n)
 {
 	for (ffsize i = 0;  i != s->len;  i++) {
+		if (NULL != ffmem_findbyte(anyof, n, s->ptr[i]))
+			return i;
+	}
+	return -1;
+}
+
+/** Find (from the end) the position of any byte from 'anyof' in 's'
+Return the position from the beginning
+  -1: not found */
+static inline ffssize ffstr_rfindany(const ffstr *s, const char *anyof, ffsize n)
+{
+	for (ffssize i = s->len - 1;  i >= 0;  i--) {
 		if (NULL != ffmem_findbyte(anyof, n, s->ptr[i]))
 			return i;
 	}
@@ -725,7 +753,8 @@ Return -1 if not found */
 #define ffstr_ifindz(s, sz)  ffs_ifindstr((s)->ptr, (s)->len, sz, ffsz_len(sz))
 
 /** Find substring from the end
-Return -1 if not found */
+Return the position from the beginning
+  -1: not found */
 #define ffstr_rfind(s, search, search_len)  ffs_rfindstr((s)->ptr, (s)->len, search, search_len)
 
 

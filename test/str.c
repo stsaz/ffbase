@@ -272,6 +272,30 @@ void test_ffstr_array()
 	xieq(2, ffslicestr_ifindz(&a, "ZXCv"));
 }
 
+static void test_str_wildcard()
+{
+	x(0 == ffs_wildcard(NULL, 0, NULL, 0, 0));
+	x(0 == ffs_wildcard(STR("*"), NULL, 0, 0));
+	x(0 != ffs_wildcard(STR("?"), NULL, 0, 0));
+	x(0 != ffs_wildcard(NULL, 0, STR("a"), 0));
+	x(0 == ffs_wildcard(STR("aa"), STR("aa"), 0));
+	x(0 != ffs_wildcard(STR("aa"), STR("ba"), 0));
+	x(0 == ffs_wildcard(STR("*"), STR("aa"), 0));
+	x(0 == ffs_wildcard(STR("?b?"), STR("abc"), 0));
+
+	x(0 == ffs_wildcard(STR("*c"), STR("abc"), 0));
+	x(0 != ffs_wildcard(STR("*c"), STR("ab!"), 0));
+	x(0 == ffs_wildcard(STR("a*"), STR("abc"), 0));
+	x(0 == ffs_wildcard(STR("a*c"), STR("abbc"), 0));
+
+	x(0 == ffs_wildcard(STR("*aB*"), STR("ac.Abc"), FFS_WC_ICASE));
+	x(0 != ffs_wildcard(STR("*aB*"), STR("ac.Abc"), 0));
+	x(0 == ffs_wildcard(STR("*ab*"), STR("ac.abc"), 0));
+	x(0 == ffs_wildcard(STR("a*a*bb*c"), STR("aabcabbc"), 0));
+	x(0 != ffs_wildcard(STR("a*a*bbc*c"), STR("aabcabbc"), 0));
+	x(0 != ffs_wildcard(STR("*ab*"), STR("ac.ac"), 0));
+}
+
 void test_str()
 {
 	const char *data = "0123456789";
@@ -335,6 +359,7 @@ void test_str()
 	test_str_case();
 	test_ffstr_array();
 	test_ffstr_gather();
+	test_str_wildcard();
 }
 
 void test_write_bitmap()

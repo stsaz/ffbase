@@ -71,6 +71,7 @@ ALGORITHMS
 	ffs_findstr ffs_ifindstr ffs_findchar ffs_findany
 	ffs_rfindchar ffs_rfindstr
 	ffs_lower ffs_upper ffs_titlecase
+	ffs_wildcard
 */
 
 // ALGORITHMS
@@ -377,6 +378,63 @@ static inline ffsize ffs_titlecase(char *dst, ffsize cap, const char *src, ffsiz
 	}
 
 	return len;
+}
+
+enum FFS_WILDCARD {
+	FFS_WC_ICASE = 1
+};
+
+/** Match string by a wildcard pattern
+'*': >=0 any characters match
+'?': 1 any character matches
+flags: enum FFS_WILDCARD
+Return 0 if match */
+static inline int ffs_wildcard(const char *pattern, ffsize pattern_len, const char *s, ffsize len, ffuint flags)
+{
+	ffsize i, is = 0, astk = -1, astk_is = -1;
+	int c, cs;
+
+	for (i = 0;  i != pattern_len;  ) {
+
+		c = pattern[i];
+
+		if (c == '*') {
+			if (++i == pattern_len)
+				return 0; // the rest of input string matches
+
+			astk = i;
+			astk_is = is;
+			continue;
+		}
+
+		if (is == len)
+			return 1; // too short input string
+
+		if (c == '?') {
+			i++;
+			is++;
+			continue;
+		}
+
+		cs = s[is];
+		if (flags & FFS_WC_ICASE) {
+			if (c >= 'A' && c <= 'Z')
+				c |= 0x20;
+			if (cs >= 'A' && cs <= 'Z')
+				cs |= 0x20;
+		}
+
+		if (c == cs) {
+			i++;
+			is++;
+
+		} else {
+			i = astk;
+			is = ++astk_is;
+		}
+	}
+
+	return (is == len) ? 0 : 1;
 }
 
 static inline ffsize _ffsz_nlen(const char *s, ffsize maxlen)

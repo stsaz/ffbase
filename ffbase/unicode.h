@@ -507,7 +507,7 @@ static inline char* ffsz_alloc_wtou(const wchar_t *wsz)
 		return NULL;
 
 	char *s;
-	if (NULL == (s = ffmem_alloc(r)))
+	if (NULL == (s = (char*)ffmem_alloc(r)))
 		return NULL;
 
 	r = ffutf8_from_utf16(s, r, (char*)wsz, (len + 1) * 2, FFUNICODE_UTF16LE);
@@ -528,7 +528,7 @@ static inline wchar_t* ffsz_alloc_utow(const char *sz)
 		return NULL;
 
 	wchar_t *ws;
-	if (NULL == (ws = ffmem_alloc(r)))
+	if (NULL == (ws = (wchar_t*)ffmem_alloc(r)))
 		return NULL;
 
 	r = ffutf8_to_utf16((char*)ws, r, sz, len + 1, FFUNICODE_UTF16LE);

@@ -94,7 +94,7 @@ To avoid copying the whole ffbase repo into your project while all you need is, 
 		$ mkdir YOUR_PROJECT/include/ffbase/
 		$ cp ffbase/ffbase/slice.h ffbase/ffbase/base.h  YOUR_PROJECT/include/ffbase/
 
-where `YOUR_PROJECT` is your project's directory.
+	where `YOUR_PROJECT` is your project's directory.
 
 2. Then, edit `YOUR_PROJECT/include/ffbase/slice.h` and remove the dependencies (marked as optional) you don't need, for example:
 
@@ -104,7 +104,7 @@ where `YOUR_PROJECT` is your project's directory.
 		-#include <ffbase/sort.h> // optional
 		+// #include <ffbase/sort.h> // optional
 
-Or you can copy `sort.h` file too if you need it.
+	Or you can copy `sort.h` file too if you need it.
 
 3. In your build script:
 
@@ -146,14 +146,25 @@ Don't use any standard functions directly, otherwise it will be impossible to su
 
 ### Test
 
-	mkdir /tmp/ffbase
-	cd /tmp/ffbase
-	make -j8 -Rrf MYSRC/ffbase/Makefile SRCDIR=MYSRC/ffbase
+	make
+	cd test
 	./fftest all
 
-or for Windows:
+on FreeBSD:
 
-	make -j8 -Rrf MYSRC/ffbase/Makefile SRCDIR=MYSRC/ffbase CPREFIX=x86_64-w64-mingw32- OS=win
+	gmake
+
+on Linux for Windows:
+
+	make OS=win CPREFIX=x86_64-w64-mingw32-
+
+To another directory:
+
+	mkdir /tmp/ffbase
+	cd /tmp/ffbase
+	make -Rrf MYSRC/ffbase/Makefile SRCDIR=MYSRC/ffbase
+	cp -ruv MYSRC/ffbase/test/data /tmp/ffbase
+	./fftest all
 
 ### Commit
 
@@ -162,6 +173,11 @@ Message:
 * `+ component: message` - new feature
 * `* component: message` - change, small improvement
 * `- component: message` - bugfix
+
+
+## License
+
+This code is absolutely free.
 
 
 ## History

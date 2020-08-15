@@ -13,11 +13,11 @@ fflock_unlock
 */
 
 #ifdef FF_WIN
-#define ffthd_yield  SwitchToThread
+#define ffthread_yield  SwitchToThread
 
 #else
 #include <sched.h>
-#define ffthd_yield  sched_yield
+#define ffthread_yield  sched_yield
 #endif
 
 #define ffcpu_pause()  __asm volatile("pause")
@@ -55,7 +55,7 @@ static inline void fflock_lock(fflock *lk)
 				return;
 		}
 
-		ffthd_yield();
+		ffthread_yield();
 	}
 }
 

@@ -71,7 +71,6 @@ ffmem_copy ffmem_move
 	#include <stdlib.h>
 	#include <string.h>
 	#include <unistd.h>
-	#include <alloca.h>
 #endif
 
 

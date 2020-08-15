@@ -182,6 +182,20 @@ static inline ffuint ffbit_find64(ffuint64 n)
 	return (n != 0) ? __builtin_clzll(n) + 1 : 0;
 }
 
+/** Find the least significant 1-bit
+0xABCD <--
+Return position +1
+  0 if not found */
+static inline ffuint ffbit_rfind32(ffuint n)
+{
+	return __builtin_ffs(n);
+}
+
+static inline ffuint ffbit_rfind64(ffuint64 n)
+{
+	return __builtin_ffsll(n);
+}
+
 
 /** Return TRUE if number is a power of 2 */
 #define ffint_ispower2(n)  ((n) >= 2 && (((n) - 1) & (n)) == 0)

@@ -65,4 +65,8 @@ void test_strz()
 	for (uint i = 0;  i != FF_COUNT(sss);  i++) {
 		xieq(i, ffcharr_findsorted(sss, FF_COUNT(sss), sizeof(sss[0]), sss[i], ffmin(ffsz_len(sss[i]), 4)));
 	}
+
+	char buf[10];
+	xieq(4, ffsz_copyz(buf, 4, "12345"));
+	x(ffsz_eq(buf, "123"));
 }

@@ -10,12 +10,31 @@
 #include <ffbase/string.h>
 
 /*
+ffsz_copyz
 ffsz_dupn ffsz_dup
 ffsz_match ffsz_matchz
 ffszarr_find ffszarr_ifind
 ffszarr_findsorted ffszarr_ifindsorted
 ffcharr_findsorted
 */
+
+/** Copy string
+Return number of bytes written (including NULL byte)
+  ==cap: usually means that there was not enough space */
+static inline ffsize ffsz_copyz(char *dst, ffsize cap, const char *sz)
+{
+	if (cap == 0)
+		return 0;
+
+	ffsize i;
+	for (i = 0;  i != cap - 1;  i++) {
+		if (sz[i] == '\0')
+			break;
+		dst[i] = sz[i];
+	}
+	dst[i] = '\0';
+	return i + 1;
+}
 
 /** Allocate memory and copy string */
 static inline char* ffsz_dupn(const char *src, ffsize n)

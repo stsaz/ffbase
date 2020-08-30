@@ -497,7 +497,7 @@ static inline ffssize ffsz_utow(wchar_t *dst, ffsize cap_wchars, const char *sz)
 	return r / 2;
 }
 
-/** Allocate memory and convert NULL-terminated UTF-16LE NULL-terminated to a NULL-terminated UTF-8 string
+/** Allocate memory and convert NULL-terminated UTF-16LE string to a NULL-terminated UTF-8 string
 Return UTF-8 string */
 static inline char* ffsz_alloc_wtou(const wchar_t *wsz)
 {

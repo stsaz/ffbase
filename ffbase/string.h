@@ -1105,6 +1105,8 @@ static inline ffsize ffstr_growaddfill(ffstr *s, ffsize *cap, int ch, ffsize n)
 	return n;
 }
 
+#if defined _FFBASE_STRFORMAT_H
+
 /** Reallocate buffer (if necessary) and append %-formatted data
 Return N of bytes copied, set 'cap' to the new capacity of reallocated buffer;
  0 on error */
@@ -1143,6 +1145,8 @@ static inline ffsize ffstr_growfmt(ffstr *s, ffsize *cap, const char *fmt, ...)
 	va_end(args);
 	return r;
 }
+
+#endif // _FFBASE_STRFORMAT_H
 
 #ifdef _FFBASE_UNICODE_H
 

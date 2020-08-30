@@ -86,13 +86,13 @@ TEST_CFLAGS += -std=gnu99
 # TEST_CFLAGS += -fsanitize=address
 # TEST_LDFLAGS += -fsanitize=address
 
-$(TEST_OUTDIR)/str.o: $(SRCDIR)/test/str.c $(HDR) $(SRCDIR)/test/test.h $(SRCDIR)/Makefile
+$(TEST_OUTDIR)/str.o: $(SRCDIR)/test/str.c $(HDR) $(SRCDIR)/test/test.h $(SRCDIR)/test/Makefile
 	$(C) -Wno-array-bounds $(TEST_CFLAGS) $< -o $@
 
-$(TEST_OUTDIR)/%.o: $(SRCDIR)/test/%.c $(HDR) $(SRCDIR)/test/test.h $(SRCDIR)/Makefile
+$(TEST_OUTDIR)/%.o: $(SRCDIR)/test/%.c $(HDR) $(SRCDIR)/test/test.h $(SRCDIR)/test/Makefile
 	$(C) $(TEST_CFLAGS) $< -o $@
 
-$(TEST_OUTDIR)/%.o: $(SRCDIR)/test/%.cpp $(HDR) $(SRCDIR)/test/test.h $(SRCDIR)/Makefile
+$(TEST_OUTDIR)/%.o: $(SRCDIR)/test/%.cpp $(HDR) $(SRCDIR)/test/test.h $(SRCDIR)/test/Makefile
 	$(CXX) $(TEST_CXXFLAGS) $< -o $@
 
 $(TESTER): $(TEST_OBJ)

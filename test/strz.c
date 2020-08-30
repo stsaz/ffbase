@@ -69,4 +69,9 @@ void test_strz()
 	char buf[10];
 	xieq(4, ffsz_copyz(buf, 4, "12345"));
 	x(ffsz_eq(buf, "123"));
+
+	xieq(4, ffsz_findchar("asdf1234", '1'));
+	xieq(-1, ffsz_findchar("asdf1234", '\0'));
+	xieq(-1, ffsz_findchar("asdf1234", '5'));
+	xieq(-1, ffsz_findchar("", '5'));
 }

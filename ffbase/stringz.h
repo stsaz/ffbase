@@ -12,6 +12,7 @@
 /*
 ffsz_copyz
 ffsz_dupn ffsz_dup
+ffsz_findchar
 ffsz_match ffsz_matchz
 ffszarr_find ffszarr_ifind
 ffszarr_findsorted ffszarr_ifindsorted
@@ -66,6 +67,17 @@ static inline int ffsz_cmp(const char *sz, const char *cmpz)
 static inline int ffsz_eq(const char *sz, const char *cmpz)
 {
 	return !ffsz_cmp(sz, cmpz);
+}
+
+/** Find a position of byte in a NULL-terminated string
+Return <0 if not found */
+static inline ffssize ffsz_findchar(const char *sz, int ch)
+{
+	for (ffsize i = 0;  sz[i] != '\0';  i++) {
+		if (sz[i] == ch)
+			return i;
+	}
+	return -1;
 }
 
 /** Return TRUE if 'n' characters are equal in both strings */

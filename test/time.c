@@ -9,8 +9,28 @@
 
 void test_time()
 {
-	fftime t = {};
+	fftime t = {}, t2;
 	ffdatetime dt = {};
+
+	t.sec = 1;  t.nsec = 1;
+	t2.sec = 2;  t2.nsec = 1;
+	x(fftime_cmp(&t, &t2) < 0);
+
+	t.sec = 2;  t.nsec = 1;
+	t2.sec = 1;  t2.nsec = 1;
+	x(fftime_cmp(&t, &t2) > 0);
+
+	t.sec = 1;  t.nsec = 1;
+	t2.sec = 1;  t2.nsec = 2;
+	x(fftime_cmp(&t, &t2) < 0);
+
+	t.sec = 1;  t.nsec = 2;
+	t2.sec = 1;  t2.nsec = 1;
+	x(fftime_cmp(&t, &t2) > 0);
+
+	t.sec = 1;  t.nsec = 1;
+	t2.sec = 1;  t2.nsec = 1;
+	x(fftime_cmp(&t, &t2) == 0);
 
 	// Jan 1, 1 AD
 	dt.year = 1;

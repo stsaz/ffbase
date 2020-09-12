@@ -45,6 +45,20 @@ static inline void fftime_sub(fftime *t, const fftime *sub)
 	}
 }
 
+/** Compare time values */
+static inline int fftime_cmp(const fftime *t1, const fftime *t2)
+{
+	if (t1->sec == t2->sec) {
+		if (t1->nsec == t2->nsec)
+			return 0;
+		else if (t1->nsec < t2->nsec)
+			return -1;
+	} else if (t1->sec < t2->sec)
+		return -1;
+	return 1;
+}
+
+
 /** Date/time parts */
 typedef struct ffdatetime {
 	int year;

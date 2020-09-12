@@ -11,6 +11,7 @@ Chain with 2 items:
 */
 
 #pragma once
+#include <ffbase/base.h>
 
 
 typedef struct ffchain_item ffchain_item;

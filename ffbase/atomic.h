@@ -40,13 +40,16 @@ Return old value */
 #if defined FF_AMD64 || defined FF_X86
 	/** Ensure no "store-store" and "load-store" reorder by CPU */
 	#define ffcpu_fence_release()  ff_compiler_fence()
+	#define ffcpu_fence_acquire()  ff_compiler_fence()
 
 #elif defined __aarch64__
 	#define _ffcpu_dmb(opt)  __asm volatile("dmb " #opt : : : "memory")
 	#define ffcpu_fence_release()  _ffcpu_dmb(sy)
+	#define ffcpu_fence_acquire()  _ff_dmb(ld)
 
 #else
 	#define ffcpu_fence_release()  __sync_synchronize()
+	#define ffcpu_fence_acquire()  __sync_synchronize()
 #endif
 
 

@@ -31,6 +31,16 @@ void test_write_charmap();
 
 void test_base()
 {
+	x(sizeof(ffbyte) == 1);
+	x(sizeof(ffushort) == 2);
+	x(sizeof(ffuint) == 4);
+#ifdef FF_64
+	x(sizeof(ffsize) == 8);
+#else
+	x(sizeof(ffsize) == 4);
+#endif
+	x(sizeof(ffuint64) == 8);
+
 	x(1 == ffmin(1, 2));
 	x(2 == ffmin(-1, 2));
 	x(0x123456789 == ffmin64(0x123456789, 0x1234567890));
@@ -134,10 +144,10 @@ int main(int argc, const char **argv)
 
 	if (argc == 1) {
 		printf("Supported tests: all ");
-		FFARR_WALK(atests, t) {
+		FFARRAY_FOREACH(atests, t) {
 			printf("%s ", t->name);
 		}
-		FFARR_WALK(natests, t) {
+		FFARRAY_FOREACH(natests, t) {
 			printf("%s ", t->name);
 		}
 		printf("\n");
@@ -146,7 +156,7 @@ int main(int argc, const char **argv)
 
 	if (ffsz_eq(argv[1], "all")) {
 		//run all tests
-		FFARR_WALK(atests, t) {
+		FFARRAY_FOREACH(atests, t) {
 			printf("%s\n", t->name);
 			t->func();
 			printf("  OK\n");
@@ -158,14 +168,14 @@ int main(int argc, const char **argv)
 		for (ffuint n = 1;  n < (ffuint)argc;  n++) {
 			const struct test *sel = NULL;
 
-			FFARR_WALK(atests, t) {
+			FFARRAY_FOREACH(atests, t) {
 				if (ffsz_eq(argv[n], t->name)) {
 					sel = t;
 					goto call;
 				}
 			}
 
-			FFARR_WALK(natests, t) {
+			FFARRAY_FOREACH(natests, t) {
 				if (ffsz_eq(argv[n], t->name)) {
 					sel = t;
 					goto call;

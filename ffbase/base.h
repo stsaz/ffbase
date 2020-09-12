@@ -2,7 +2,7 @@
 2020, Simon Zolin
 */
 
-#pragma once
+#ifndef _FFBASE_BASE_H
 #define _FFBASE_BASE_H
 
 /*
@@ -250,8 +250,6 @@ static inline ffuint64 ffint_align_power2(ffuint64 n)
 /** Free heap buffer */
 #define ffmem_free(ptr)  free(ptr)
 
-#endif
-
 
 /** Reserve stack buffer */
 #define ffmem_stack(size)  alloca(size)
@@ -266,6 +264,8 @@ static inline ffuint64 ffint_align_power2(ffuint64 n)
 	if ((size) >= FFMEM_STACK_THRESHOLD) \
 		ffmem_free(ptr); \
 })
+
+#endif
 
 
 /** Compare buffers */
@@ -294,3 +294,5 @@ static inline void* ffmem_copy(void *dst, const void *src, ffsize len)
 
 /** Safely copy data (overlapping regions) */
 #define ffmem_move(dst, src, len)  (void) memmove(dst, src, len)
+
+#endif

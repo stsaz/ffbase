@@ -95,7 +95,7 @@ static inline int fftime_valid(const ffdatetime *dt)
 	return 1;
 }
 
-/** Join time parts into a time value
+/** Join time parts into a time value (after Jan 1, 1 AD)
 Note: the time values in 'dt' are allowed to overflow
 'weekday' and 'yearday' values are not read
 If either 'year', 'month' or 'day' is 0, only time values are read and the date values are skipped
@@ -131,7 +131,7 @@ static inline void fftime_join(fftime *t, const ffdatetime *dt)
 	t->sec += days*60*60*24;
 }
 
-/** Split time value into date/time parts
+/** Split time value (after Jan 1, 1 AD) into date/time parts
 
 Algorithm:
 . Get day of week (1/1/1 was Monday).
@@ -276,4 +276,5 @@ static inline ffsize fftime_tostr(const ffdatetime *dt, char *dst, ffsize cap, f
 		return 0;
 	return i;
 }
+
 #endif // _FFBASE_STRFORMAT_H

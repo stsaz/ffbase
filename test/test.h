@@ -79,5 +79,5 @@ static inline int file_readall(ffstr *a, const char *fn)
 	return 0;
 }
 
-#define FFARR_WALK(static_array, it) \
+#define FFARRAY_FOREACH(static_array, it) \
 	for (it = static_array;  it != static_array + FF_COUNT(static_array);  it++)

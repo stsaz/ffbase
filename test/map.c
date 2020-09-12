@@ -69,11 +69,11 @@ void test_map()
 	xieq(128329757, ffmap_hash(s, ffsz_len(s)));
 
 	const char **hh;
-	FFARR_WALK(httphdrs, hh) {
+	FFARRAY_FOREACH(httphdrs, hh) {
 		x(0 == ffmap_add(&m, *hh, ffsz_len(*hh), (void*)*hh));
 	}
 
-	FFARR_WALK(httphdrs, hh) {
+	FFARRAY_FOREACH(httphdrs, hh) {
 		it = ffmap_find(&m, *hh, ffsz_len(*hh), NULL);
 		x(it != NULL);
 		x(it == (void*)*hh);

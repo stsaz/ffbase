@@ -107,6 +107,11 @@ static inline ffsize ffmin(ffsize a, ffsize b)
 	return (a < b) ? a : b;
 }
 
+static inline ffuint64 ffmin64(ffuint64 a, ffuint64 b)
+{
+	return (a < b) ? a : b;
+}
+
 /** Get maximum value */
 #define ffmax(i0, i1) \
 	(((i0) < (i1)) ? (i1) : (i0))
@@ -195,6 +200,19 @@ static inline ffuint ffbit_rfind64(ffuint64 n)
 	return __builtin_ffsll(n);
 }
 
+
+/** Align number to lower/upper boundary
+align: must be a power of 2 */
+#define ffint_align_floor2(n, align) \
+	((n) & ~(ffuint64)((align) - 1))
+#define ffint_align_ceil2(n, align) \
+	ffint_align_floor2((n) + (align) - 1, align)
+
+/** Align number to lower/upper boundary */
+#define ffint_align_floor(n, align) \
+	((n) / (align) * (align))
+#define ffint_align_ceil(n, align) \
+	ffint_align_floor((n) + (align) - 1, align)
 
 /** Return TRUE if number is a power of 2 */
 #define ffint_ispower2(n)  ((n) >= 2 && (((n) - 1) & (n)) == 0)

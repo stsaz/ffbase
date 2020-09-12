@@ -33,6 +33,8 @@ void test_base()
 {
 	x(1 == ffmin(1, 2));
 	x(2 == ffmin(-1, 2));
+	x(0x123456789 == ffmin64(0x123456789, 0x1234567890));
+	x(2 == ffmin(-1, 2));
 	x(2 == ffmax(1, 2));
 	x(2 == ffmax(-1, 2));
 	x(1 == ffint_abs(-1));
@@ -65,10 +67,23 @@ void test_base()
 #ifdef FF_LITTLE_ENDIAN
 	x(0x1234 == ffint_be_cpu16(0x3412));
 	x(0x1234 == ffint_le_cpu16(0x1234));
+	x(0x78563412 == ffint_be_cpu32(0x12345678));
 #else
 	x(0x1234 == ffint_le_cpu16(0x3412));
 	x(0x1234 == ffint_be_cpu16(0x1234));
+	x(0x12345678 == ffint_be_cpu32(0x12345678));
 #endif
+
+	x(0x3412 == ffint_bswap16(0x1234));
+	x(0x78563412 == ffint_bswap32(0x12345678));
+	x(0x12efcdab78563412 == ffint_bswap64(0x12345678abcdef12));
+
+	x(0xfff0 == ffint_align_floor2(0xffff, 0x10));
+	x(0x123456780 == ffint_align_floor2(0x123456789ULL, 0x10));
+	x(0x10000 == ffint_align_ceil2(0xffff, 0x10));
+
+	x(10 == ffint_align_floor(11, 5));
+	x(15 == ffint_align_ceil(11, 5));
 
 	x(!ffint_ispower2(0));
 	x(!ffint_ispower2(1));

@@ -32,4 +32,12 @@ void test_mem()
 
 	x(NULL != (d = ffmem_new(char)));
 	ffmem_free(d);
+
+	x(NULL != (d = ffmem_align(4, 16)));
+	x(((ffsize)d % 16) == 0);
+	ffmem_alignfree(d);
+
+	x(NULL != (d = ffmem_align(999, 512)));
+	x(((ffsize)d % 512) == 0);
+	ffmem_alignfree(d);
 }

@@ -10,22 +10,34 @@ Detect CPU
 	FF_AMD64 FF_X86 FF_ARM FF_64
 	FF_LITTLE_ENDIAN FF_BIG_ENDIAN
 Detect OS
-	FF_UNIX FF_WIN
+	FF_UNIX FF_WIN FF_ANDROID
 Base types
 	ffbyte ffushort ffint ffuint ffint64 ffuint64 ffsize ffssize
 FF_ASSERT
 ff_printf
-ffmin ffmax ffint_abs
+ffmin ffmin64
+ffmax
+ffint_abs
 FF_COUNT FFS_LEN
 FF_OFF FF_PTR
 FF_STRUCTPTR
-ffint_be_cpu16 ffint_be_cpu32 ffint_be_cpu64
-ffint_le_cpu16 ffint_le_cpu32 ffint_le_cpu64
-ffbit_find32 ffbit_find64
-ffint_ispower2 ffint_align_power2
+Endian conversion:
+	ffint_be_cpu16 ffint_be_cpu32 ffint_be_cpu64
+	ffint_le_cpu16 ffint_le_cpu32 ffint_le_cpu64
+Bits:
+	ffbit_find32 ffbit_find64
+	ffbit_rfind32 ffbit_rfind64
+Integer align:
+	ffint_align_floor2 ffint_align_floor
+	ffint_align_ceil2 ffint_align_ceil
+	ffint_ispower2
+	ffint_align_power2
 ffsz_len ffwsz_len
 Heap allocation
-	ffmem_alloc ffmem_zalloc ffmem_new ffmem_realloc ffmem_free
+	ffmem_alloc ffmem_zalloc ffmem_new ffmem_realloc
+	ffmem_free
+	ffmem_align
+	ffmem_alignfree
 ffmem_stack
 ffmem_cmp ffmem_fill ffmem_findbyte
 ffmem_zero ffmem_zero_obj
@@ -67,10 +79,15 @@ ffmem_copy ffmem_move
 	#include <stdlib.h>
 
 #else
+	#if defined __linux__ && defined ANDROID
+		#define FF_ANDROID
+	#endif
+
 	#define FF_UNIX
 	#include <stdlib.h>
 	#include <string.h>
 	#include <unistd.h>
+	#include <errno.h>
 #endif
 
 
@@ -233,22 +250,139 @@ static inline ffuint64 ffint_align_power2(ffuint64 n)
 
 
 /* Heap allocation */
-#if !defined ffmem_alloc
+#if !defined _FFBASE_MEM_ALLOC
+#define _FFBASE_MEM_ALLOC
 
-/** Allocate heap buffer */
-#define ffmem_alloc(size)  malloc(size)
+#ifdef FF_WIN
 
-/** Allocate heap buffer and zero it */
-#define ffmem_zalloc(size)  calloc(1, size)
+static inline void* ffmem_alloc(ffsize size)
+{
+	return HeapAlloc(GetProcessHeap(), 0, size);
+}
 
-/** Allocate object and zero it */
-#define ffmem_new(T)  ((T*)calloc(1, sizeof(T)))
+static inline void* ffmem_calloc(ffsize n, ffsize elsize)
+{
+	return HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, n * elsize);
+}
 
-/** Change heap buffer size */
-#define ffmem_realloc(ptr, newsize)  realloc(ptr, newsize)
+static inline void* ffmem_realloc(void *ptr, ffsize new_size)
+{
+	if (ptr == NULL)
+		return HeapAlloc(GetProcessHeap(), 0, new_size);
+	return HeapReAlloc(GetProcessHeap(), 0, ptr, new_size);
+}
 
-/** Free heap buffer */
-#define ffmem_free(ptr)  free(ptr)
+static inline void ffmem_free(void *ptr)
+{
+	HeapFree(GetProcessHeap(), 0, ptr);
+}
+
+#else // UNIX:
+
+static inline void* ffmem_alloc(ffsize size)
+{
+	return malloc(size);
+}
+
+static inline void* ffmem_calloc(ffsize n, ffsize elsize)
+{
+	return calloc(n, elsize);
+}
+
+static inline void* ffmem_realloc(void *ptr, ffsize new_size)
+{
+	return realloc(ptr, new_size);
+}
+
+static inline void ffmem_free(void *ptr)
+{
+	free(ptr);
+}
+
+#endif
+
+#if defined FF_WIN || defined FF_ANDROID
+
+/* (allocated-start) (free space) (pointer to allocated-start) (aligned) ... (allocated-end) */
+static inline void* ffmem_align(ffsize size, ffsize align)
+{
+	if ((align % sizeof(void*)) != 0) {
+#ifdef FF_WIN
+		SetLastError(ERROR_INVALID_PARAMETER);
+#else
+		errno = EINVAL;
+#endif
+		return NULL;
+	}
+
+	void *buf;
+	if (NULL == (buf = ffmem_alloc(size + align + sizeof(void*))))
+		return NULL;
+
+	void *al = (void*)(ffsize)ffint_align_ceil2((ffsize)buf + sizeof(void*), align);
+	*((void**)al - 1) = buf; // remember the original pointer
+	return al;
+}
+
+static inline void ffmem_alignfree(void *ptr)
+{
+	if (ptr == NULL)
+		return;
+
+	void *buf = *((void**)ptr - 1);
+	ffmem_free(buf);
+}
+
+#else // #if defined FF_WIN || defined FF_ANDROID
+
+static inline void* ffmem_align(ffsize size, ffsize align)
+{
+	void *buf;
+	int e = posix_memalign(&buf, align, size);
+	if (e != 0) {
+		errno = e;
+		return NULL;
+	}
+	return buf;
+}
+
+static inline void ffmem_alignfree(void *ptr)
+{
+	free(ptr);
+}
+
+#endif
+
+
+/** Allocate heap memory region
+Return NULL on error */
+static void* ffmem_alloc(ffsize size);
+
+#define ffmem_zalloc(size)  ffmem_calloc(1, size)
+
+/** Allocate heap memory zero-filled region
+Return NULL on error */
+static void* ffmem_calloc(ffsize n, ffsize elsize);
+
+/** Reallocate heap memory region
+Return NULL on error */
+static void* ffmem_realloc(void *ptr, ffsize new_size);
+
+/** Allocate an object of type T */
+#define ffmem_new(T)  ((T*)ffmem_calloc(1, sizeof(T)))
+
+/** Deallocate heap memory region */
+static void ffmem_free(void *ptr);
+
+
+/** Allocate aligned memory
+align:
+  Windows, Android: must be a multiple of sizeof(void*)
+Return NULL on error */
+static void* ffmem_align(ffsize size, ffsize align);
+
+/** Deallocate aligned memory */
+static void ffmem_alignfree(void *ptr);
 
 
 /** Reserve stack buffer */
@@ -256,6 +390,7 @@ static inline ffuint64 ffint_align_power2(ffuint64 n)
 
 #define FFMEM_STACK_THRESHOLD  4096
 
+/** Reserve stack or allocate a heap buffer */
 #define _ffmem_alloc_stackorheap(size) \
 	((size) < FFMEM_STACK_THRESHOLD) ? alloca(size) : ffmem_alloc(size)
 

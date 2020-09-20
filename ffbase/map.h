@@ -64,7 +64,7 @@ static inline void ffmap_init(ffmap *m, ffmap_keyeq_func keyeq)
 /** Free buffer */
 static inline void ffmap_free(ffmap *m)
 {
-	ffmem_free(m->data);
+	ffmem_alignfree(m->data);
 	m->data = NULL;
 	m->len = m->cap = 0;
 }
@@ -76,8 +76,9 @@ static inline int ffmap_alloc(ffmap *m, ffsize n)
 	n = ffint_align_power2(n);
 	ffmap_free(m);
 	void *p;
-	if (NULL == (p = ffmem_zalloc(n * sizeof(struct _ffmap_item))))
+	if (NULL == (p = ffmem_align(n * sizeof(struct _ffmap_item), 64)))
 		return -1;
+	ffmem_zero(p, n * sizeof(struct _ffmap_item));
 	m->data = (struct _ffmap_item*)p;
 	m->cap = n;
 	m->mask = n - 1;
@@ -124,7 +125,7 @@ static inline int _ffmap_resize(ffmap *m, ffsize newsize)
 			_ffmap_add(&nm, it->hash, it->val);
 	}
 
-	ffmem_free(m->data);
+	ffmem_alignfree(m->data);
 	m->len = nm.len;
 	m->cap = nm.cap;
 	m->mask = nm.mask;

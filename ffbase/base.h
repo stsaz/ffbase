@@ -14,6 +14,7 @@ Detect OS
 Base types
 	ffbyte ffushort ffint ffuint ffint64 ffuint64 ffsize ffssize
 FF_ASSERT
+FF_EXTERN
 ff_printf
 ffmin ffmin64
 ffmax
@@ -112,6 +113,13 @@ ffmem_copy ffmem_move
 #endif
 
 
+#ifdef __cplusplus
+	#define FF_EXTERN extern "C"
+#else
+	#define FF_EXTERN extern
+#endif
+
+
 #include <stdio.h>
 /** Formatted print to stdout
 Supported: %p, %u, %s */
@@ -143,6 +151,10 @@ static inline ffuint64 ffmin64(ffuint64 a, ffuint64 b)
 
 /** Get N of elements in a static C array */
 #define FF_COUNT(ar)  (sizeof(ar) / sizeof(ar[0]))
+
+/** Loop for each element of a static C array */
+#define FF_FOREACH(static_array, it) \
+	for (it = static_array;  it != static_array + FF_COUNT(static_array);  it++)
 
 /** Get N of characters in a static C string */
 #define FFS_LEN(s)  (FF_COUNT(s) - 1)

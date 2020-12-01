@@ -242,6 +242,26 @@ void test_str_case()
 	ffstr s;
 	s.ptr = buf;
 
+	{
+	ffmem_copy(buf, "ASDFqwer", 8);
+	ffstr s1 = FFSTR_INITN(buf, 8);
+	ffstr_lower(&s1);
+	xseq(&s1, "asdfqwer");
+	}
+
+	{
+	ffstr s1 = FFSTR_INITZ("ASDFqwer");
+	ffstr s2 = {};
+	ffstr_dup2_lower(&s2, &s1);
+	xseq(&s2, "asdfqwer");
+	}
+
+	{
+	ffstr s2 = {};
+	ffstr_dup_lower(&s2, "ASDFqwer", 5);
+	xseq(&s2, "asdfq");
+	}
+
 	s.len = ffs_lower(buf, sizeof(buf), STR("ASDFqwer"));
 	xseq(&s, "asdfqwer");
 
@@ -302,6 +322,19 @@ void test_str()
 {
 	const char *data = "0123456789";
 	ffstr s = FFSTR_INIT(data);
+
+	{
+		ffstr s1 = FFSTR_INITZ("1234");
+		xseq(&s1, "1234");
+	}
+	{
+		ffstr s1 = FFSTR_INITN("1234", 3);
+		xseq(&s1, "123");
+	}
+	{
+		ffstr s1 = FFSTR_INITSTR(&s);
+		xseq(&s1, data);
+	}
 
 	ffstr_null(&s);
 	ffstr_set(&s, data, 10);

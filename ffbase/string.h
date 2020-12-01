@@ -22,6 +22,7 @@ typedef struct ffstr {
 /* Contents:
 GETTERS
 SET
+	FFSTR_INITZ FFSTR_INITN FFSTR_INITSTR
 COMPARE
 	ffstr_cmp ffstr_cmp2 ffstr_cmpz
 	ffstr_eq ffstr_eq2 ffstr_eqz ffstr_eqcz
@@ -53,6 +54,7 @@ CONVERT
 	ffstr_toint ffstr_to_uint64 ffstr_to_uint32 ffstr_to_int64 ffstr_to_int32
 	ffstr_fromint ffstr_from_uint ffstr_from_int
 	ffstr_from_float
+	ffstr_lower
 ALLOCATE
 	ffstr_alloc_stack
 	ffstr_alloc ffstr_realloc ffstr_grow ffstr_growtwice
@@ -63,6 +65,7 @@ COPY
 	ffstr_addfmt ffstr_addfmtv
 ALLOCATE+COPY
 	ffstr_dup ffstr_dup2 ffstr_dupz
+	ffstr_dup_lower ffstr_dup2_lower
 	ffstr_growaddfill ffstr_growadd ffstr_growadd2 ffstr_growaddz
 	ffstr_growfmt
 
@@ -478,6 +481,18 @@ static inline ffsize _ffsz_nlen(const char *s, ffsize maxlen)
 /** ffstr initializator: ffstr s = FFSTR_INIT("string") */
 #define FFSTR_INIT(s) \
 	{ ffsz_len(s), (char*)(s) }
+
+/** ffstr initializator: ffstr s = FFSTR_INITZ("string") */
+#define FFSTR_INITZ(s) \
+	{ ffsz_len(s), (char*)(s) }
+
+/** ffstr initializator: ffstr s = FFSTR_INITN("string") */
+#define FFSTR_INITN(s, n) \
+	{ n, (char*)(s) }
+
+/** ffstr initializator: ffstr s = FFSTR_INIT2(ffstr) */
+#define FFSTR_INITSTR(str) \
+	{ (str)->len, (str)->ptr }
 
 /** Set data pointer and length: s = {data, length} */
 #define ffstr_set(s, data, n) \
@@ -899,6 +914,12 @@ Return N of bytes written;  0 on error */
 
 #endif // _FFBASE_STRCONVERT_H
 
+/** Convert to lower case in-place */
+static inline void ffstr_lower(ffstr *s)
+{
+	ffs_lower(s->ptr, s->len, s->ptr, s->len);
+}
+
 
 // ALLOCATE
 
@@ -1058,6 +1079,18 @@ static inline char* ffstr_dup(ffstr *s, const char *src, ffsize n)
 
 /** Allocate and copy data: s = copy(sz) */
 #define ffstr_dupz(s, sz)  ffstr_dup(s, sz, ffsz_len(sz))
+
+/** Allocate and copy data in lower case: s = copy(lower(src[])) */
+static inline char* ffstr_dup_lower(ffstr *s, const char *src, ffsize n)
+{
+	if (NULL == ffstr_alloc(s, n))
+		return NULL;
+	ffs_lower(s->ptr, n, src, n);
+	s->len = n;
+	return s->ptr;
+}
+
+#define ffstr_dup2_lower(s, src)  ffstr_dup_lower(s, (src)->ptr, (src)->len)
 
 /** Reallocate buffer (if necessary) and append data
 Return N of bytes copied, set 'cap' to the new capacity of reallocated buffer;

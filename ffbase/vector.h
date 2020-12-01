@@ -3,6 +3,7 @@
 */
 
 #pragma once
+#define _FFBASE_VECTOR_H
 
 #include <ffbase/slice.h>
 

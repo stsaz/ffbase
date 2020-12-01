@@ -3,6 +3,7 @@
 */
 
 #include <ffbase/base.h>
+#include <ffbase/mem-print.h>
 
 #define x  assert
 
@@ -40,4 +41,16 @@ void test_mem()
 	x(NULL != (d = ffmem_align(999, 512)));
 	x(((ffsize)d % 512) == 0);
 	ffmem_alignfree(d);
+}
+
+void test_mem_print()
+{
+	char ss[] = "asdfghjkzxcv12345678";
+	ffstr s;
+	s = ffmem_print(ss, sizeof(ss), 0);
+	printf("%.*s\n", (int)s.len, s.ptr);
+	s = ffmem_print(ss, sizeof(ss), FFMEM_PRINT_NO_TEXT);
+	printf("%.*s\n", (int)s.len, s.ptr);
+	s = ffmem_print(ss, sizeof(ss), FFMEM_PRINT_ZEROSPACE);
+	printf("%.*s\n", (int)s.len, s.ptr);
 }

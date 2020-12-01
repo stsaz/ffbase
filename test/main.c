@@ -10,6 +10,7 @@
 
 void test_base();
 void test_mem();
+void test_mem_print();
 void test_slice();
 void test_str();
 void test_strz();
@@ -123,7 +124,7 @@ struct test {
 };
 #define T(nm) { #nm, &test_ ## nm }
 static const struct test atests[] = {
-	T(base), T(mem),
+	T(base), T(mem), T(mem_print),
 	T(slice), T(vec), T(sort),
 	T(str), T(strz),
 	T(unicode),

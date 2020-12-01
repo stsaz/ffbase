@@ -12,9 +12,9 @@
 /*
 fftime_add fftime_sub
 fftime_valid
-fftime_join
-fftime_split
-fftime_tostr
+fftime_join1
+fftime_split1
+fftime_tostr1
 */
 
 /** Time value */
@@ -22,6 +22,9 @@ typedef struct fftime {
 	ffint64 sec;
 	ffuint nsec;
 } fftime;
+
+/** Seconds passed until 1970 */
+#define FFTIME_1970_SECONDS  62135596800ULL
 
 /** Add time value */
 static inline void fftime_add(fftime *t, const fftime *add)
@@ -100,7 +103,7 @@ Note: the time values in 'dt' are allowed to overflow
 'weekday' and 'yearday' values are not read
 If either 'year', 'month' or 'day' is 0, only time values are read and the date values are skipped
 'year' < 0 isn't supported */
-static inline void fftime_join(fftime *t, const ffdatetime *dt)
+static inline void fftime_join1(fftime *t, const ffdatetime *dt)
 {
 	t->sec = (ffint64)dt->hour*60*60 + dt->minute*60 + dt->second;
 	t->nsec = dt->nanosecond;
@@ -147,7 +150,7 @@ Algorithm:
   . If year day is within Mar..Dec, add 2 months
   . If year day is within Jan..Feb, add 2 months and increment year
 */
-static inline void fftime_split(ffdatetime *dt, const fftime *t)
+static inline void fftime_split1(ffdatetime *dt, const fftime *t)
 {
 	ffuint64 sec = t->sec;
 	dt->nanosecond = t->nsec;
@@ -212,7 +215,7 @@ enum FFTIME_FMT {
 /** Convert date/time to string
 flags: enum FFTIME_FMT
 Return N of bytes written;  0 on error */
-static inline ffsize fftime_tostr(const ffdatetime *dt, char *dst, ffsize cap, ffuint flags)
+static inline ffsize fftime_tostr1(const ffdatetime *dt, char *dst, ffsize cap, ffuint flags)
 {
 	ffsize i = 0;
 	static const char week_days[][4] = {"Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"};

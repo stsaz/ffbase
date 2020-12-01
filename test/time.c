@@ -36,7 +36,7 @@ void test_time()
 	dt.year = 1;
 	dt.month = 1;
 	dt.day = 1;
-	fftime_join(&t, &dt);
+	fftime_join1(&t, &dt);
 	xieq(0, t.sec);
 
 	// (no date) 01:02:03
@@ -44,7 +44,7 @@ void test_time()
 	dt.hour = 1;
 	dt.minute = 2;
 	dt.second = 3;
-	fftime_join(&t, &dt);
+	fftime_join1(&t, &dt);
 	xieq(1*60*60 + 2*60 + 3, t.sec);
 
 	// Dec 31, 1 AD, 23:59:59
@@ -55,7 +55,7 @@ void test_time()
 	dt.hour = 23;
 	dt.minute = 59;
 	dt.second = 59;
-	fftime_join(&t, &dt);
+	fftime_join1(&t, &dt);
 	xieq(365*24*60*60-1, t.sec);
 
 	// Jan 1, 1970
@@ -63,9 +63,9 @@ void test_time()
 	dt.year = 1970;
 	dt.month = 1;
 	dt.day = 1;
-	fftime_join(&t, &dt);
+	fftime_join1(&t, &dt);
 	ffuint64 sec1970 = t.sec;
-	fftime_split(&dt, &t);
+	fftime_split1(&dt, &t);
 	xieq(1970, dt.year);
 	xieq(1, dt.month);
 	xieq(1, dt.day);
@@ -73,10 +73,10 @@ void test_time()
 	char buf[64];
 	ffstr s;
 	s.ptr = buf;
-	s.len = fftime_tostr(&dt, buf, sizeof(buf), FFTIME_YMD);
+	s.len = fftime_tostr1(&dt, buf, sizeof(buf), FFTIME_YMD);
 	xseq(&s, "1970-01-01 00:00:00");
 
-	s.len = fftime_tostr(&dt, buf, sizeof(buf), FFTIME_WDMY);
+	s.len = fftime_tostr1(&dt, buf, sizeof(buf), FFTIME_WDMY);
 	xseq(&s, "Thu, 01 Jan 1970 00:00:00 GMT");
 
 	// test each day since 1970
@@ -100,10 +100,10 @@ void test_time()
 				}
 
 				dt.day = d;
-				fftime_join(&t, &dt);
+				fftime_join1(&t, &dt);
 				xieq(cursec, t.sec);
 
-				fftime_split(&dt, &t);
+				fftime_split1(&dt, &t);
 				xieq(y, dt.year);
 				xieq(m, dt.month);
 				xieq(d, dt.day);
@@ -113,7 +113,7 @@ void test_time()
 				cursec += 24*60*60;
 
 				// char buf[64];
-				// ffsize n = fftime_tostr(&dt, buf, sizeof(buf), FFTIME_DATE_YMD);
+				// ffsize n = fftime_tostr1(&dt, buf, sizeof(buf), FFTIME_DATE_YMD);
 				// printf("%.*s\n", (int)n, buf);
 			}
 		}

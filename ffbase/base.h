@@ -25,6 +25,8 @@ FF_STRUCTPTR
 Endian conversion:
 	ffint_be_cpu16 ffint_be_cpu32 ffint_be_cpu64
 	ffint_le_cpu16 ffint_le_cpu32 ffint_le_cpu64
+	ffint_le_cpu16_ptr ffint_le_cpu32_ptr ffint_le_cpu64_ptr
+	ffint_be_cpu16_ptr ffint_be_cpu32_ptr ffint_be_cpu64_ptr
 Bits:
 	ffbit_find32 ffbit_find64
 	ffbit_rfind32 ffbit_rfind64
@@ -199,6 +201,13 @@ e.g. "0x11223344" <-> "0x44332211" */
 	#define ffint_le_cpu32(i)  __builtin_bswap32(i)
 	#define ffint_le_cpu64(i)  __builtin_bswap64(i)
 #endif
+
+#define ffint_le_cpu16_ptr(ptr)  ffint_le_cpu16(*(ffushort*)(ptr))
+#define ffint_le_cpu32_ptr(ptr)  ffint_le_cpu32(*(ffuint*)(ptr))
+#define ffint_le_cpu64_ptr(ptr)  ffint_le_cpu64(*(ffuint64*)(ptr))
+#define ffint_be_cpu16_ptr(ptr)  ffint_be_cpu16(*(ffushort*)(ptr))
+#define ffint_be_cpu32_ptr(ptr)  ffint_be_cpu32(*(ffuint*)(ptr))
+#define ffint_be_cpu64_ptr(ptr)  ffint_be_cpu64(*(ffuint64*)(ptr))
 
 
 /** Find the most significant 1-bit

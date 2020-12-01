@@ -10,12 +10,14 @@
 #include <ffbase/murmurhash3.h>
 
 /*
+FFMAP_WALK
 ffmap_hash
 ffmap_init
-ffmap_alloc ffmap_free
+ffmap_alloc ffmap_grow
+ffmap_free
 ffmap_add ffmap_add_hash
-ffmap_rm_hash
-ffmap_find
+ffmap_rm ffmap_rm_hash
+ffmap_find ffmap_find_hash
 _ffmap_stats
 */
 
@@ -45,6 +47,24 @@ struct _ffmap_item {
 	ffuint hash;
 	void *val;
 };
+
+static inline int _ffmap_item_occupied(const struct _ffmap_item *it)
+{
+	return it->flags != 0;
+}
+
+/** Walk through all elements
+Example:
+
+struct _ffmap_item *it;
+FFMAP_WALK(&map, it) {
+	if (!_ffmap_item_occupied(it))
+		continue;
+	void *val = it->val;
+}
+*/
+#define FFMAP_WALK(m, it) \
+	for (it = (m)->data;  it != &(m)->data[(m)->cap];  it++)
 
 /** Get hash value */
 static inline ffuint ffmap_hash(const void *key, ffsize keylen)
@@ -105,8 +125,7 @@ static inline void _ffmap_add(ffmap *m, ffuint hash, void *val)
 			return;
 		}
 
-		if (++i == m->cap)
-			i = 0;
+		i = (i + 1) & m->mask;
 	}
 }
 
@@ -130,6 +149,17 @@ static inline int _ffmap_resize(ffmap *m, ffsize newsize)
 	m->cap = nm.cap;
 	m->mask = nm.mask;
 	m->data = nm.data;
+	return 0;
+}
+
+/** Grow buffer
+Reallocate if capacity is less than total required size plus THRESHOLD
+Return 0 on success */
+static inline int ffmap_grow(ffmap *m, ffsize by)
+{
+	ffsize cap = (m->len + by) * 100 / FFMAP_RESIZE_THRESHOLD + 1;
+	if (cap > m->cap)
+		return _ffmap_resize(m, cap);
 	return 0;
 }
 
@@ -159,58 +189,139 @@ static inline int ffmap_add(ffmap *m, const void *key, ffsize keylen, void *val)
 	return ffmap_add_hash(m, hash, val);
 }
 
-/** Remove the element matching 'hash' and 'val' */
+/* Move elements (in the same chunk) that collide with the removed element:
+(removed) #1    (occupied)#3
+(occupied)#2    (occupied)#2
+(coll#1)  #3 -> (free)
+(free)          (free)
+*/
+static inline void _ffmap_normalize(ffmap *m, ffsize end, ffsize irm)
+{
+	ffsize i = end;
+	struct _ffmap_item *it;
+	for (;;) {
+		i = (i - 1) & m->mask;
+		it = &m->data[i];
+		if (i == irm)
+			break; // none of the next elements can be moved
+
+		ffsize ni = IDX_HASH(m, it->hash);
+		if (ni <= irm) {
+			m->data[irm] = *it;
+			irm = i; // repeat the same procedure for this element
+			i = end;
+		}
+	}
+
+	it->flags = 0;
+	it->hash = 0;
+	it->val = NULL;
+	m->len--;
+}
+
+/** Remove the element matching 'hash' and 'val'
+Normalize the next elements
+Return 0 on success */
 static inline int ffmap_rm_hash(ffmap *m, ffuint hash, void *val)
 {
-	FF_ASSERT(m->len != 0);
+	if (m->len == 0)
+		return -1;
+
 	ffsize i = IDX_HASH(m, hash);
 	ffsize sentl = i;
+	ffssize irm = -1;
+	struct _ffmap_item *it;
 
 	for (;;) {
-		struct _ffmap_item *it = &m->data[i];
+		it = &m->data[i];
+		if (it->flags == 0)
+			break;
 
-		if (it->hash == hash
-			&& it->val == val
-			&& it->flags != 0) {
+		if (irm < 0
+			&& it->hash == hash
+			&& it->val == val)
+			irm = i; // mark the element to remove and continue iterating until the end of the chunk
 
-			it->flags = 0;
-			it->hash = 0;
-			it->val = NULL;
-			return 0;
-		}
-
-		if (++i == m->cap)
-			i = 0;
+		i = (i + 1) & m->mask;
 		if (i == sentl)
 			return -1;
 	}
+
+	if (irm < 0)
+		return -1;
+
+	_ffmap_normalize(m, i, irm);
+	return 0;
+}
+
+static inline int ffmap_rm(ffmap *m, const void *key, ffsize keylen, void *opaque)
+{
+	if (m->len == 0)
+		return -1;
+
+	ffuint hash = ffmap_hash(key, keylen);
+	ffsize i = IDX_HASH(m, hash);
+	ffsize sentl = i;
+	ffssize irm = -1;
+	struct _ffmap_item *it;
+
+	for (;;) {
+		it = &m->data[i];
+		if (it->flags == 0)
+			break;
+
+		if (irm < 0
+			&& it->hash == hash
+			&& m->key_eq(opaque, key, keylen, it->val))
+			irm = i;
+
+		i = (i + 1) & m->mask;
+		if (i == sentl)
+			return -1;
+	}
+
+	if (irm < 0)
+		return -1;
+
+	_ffmap_normalize(m, i, irm);
+	return 0;
 }
 
 /** Find element
 Return user's value or NULL on error */
-static inline void* ffmap_find(ffmap *m, const void *key, ffsize keylen, void *opaque)
+static inline void* ffmap_find_hash(ffmap *m, ffuint hash, const void *key, ffsize keylen, void *opaque)
 {
-	ffuint hash = ffmap_hash(key, keylen);
+	if (m->len == 0)
+		return NULL;
+
 	ffsize i = IDX_HASH(m, hash);
 	ffsize sentl = i;
 
 	for (;;) {
 		const struct _ffmap_item *it = &m->data[i];
+		if (it->flags == 0)
+			break;
 
 		if (it->hash == hash
-			&& it->flags != 0
 			&& m->key_eq(opaque, key, keylen, it->val))
 			return it->val;
 
-		if (++i == m->cap)
-			i = 0;
+		i = (i + 1) & m->mask;
 		if (i == sentl)
-			return NULL;
+			break;
 	}
+
+	return NULL;
+}
+
+static inline void* ffmap_find(ffmap *m, const void *key, ffsize keylen, void *opaque)
+{
+	ffuint hash = ffmap_hash(key, keylen);
+	return ffmap_find_hash(m, hash, key, keylen, opaque);
 }
 
 /** Print statistics info */
-static inline void _ffmap_stats(ffmap *m)
+static inline void _ffmap_stats(ffmap *m, ffuint flags)
 {
 	ffsize nlen = 0, ncoll = 0;
 	ffsize max_coll = 0, max_coll_n = 0;
@@ -242,16 +353,18 @@ static inline void _ffmap_stats(ffmap *m)
 			nlen++;
 		}
 
-		ff_printf("map %p:  %u: %s\n"
-			, m, (int)i
-			, status);
+		if (flags & 1) {
+			ff_printf("map %p:  %u: %s %p\n"
+				, m, (int)i
+				, status, it->val);
+		}
 	}
 
 	ff_printf("map %p:  cap:%u  len:%u/%u(%u%%)  ncoll:%u(%u%%)  longest-coll:%u  longest-free:%u\n"
 		, m
 		, (int)m->cap
-		, (int)nlen, (int)m->len, (int)(m->len * 100 / m->cap)
-		, (int)ncoll, (int)(ncoll * 100 / m->len)
+		, (int)nlen, (int)m->len, (int)((m->cap != 0) ? (m->len * 100 / m->cap) : 0)
+		, (int)ncoll, (int)((m->len != 0) ? (ncoll * 100 / m->len) : 0)
 		, (int)max_coll
 		, (int)max_free
 		);

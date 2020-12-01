@@ -68,6 +68,9 @@ void test_map()
 	const char *s = "This is a test string!";
 	xieq(128329757, ffmap_hash(s, ffsz_len(s)));
 
+	ffmap_grow(&m, 8);
+	ffmap_grow(&m, 24);
+
 	const char **hh;
 	FFARRAY_FOREACH(httphdrs, hh) {
 		x(0 == ffmap_add(&m, *hh, ffsz_len(*hh), (void*)*hh));
@@ -79,6 +82,26 @@ void test_map()
 		x(it == (void*)*hh);
 	}
 
-	_ffmap_stats(&m);
+	_ffmap_stats(&m, 1);
+
+	{
+		struct _ffmap_item *it;
+		FFMAP_WALK(&m, it) {
+			if (_ffmap_item_occupied(it)) {
+			}
+		}
+	}
+
+	FFARRAY_FOREACH(httphdrs, hh) {
+		xieq(0, ffmap_rm(&m, *hh, ffsz_len(*hh), NULL));
+		xieq(-1, ffmap_rm(&m, *hh, ffsz_len(*hh), NULL));
+	}
+
+	FFARRAY_FOREACH(httphdrs, hh) {
+		xieq(-1, ffmap_rm(&m, *hh, ffsz_len(*hh), NULL));
+	}
+
+	_ffmap_stats(&m, 1);
+
 	ffmap_free(&m);
 }

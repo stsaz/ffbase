@@ -219,6 +219,50 @@ void test_ffstr_match()
 	x(!ffstr_irmatchcz(&s, ".=val"));
 }
 
+void test_ffstr_matchfmt()
+{
+	ffstr in, s1 = {}, s2 = {};
+
+	ffstr_setz(&in, "asdf");
+	xieq(0, ffstr_matchfmt(&in, "%S", &s1));
+	xseq(&s1, "asdf");
+
+	ffstr_setz(&in, "asdf{#qwer}");
+	xieq(0, ffstr_matchfmt(&in, "%S{#%S}", &s1, &s2));
+	xseq(&s1, "asdf");
+	xseq(&s2, "qwer");
+
+	ffstr_setz(&in, "a{#b}{#c}");
+	xieq(5+1, ffstr_matchfmt(&in, "%S{#%S}", &s1, &s2));
+	xseq(&s1, "a");
+	xseq(&s2, "b");
+
+	ffstr_setz(&in, "a{#b{#c}");
+	xieq(0, ffstr_matchfmt(&in, "%S{#%S}", &s1, &s2));
+	xseq(&s1, "a");
+	xseq(&s2, "b{#c");
+
+	ffstr_setz(&in, "a#q}");
+	xieq(4+1, ffstr_matchfmt(&in, "%S{#%S}", &s1, &s2));
+
+	ffstr_setz(&in, "a{#q");
+	xieq(4+1, ffstr_matchfmt(&in, "%S{#%S}", &s1, &s2));
+
+	ffstr_setz(&in, "");
+	xieq(1, ffstr_matchfmt(&in, "%S{#%S}", &s1, &s2));
+
+	ffstr_setz(&in, "a");
+	xieq(1, ffstr_matchfmt(&in, "", &s1, &s2));
+
+	ffstr_setz(&in, "");
+	xieq(0, ffstr_matchfmt(&in, "", &s1, &s2));
+
+	ffstr_setz(&in, "asdf");
+	xieq(-1, ffstr_matchfmt(&in, "%"));
+	xieq(-1, ffstr_matchfmt(&in, "%x"));
+	xieq(-1, ffstr_matchfmt(&in, "%S%S", &s1));
+}
+
 void test_ffstr_split()
 {
 	ffstr s = FFSTR_INIT("abcdeFGHIJ");
@@ -395,6 +439,7 @@ void test_str()
 	test_ffstr_array();
 	test_ffstr_gather();
 	test_str_wildcard();
+	test_ffstr_matchfmt();
 }
 
 void test_write_bitmap()

@@ -37,6 +37,8 @@ MATCH
 	ffstr_imatch ffstr_imatch2 ffstr_imatchcz
 REVERSE MATCH
 	ffstr_irmatch ffstr_irmatch2 ffstr_irmatchcz
+MATCH BY FORMAT
+	ffstr_matchfmt ffstr_matchfmtv
 FIND CHARACTER
 	ffstr_findchar ffstr_findany ffstr_findanyz
 	ffstr_rfindchar ffstr_rfindany
@@ -701,6 +703,93 @@ static inline int ffstr_irmatch(const ffstr *s, const char *suffix, ffsize n)
 
 #define ffstr_irmatch2(s, suffix)  ffstr_irmatch(s, (suffix)->ptr, (suffix)->len)
 #define ffstr_irmatchcz(s, csz)  ffstr_irmatch(s, csz, ffsz_len(csz))
+
+
+// MATCH BY FORMAT
+
+/** Match string by a format and extract data to output variables
+
+Format:
+%S       ffstr*
+%%       %
+
+Return 0 if matched;
+ >0: no match: return stop index +1 within input string;
+ <0: format error */
+static inline ffssize ffstr_matchfmtv(ffstr *s, const char *fmt, va_list args)
+{
+	ffsize is = 0;
+	for (ffsize i = 0;  fmt[i] != '\0';) {
+		int ch = fmt[i++];
+		if (ch != '%') {
+			if (ch != s->ptr[is])
+				goto end; // mismatch
+			is++;
+			continue;
+		}
+
+		ch = fmt[i++];
+		switch (ch) {
+		case 'S': {
+			ffstr *pstr = va_arg(args, ffstr*);
+			int stop_char;
+
+			if (fmt[i] == '\0') {
+				ffstr_set(pstr, &s->ptr[is], s->len - is);
+				return 0;
+
+			} else if (fmt[i] == '%') {
+				if (fmt[i+1] == '%') {
+					stop_char = '%';
+					i += 2;
+				} else {
+					return -1; // "%S%S" - invalid
+				}
+
+			} else {
+				stop_char = fmt[i++];
+			}
+
+			pstr->ptr = &s->ptr[is];
+			for (;; is++) {
+				if (is == s->len) {
+					goto end; // mismatch
+				}
+				if (s->ptr[is] == stop_char) {
+					pstr->len = &s->ptr[is] - pstr->ptr;
+					is++;
+					break;
+				}
+			}
+			break;
+		}
+
+		case '%':
+			if (s->ptr[is] != '%')
+				goto end; // mismatch
+			is++;
+			continue;
+
+		default:
+			return -1;
+		}
+	}
+
+	if (is == s->len)
+		return 0;
+
+end:
+	return is + 1;
+}
+
+static inline ffssize ffstr_matchfmt(ffstr *s, const char *fmt, ...)
+{
+	va_list args;
+	va_start(args, fmt);
+	ffssize r = ffstr_matchfmtv(s, fmt, args);
+	va_end(args);
+	return r;
+}
 
 
 // FIND CHARACTER

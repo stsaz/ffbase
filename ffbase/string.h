@@ -62,12 +62,13 @@ ALLOCATE
 	ffstr_alloc ffstr_realloc ffstr_grow ffstr_growtwice
 	ffstr_free
 COPY
+	ffstr_copy ffstr_copystr
 	ffstr_push
 	ffstr_add ffstr_add2 ffstr_addcz ffstr_addz ffstr_addfill
 	ffstr_addfmt ffstr_addfmtv
 ALLOCATE+COPY
-	ffstr_dup ffstr_dup2 ffstr_dupz
-	ffstr_dup_lower ffstr_dup2_lower
+	ffstr_dup ffstr_dupstr ffstr_dupz
+	ffstr_dup_lower ffstr_dupstr_lower
 	ffstr_growaddfill ffstr_growadd ffstr_growadd2 ffstr_growaddz
 	ffstr_growfmt
 
@@ -76,6 +77,7 @@ ALGORITHMS
 	ffs_cmpz ffs_icmp ffs_icmpz ffs_matchz
 	ffs_findstr ffs_ifindstr ffs_findchar ffs_findany
 	ffs_rfindchar ffs_rfindstr ffs_rfindany
+	ffs_skipchar ffs_skipany
 	ffs_lower ffs_upper ffs_titlecase
 	ffs_wildcard
 */
@@ -325,6 +327,28 @@ static inline ffssize ffs_rfindstr(const char *s, ffsize len, const char *search
 			return i - search_len;
 	}
 	return -1;
+}
+
+/** Skip bytes from the beginning */
+static inline ffsize ffs_skipchar(const char *s, ffsize len, int skip_char)
+{
+	ffsize i;
+	for (i = 0;  i != len;  i++) {
+		if (s[i] != skip_char)
+			break;
+	}
+	return i;
+}
+
+/** Remove any of matching bytes from the beginning */
+static inline ffsize ffs_skipany(const char *s, ffsize len, const char *skip_chars, ffsize skip_chars_len)
+{
+	ffsize i;
+	for (i = 0;  i != len;  i++) {
+		if (ffs_findchar(skip_chars, skip_chars_len, s[i]) < 0)
+			break;
+	}
+	return i;
 }
 
 /** Convert case (ANSI).
@@ -868,11 +892,7 @@ Return the position from the beginning
 /** Remove bytes from the beginning */
 static inline void ffstr_skipchar(ffstr *s, int skip_char)
 {
-	ffsize i;
-	for (i = 0;  i != s->len;  i++) {
-		if (s->ptr[i] != skip_char)
-			break;
-	}
+	ffsize i = ffs_skipchar(s->ptr, s->len, skip_char);
 	s->ptr += i;
 	s->len -= i;
 }
@@ -880,11 +900,7 @@ static inline void ffstr_skipchar(ffstr *s, int skip_char)
 /** Remove any of matching bytes from the beginning */
 static inline void ffstr_skipany(ffstr *s, const ffstr *skip_chars)
 {
-	ffsize i;
-	for (i = 0;  i != s->len;  i++) {
-		if (ffstr_findchar(skip_chars, s->ptr[i]) < 0)
-			break;
-	}
+	ffsize i = ffs_skipany(s->ptr, s->len, skip_chars->ptr, skip_chars->len);
 	s->ptr += i;
 	s->len -= i;
 }
@@ -1077,6 +1093,18 @@ static inline void ffstr_free(ffstr *s)
 
 // COPY
 
+/** Copy data
+Return N of bytes copied */
+static inline ffsize ffstr_copy(ffstr *s, ffsize cap, const void *src, ffsize n)
+{
+	n = ffmin(n, cap);
+	ffmem_copy(s->ptr, src, n);
+	s->len = n;
+	return n;
+}
+
+#define ffstr_copystr(s, cap, ssrc)  ffstr_copy(s, cap, (ssrc)->ptr, (ssrc)->len)
+
 /** Add a new element and return its pointer: &s[len++]
 ffstr_addchar() is a safe variant */
 #define ffstr_push(s) \
@@ -1165,6 +1193,7 @@ static inline char* ffstr_dup(ffstr *s, const char *src, ffsize n)
 
 /** Allocate and copy data: s = copy(ffstr) */
 #define ffstr_dup2(s, src)  ffstr_dup(s, (src)->ptr, (src)->len)
+#define ffstr_dupstr(s, src)  ffstr_dup(s, (src)->ptr, (src)->len)
 
 /** Allocate and copy data: s = copy(sz) */
 #define ffstr_dupz(s, sz)  ffstr_dup(s, sz, ffsz_len(sz))
@@ -1179,7 +1208,7 @@ static inline char* ffstr_dup_lower(ffstr *s, const char *src, ffsize n)
 	return s->ptr;
 }
 
-#define ffstr_dup2_lower(s, src)  ffstr_dup_lower(s, (src)->ptr, (src)->len)
+#define ffstr_dupstr_lower(s, src)  ffstr_dup_lower(s, (src)->ptr, (src)->len)
 
 /** Reallocate buffer (if necessary) and append data
 Return N of bytes copied, set 'cap' to the new capacity of reallocated buffer;

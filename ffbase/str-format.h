@@ -2,6 +2,11 @@
 2020, Simon Zolin
 */
 
+/*
+ffs_format ffs_formatv
+ffsz_allocfmt ffsz_allocfmtv
+*/
+
 #pragma once
 #define _FFBASE_STRFORMAT_H
 

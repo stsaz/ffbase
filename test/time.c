@@ -7,6 +7,8 @@
 #include <test/test.h>
 
 
+#define STR2(s)  (char*)(s), FFS_LEN(s)
+
 void test_time()
 {
 	fftime t = {}, t2;
@@ -64,7 +66,6 @@ void test_time()
 	dt.month = 1;
 	dt.day = 1;
 	fftime_join1(&t, &dt);
-	ffuint64 sec1970 = t.sec;
 	fftime_split1(&dt, &t);
 	xieq(1970, dt.year);
 	xieq(1, dt.month);
@@ -79,9 +80,28 @@ void test_time()
 	s.len = fftime_tostr1(&dt, buf, sizeof(buf), FFTIME_WDMY);
 	xseq(&s, "Thu, 01 Jan 1970 00:00:00 GMT");
 
+	xieq(19, fftime_fromstr1(&dt, STR2("1970-01-02 04:05:06"), FFTIME_YMD));
+	x(dt.year == 1970);
+	x(dt.month == 1);
+	xieq(dt.day, 2);
+	x(dt.hour == 4);
+	x(dt.minute == 5);
+	x(dt.second == 6);
+	x(dt.weekday == 0);
+
+	xieq(29, fftime_fromstr1(&dt, STR2("Thu, 01 Feb 1972 04:05:06 GMT"), FFTIME_WDMY));
+	x(dt.year == 1972);
+	x(dt.month == 2);
+	x(dt.day == 1);
+	x(dt.hour == 4);
+	x(dt.minute == 5);
+	x(dt.second == 6);
+	x(dt.weekday == 4);
+
 	// test each day since 1970
-	ffuint64 cursec = sec1970;
+	ffuint64 cursec = FFTIME_1970_SECONDS;
 	ffuint wd = 4;
+	ffmem_zero_obj(&dt);
 	for (ffuint y = 1970;  y <= 2020;  y++) {
 		dt.year = y;
 

@@ -212,14 +212,15 @@ enum FFTIME_FMT {
 
 #ifdef _FFBASE_STRFORMAT_H
 
+static const char _fftime_months[][4] = {"Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"};
+static const char _fftime_week_days[][4] = {"Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"};
+
 /** Convert date/time to string
 flags: enum FFTIME_FMT
 Return N of bytes written;  0 on error */
 static inline ffsize fftime_tostr1(const ffdatetime *dt, char *dst, ffsize cap, ffuint flags)
 {
 	ffsize i = 0;
-	static const char week_days[][4] = {"Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"};
-	static const char months[][4] = {"Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"};
 
 	switch (flags & 0x0f) {
 	case FFTIME_DATE_YMD:
@@ -229,7 +230,7 @@ static inline ffsize fftime_tostr1(const ffdatetime *dt, char *dst, ffsize cap, 
 
 	case FFTIME_DATE_WDMY:
 		i += ffs_format(dst, cap, "%s, %02u %s %04u"
-			, week_days[dt->weekday], dt->day, months[dt->month - 1], dt->year);
+			, _fftime_week_days[dt->weekday], dt->day, _fftime_months[dt->month - 1], dt->year);
 		break;
 
 	case FFTIME_DATE_MDY:
@@ -278,6 +279,163 @@ static inline ffsize fftime_tostr1(const ffdatetime *dt, char *dst, ffsize cap, 
 	if (i == cap)
 		return 0;
 	return i;
+}
+
+static int _fftime_date_fromstr(ffdatetime *dt, ffstr *str, ffuint flags)
+{
+	int r;
+
+	switch (flags & 0x0f) {
+	case FFTIME_DATE_YMD:
+		if (0 > (r = ffstr_matchfmt(str, "%4u-%2u-%2u"
+			, &dt->year, &dt->month, &dt->day)))
+			return -1;
+
+		dt->weekday = 0;
+		break;
+
+	case FFTIME_DATE_MDY:
+		if (0 > (r = ffstr_matchfmt(str, "%u/%u/%4u"
+			, &dt->year, &dt->month, &dt->day)))
+			return -1;
+
+		dt->weekday = 0;
+		break;
+
+	case FFTIME_DATE_DMY:
+		if (0 > (r = ffstr_matchfmt(str, "%2u.%2u.%4u"
+			, &dt->year, &dt->month, &dt->day)))
+			return -1;
+
+		dt->weekday = 0;
+		break;
+
+	case FFTIME_DATE_WDMY: {
+		ffstr wd, mon;
+		if (0 > (r = ffstr_matchfmt(str, "%3S, %2u %3S %4u"
+			, &wd, &dt->day, &mon, &dt->year)))
+			return -1;
+
+		char s[4];
+		s[3] = '\0';
+		ffmem_copy(s, mon.ptr, 3);
+		int i = ffarrint32_find((ffuint*)_fftime_months, FF_COUNT(_fftime_months), *(ffuint*)s);
+		if (i < 0)
+			return -1;
+		dt->month = 1 + i;
+
+		ffmem_copy(s, wd.ptr, 3);
+		i = ffarrint32_find((ffuint*)_fftime_week_days, FF_COUNT(_fftime_week_days), *(ffuint*)s);
+		if (i >= 0)
+			dt->weekday = i;
+		break;
+	}
+
+	case 0:
+		return 0; // no date
+
+	default:
+		return -1;
+	}
+
+	ffstr_shift(str, r-1);
+	return 0;
+}
+
+static int _fftime_time_fromstr(ffdatetime *dt, ffstr *str, ffuint flags)
+{
+	int r;
+	ffuint val;
+
+	switch (flags & 0xf0) {
+	case FFTIME_HMS:
+		if (0 > (r = ffstr_matchfmt(str, "%2u:%2u:%2u"
+			, &dt->hour, &dt->minute, &dt->second)))
+			return -1;
+		break;
+
+	case FFTIME_HMS_GMT:
+		if (0 > (r = ffstr_matchfmt(str, "%2u:%2u:%2u GMT"
+			, &dt->hour, &dt->minute, &dt->second)))
+			return -1;
+		break;
+
+	case FFTIME_HMS_MSEC_VAR:
+		if (0 == (r = ffs_toint(str->ptr, str->len, &val, FFS_INT32)))
+			return -1;
+		ffstr_shift(str, r);
+		if (!(str->len != 0 && ffstr_popfront(str) == ':')) {
+			dt->second = val;
+			goto msec;
+		}
+		dt->minute = val;
+
+		if (0 == (r = ffs_toint(str->ptr, str->len, &val, FFS_INT32)))
+			return -1;
+		ffstr_shift(str, r);
+		if (!(str->len != 0 && ffstr_popfront(str) == ':')) {
+			dt->second = val;
+			goto msec;
+		}
+		dt->hour = dt->minute;
+		dt->minute = val;
+
+		if (0 == (r = ffs_toint(str->ptr, str->len, &val, FFS_INT32)))
+			return -1;
+		ffstr_shift(str, r);
+		dt->second = val;
+
+msec:
+		if (str->len != 0 && ffstr_popfront(str) == '.') {
+			if (0 == (r = ffs_toint(str->ptr, str->len, &val, FFS_INT32)))
+				return -1;
+			dt->nanosecond = val * 1000000;
+			ffstr_shift(str, r);
+		}
+		return 0;
+
+	case 0:
+		return 0; // no time
+
+	default:
+		return -1;
+	}
+
+	if (r == 0)
+		str->len = 0;
+	else
+		ffstr_shift(str, r-1);
+	return 0;
+}
+
+/** Convert string to date/time
+flags: enum FFTIME_FMT
+Return the number of processed bytes;
+  0 on error */
+static inline ffsize fftime_fromstr1(ffdatetime *dt, const char *s, ffsize len, ffuint flags)
+{
+	ffdatetime dt2 = {};
+	ffstr str = FFSTR_INITN(s, len);
+
+	if (0 != _fftime_date_fromstr(&dt2, &str, flags))
+		goto end;
+
+	if ((flags & 0x0f) && (flags & 0xf0)) {
+		if (str.len == 0 || ffstr_popfront(&str) != ' ')
+			goto end;
+	}
+
+	if (0 != _fftime_time_fromstr(&dt2, &str, flags))
+		goto end;
+
+	if (str.len != 0)
+		goto end;
+
+	*dt = dt2;
+	return len;
+
+end:
+	return 0;
 }
 
 #endif // _FFBASE_STRFORMAT_H

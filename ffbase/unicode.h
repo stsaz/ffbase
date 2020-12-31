@@ -30,6 +30,7 @@ ffutf8_decode
 ffutf8_valid
 ffutf8_from_utf16
 ffutf8_to_utf16
+ffutf8_from_cp
 ffutf_bom
 Windows-only:
 	ffs_wtou ffs_wtouz ffsz_wtou

@@ -243,24 +243,45 @@ void test_ffstr_matchfmt()
 	xseq(&s2, "b{#c");
 
 	ffstr_setz(&in, "a#q}");
-	xieq(4+1, ffstr_matchfmt(&in, "%S{#%S}", &s1, &s2));
+	xieq(-1, ffstr_matchfmt(&in, "%S{#%S}", &s1, &s2));
 
 	ffstr_setz(&in, "a{#q");
-	xieq(4+1, ffstr_matchfmt(&in, "%S{#%S}", &s1, &s2));
+	xieq(-1, ffstr_matchfmt(&in, "%S{#%S}", &s1, &s2));
 
 	ffstr_setz(&in, "");
-	xieq(1, ffstr_matchfmt(&in, "%S{#%S}", &s1, &s2));
+	xieq(-1, ffstr_matchfmt(&in, "%S{#%S}", &s1, &s2));
 
 	ffstr_setz(&in, "a");
-	xieq(1, ffstr_matchfmt(&in, "", &s1, &s2));
+	xieq(0+1, ffstr_matchfmt(&in, "", &s1, &s2));
 
 	ffstr_setz(&in, "");
 	xieq(0, ffstr_matchfmt(&in, "", &s1, &s2));
 
+// width
+	ffstr_setz(&in, "abcd1234");
+	xieq(0, ffstr_matchfmt(&in, "%4S%S", &s1, &s2));
+	xseq(&s1, "abcd");
+	xseq(&s2, "1234");
+
+// width+u
+	ffuint u;
+	ffstr_setz(&in, "1234abcd");
+	xieq(0, ffstr_matchfmt(&in, "%4u%S", &u, &s2));
+	xieq(1234, u);
+	xseq(&s2, "abcd");
+
+// u
+	ffstr_setz(&in, "1234 abcd");
+	xieq(0, ffstr_matchfmt(&in, "%u %S", &u, &s2));
+	xieq(1234, u);
+	xseq(&s2, "abcd");
+
+// bad format
 	ffstr_setz(&in, "asdf");
 	xieq(-1, ffstr_matchfmt(&in, "%"));
 	xieq(-1, ffstr_matchfmt(&in, "%x"));
 	xieq(-1, ffstr_matchfmt(&in, "%S%S", &s1));
+	xieq(-1, ffstr_matchfmt(&in, "%u%S", &s1));
 }
 
 void test_ffstr_split()

@@ -734,75 +734,116 @@ static inline int ffstr_irmatch(const ffstr *s, const char *suffix, ffsize n)
 /** Match string by a format and extract data to output variables
 
 Format:
-%S       ffstr*
-%%       %
+% [width] S      ffstr*
+% [width] u      ffuint*
+%%               %
+
+Algorithm:
+. compare bytes until '%'
+. get optional width from '%width...'
+. get string chunk
+. convert string to integer if needed
 
 Return 0 if matched;
- >0: no match: return stop index +1 within input string;
- <0: format error */
+ >0: match: return stop index +1 within input string;
+ <0: no match or format error */
 static inline ffssize ffstr_matchfmtv(ffstr *s, const char *fmt, va_list args)
 {
 	ffsize is = 0;
+	ffuint width;
 	for (ffsize i = 0;  fmt[i] != '\0';) {
 		int ch = fmt[i++];
 		if (ch != '%') {
 			if (ch != s->ptr[is])
-				goto end; // mismatch
+				return -1; // mismatch
 			is++;
 			continue;
 		}
 
-		ch = fmt[i++];
-		switch (ch) {
-		case 'S': {
-			ffstr *pstr = va_arg(args, ffstr*);
-			int stop_char;
+		width = 0;
+		for (;;) {
+			ch = fmt[i++];
+			if (!(ch >= '0' && ch <= '9'))
+				break;
+			width = width*10 + (ch-'0');
+		}
+		if (is + width > s->len)
+			return -1; // too small input
 
+		ffstr chunk;
+		switch (ch) {
+		case 'S':
+		case 'u': {
+			if (width != 0) {
+				ffstr_set(&chunk, &s->ptr[is], width);
+				is += width;
+				break;
+			}
+
+			int stop_char;
 			if (fmt[i] == '\0') {
-				ffstr_set(pstr, &s->ptr[is], s->len - is);
-				return 0;
+				width = s->len - is;
+				ffstr_set(&chunk, &s->ptr[is], width);
+				is += width;
+				break;
 
 			} else if (fmt[i] == '%') {
-				if (fmt[i+1] == '%') {
+				if (fmt[i+1] == '%') { // "%S%%"
 					stop_char = '%';
 					i += 2;
 				} else {
-					return -1; // "%S%S" - invalid
+					return -1; // "%S%?" - bad format string
 				}
 
 			} else {
 				stop_char = fmt[i++];
 			}
 
-			pstr->ptr = &s->ptr[is];
-			for (;; is++) {
+			chunk.ptr = &s->ptr[is];
+			for (;;) {
 				if (is == s->len) {
-					goto end; // mismatch
+					return -1; // mismatch
 				}
 				if (s->ptr[is] == stop_char) {
-					pstr->len = &s->ptr[is] - pstr->ptr;
-					is++;
 					break;
 				}
+				is++;
 			}
+			chunk.len = &s->ptr[is] - chunk.ptr;
+			is++;
+			break;
+		}
+		}
+
+		switch (ch) {
+		case 'S': {
+			ffstr *pstr = va_arg(args, ffstr*);
+			*pstr = chunk;
+			break;
+		}
+
+		case 'u': {
+			ffuint *pint = va_arg(args, ffuint*);
+			if (chunk.len == 0
+				|| chunk.len != ffs_toint(chunk.ptr, chunk.len, pint, FFS_INT32))
+				return -1; // bad integer
 			break;
 		}
 
 		case '%':
 			if (s->ptr[is] != '%')
-				goto end; // mismatch
+				return -1; // mismatch
 			is++;
 			continue;
 
 		default:
-			return -1;
+			return -1; // bad format string
 		}
 	}
 
 	if (is == s->len)
 		return 0;
 
-end:
 	return is + 1;
 }
 

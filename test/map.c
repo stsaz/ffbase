@@ -58,6 +58,56 @@ static const char *httphdrs[] = {
 	"X-Forwarded-For",
 };
 
+void test_map_rm()
+{
+	ffmap m = {};
+	ffmap_init(&m, &keyeq);
+
+	/*
+	RM #0			COLL==RM #2
+	OCC1 #1			OCC1 #1
+	COLL==RM #2		COLL==OCC1 #4
+	OCC2 #3			OCC2 #3
+	COLL==OCC1 #4	FREE
+	FREE			FREE
+	*/
+
+	ffmap_add_hash(&m, 0, (void*)0);
+	ffmap_add_hash(&m, 1, (void*)1);
+	ffmap_add_hash(&m, 0, (void*)2);
+	ffmap_add_hash(&m, 3, (void*)3);
+	ffmap_add_hash(&m, 1, (void*)4);
+	ffmap_rm_hash(&m, 0, (void*)0);
+	x(m.data[0].val == (void*)2);
+	x(m.data[1].val == (void*)1);
+	x(m.data[2].val == (void*)4);
+	x(m.data[3].val == (void*)3);
+	ffmap_free(&m);
+
+	ffmap_init(&m, &keyeq);
+
+	/*
+	OCC1 #1			OCC1 #1
+	COLL==RM #2		COLL==OCC1 #4
+	OCC2 #3			OCC2 #3
+	COLL==OCC1 #4	FREE
+	FREE			FREE
+	RM #0			COLL==RM #2
+	*/
+
+	ffmap_add_hash(&m, 15, (void*)0);
+	ffmap_add_hash(&m, 0, (void*)1);
+	ffmap_add_hash(&m, 15, (void*)2);
+	ffmap_add_hash(&m, 2, (void*)3);
+	ffmap_add_hash(&m, 0, (void*)4);
+	ffmap_rm_hash(&m, 15, (void*)0);
+	x(m.data[15].val == (void*)2);
+	x(m.data[0].val == (void*)1);
+	x(m.data[1].val == (void*)4);
+	x(m.data[2].val == (void*)3);
+	ffmap_free(&m);
+}
+
 void test_map()
 {
 	ffmap m = {};
@@ -104,4 +154,6 @@ void test_map()
 	_ffmap_stats(&m, 1);
 
 	ffmap_free(&m);
+
+	test_map_rm();
 }

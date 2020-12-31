@@ -198,6 +198,7 @@ static inline int ffmap_add(ffmap *m, const void *key, ffsize keylen, void *val)
 static inline void _ffmap_normalize(ffmap *m, ffsize end, ffsize irm)
 {
 	ffsize i = end;
+	ffsize begin = (end + 1) & m->mask;
 	struct _ffmap_item *it;
 	for (;;) {
 		i = (i - 1) & m->mask;
@@ -206,7 +207,7 @@ static inline void _ffmap_normalize(ffmap *m, ffsize end, ffsize irm)
 			break; // none of the next elements can be moved
 
 		ffsize ni = IDX_HASH(m, it->hash);
-		if (ni <= irm) {
+		if (((ni - begin) & m->mask) <= ((irm - begin) & m->mask)) {
 			m->data[irm] = *it;
 			irm = i; // repeat the same procedure for this element
 			i = end;

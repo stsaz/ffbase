@@ -22,7 +22,7 @@ typedef struct ffslice {
 GETTERS
 SET
 WALK
-	FFSLICE_WALK_T FFSLICE_RWALK_T
+	FFSLICE_WALK FFSLICE_WALK_T FFSLICE_RWALK_T
 	FFSLICE_FOREACH_T FFSLICE_FOREACH_PTR_T
 COMPARE
 	ffslice_eq ffslice_eqT ffslice_eq2T
@@ -99,6 +99,8 @@ static inline void ffslice_shift(ffslice *a, ffsize by, ffsize elsize)
 /** Walk through array's elements */
 #define FFSLICE_WALK_T(a, it, T) \
 	for (it = (T*)(a)->ptr;  it != ffslice_endT(a, T);  it++)
+#define FFSLICE_WALK(a, it) \
+	FFSLICE_WALK_T(a, it, __typeof__(*it))
 
 /** Reverse walk through array's elements */
 #define FFSLICE_RWALK_T(a, it, T) \

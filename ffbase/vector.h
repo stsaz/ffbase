@@ -6,6 +6,7 @@
 #define _FFBASE_VECTOR_H
 
 #include <ffbase/slice.h>
+#include <ffbase/string.h> // optional
 
 /*
 GETTERS
@@ -22,6 +23,9 @@ ALLOCATE
 	ffvec_free
 COPY
 	ffvec_push ffvec_pushT ffvec_add ffvec_addT ffvec_add2T
+	ffvec_addchar
+	ffvec_addsz
+	ffvec_addfmt
 */
 
 /** Dynamic array container
@@ -211,3 +215,14 @@ static inline ffsize ffvec_add(ffvec *v, const void *src, ffsize n, ffsize elsiz
 
 #define ffvec_addT(v, src, n, T)  ffvec_add(v, src, n, sizeof(T))
 #define ffvec_add2T(v, vsrc, T)  ffvec_add(v, (vsrc)->ptr, (vsrc)->len, sizeof(T))
+
+static inline ffsize ffvec_addchar(ffvec *v, char ch)
+{
+	return ffvec_add(v, &ch, 1, 1);
+}
+
+#define ffvec_addsz(v, sz)  ffvec_add(v, sz, ffsz_len(sz), 1)
+
+#ifdef _FFBASE_STRING_H
+#define ffvec_addfmt(v, fmt, ...)  ffstr_growfmt((ffstr*)(v), &(v)->cap, fmt, ##__VA_ARGS__)
+#endif

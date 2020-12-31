@@ -296,7 +296,7 @@ void test_str_case()
 	{
 	ffstr s1 = FFSTR_INITZ("ASDFqwer");
 	ffstr s2 = {};
-	ffstr_dup2_lower(&s2, &s1);
+	ffstr_dupstr_lower(&s2, &s1);
 	xseq(&s2, "asdfqwer");
 	}
 

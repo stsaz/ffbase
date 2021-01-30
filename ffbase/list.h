@@ -2,12 +2,28 @@
 2020, Simon Zolin
 */
 
+/*
+GET:
+	fflist_sentl
+	fflist_first fflist_last
+	fflist_empty
+	fflist_print
+MODIFY:
+	fflist_init
+	fflist_add fflist_addfront
+	fflist_rm
+	fflist_movefront fflist_moveback
+ITERATE:
+	FFCHAIN_WALK FFCHAIN_RWALK FFCHAIN_FOR
+*/
+
 #pragma once
 
 #ifndef _FFBASE_BASE_H
 #include <ffbase/base.h>
 #endif
 #include <ffbase/chain.h>
+#include <ffbase/string.h> // optional
 
 
 /** Container - root list item used as a sentinel */
@@ -15,6 +31,8 @@ typedef struct fflist {
 	ffchain_item root;
 	ffsize len;
 } fflist;
+
+#define fflist_sentl(list)  (&(list)->root)
 
 /** Initialize container before use */
 static inline void fflist_init(fflist *list)
@@ -67,3 +85,28 @@ static inline void fflist_moveback(fflist *list, ffchain_item *item)
 
 #define FFLIST_WALK(list, it)  FFCHAIN_WALK(&(list)->root, it)
 #define FFLIST_RWALK(list, it)  FFCHAIN_RWALK(&(list)->root, it)
+#define FFLIST_FOR(list, it)  FFCHAIN_FOR(&(list)->root, it)
+
+#ifdef _FFBASE_STRFORMAT_H
+
+/** Get debug info on fflist object
+Return newly allocated string; must free with ffstr_free() */
+static inline ffstr fflist_print(fflist *list)
+{
+	ffstr s = {};
+	ffsize cap = 0;
+	ffstr_growfmt(&s, &cap, "list:%p  len:%L\n"
+		, list, list->len);
+
+	ffuint i = 0;
+	ffchain_item *it;
+	FFLIST_WALK(list, it) {
+		ffstr_growfmt(&s, &cap, "#%2u %p  prev:%p  next:%p\n"
+			, i++, it
+			, it->prev, it->next);
+	}
+
+	return s;
+}
+
+#endif

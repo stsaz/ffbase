@@ -64,4 +64,8 @@ void test_list()
 			x(0);
 		}
 	}
+
+	ffstr s = fflist_print(&ls);
+	ff_printf("%.*s\n", (int)s.len, s.ptr);
+	ffstr_free(&s);
 }

@@ -3,6 +3,12 @@
 */
 
 /*
+ffchain_item_append ffchain_item_prepend
+ffchain_item_unlink
+FFCHAIN_WALK FFCHAIN_RWALK FFCHAIN_FOR
+*/
+
+/*
 Empty chain:
 SENTL <-> SENTL <-> ...
 

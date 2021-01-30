@@ -10,6 +10,8 @@
 
 /*
 GETTERS
+	ffvec_isfull
+	ffvec_unused
 SET
 	ffvec_null ffvec_shift
 COMPARE
@@ -18,8 +20,8 @@ FIND
 	ffvec_find ffvec_findT
 	ffvec_binfind ffvec_binfindT
 ALLOCATE
-	ffvec_alloc ffvec_allocT
-	ffvec_realloc ffvec_reallocT ffvec_growT
+	ffvec_alloc ffvec_allocT ffvec_zalloc ffvec_zallocT
+	ffvec_realloc ffvec_reallocT ffvec_grow ffvec_growT ffvec_growhalf ffvec_growtwiceT
 	ffvec_free
 COPY
 	ffvec_push ffvec_pushT ffvec_add ffvec_addT ffvec_add2T
@@ -116,6 +118,26 @@ static inline void* ffvec_alloc(ffvec *v, ffsize n, ffsize elsize)
 
 #define ffvec_allocT(v, n, T)  ffvec_alloc(v, n, sizeof(T))
 
+/** Allocate and zero data in buffer */
+static inline void* ffvec_zalloc(ffvec *v, ffsize n, ffsize elsize)
+{
+	ffvec_free(v);
+
+	if (n == 0)
+		n = 1;
+	ffsize bytes;
+	if (__builtin_mul_overflow(n, elsize, &bytes))
+		return NULL;
+
+	if (NULL == (v->ptr = ffmem_zalloc(bytes)))
+		return NULL;
+
+	v->cap = n;
+	return v->ptr;
+}
+
+#define ffvec_zallocT(v, n, T)  ffvec_zalloc(v, n, sizeof(T))
+
 /** Grow/allocate memory buffer
 If the object's data is static, allocate new buffer and copy that data.
 Allocate new buffer if length is 0.
@@ -166,10 +188,23 @@ static inline void* ffvec_realloc(ffvec *v, ffsize n, ffsize elsize)
 
 /** Grow memory buffer.
 Return NULL on error (existing memory buffer is preserved if length is not 0) */
-#define ffvec_growT(v, by, T)  ffvec_realloc(v, (v)->len + by, sizeof(T))
+static inline void* ffvec_growhalf(ffvec *v, ffsize by, ffsize elsize)
+{
+	if (v->len + by <= v->cap)
+		return v->ptr;
+	return ffvec_realloc(v, v->len + ffmax(by, v->len/2), elsize);
+}
 
-#define ffvec_growtwiceT(v, by, T) \
-	(((v)->len + by > (v)->cap) ? ffvec_realloc(v, (v)->len + ffmax(by, (v)->len), sizeof(T)) : (v)->ptr)
+static inline void* ffvec_growtwice(ffvec *v, ffsize by, ffsize elsize)
+{
+	if (v->len + by <= v->cap)
+		return v->ptr;
+	return ffvec_realloc(v, v->len + ffmax(by, v->len), elsize);
+}
+#define ffvec_growtwiceT(v, by, T)  ffvec_growtwice(v, by, sizeof(T))
+
+#define ffvec_grow(v, by, elsize)  ffvec_growhalf(v, by, elsize)
+#define ffvec_growT(v, by, T)  ffvec_growhalf(v, by, sizeof(T))
 
 /** Free array's buffer */
 static inline void ffvec_free(ffvec *v)
@@ -191,8 +226,7 @@ static inline void ffvec_free(ffvec *v)
 Return NULL on error, the program will crash when accessing the pointer */
 static inline void* ffvec_push(ffvec *v, ffsize elsize)
 {
-	if (ffvec_isfull(v)
-		&& NULL == ffvec_realloc(v, v->len + 1, elsize))
+	if (NULL == ffvec_grow(v, 1, elsize))
 		return NULL;
 
 	return (char*)v->ptr + v->len++ * elsize;
@@ -204,8 +238,7 @@ static inline void* ffvec_push(ffvec *v, ffsize elsize)
 Return N of elements copied */
 static inline ffsize ffvec_add(ffvec *v, const void *src, ffsize n, ffsize elsize)
 {
-	if (n > ffvec_unused(v)
-		&& NULL == ffvec_realloc(v, v->len + n, elsize))
+	if (NULL == ffvec_grow(v, n, elsize))
 		return 0;
 
 	ffmem_copy(ffslice_end(v, elsize), src, n * elsize);
@@ -225,4 +258,5 @@ static inline ffsize ffvec_addchar(ffvec *v, char ch)
 
 #ifdef _FFBASE_STRING_H
 #define ffvec_addfmt(v, fmt, ...)  ffstr_growfmt((ffstr*)(v), &(v)->cap, fmt, ##__VA_ARGS__)
+#define ffvec_addfmtv(v, fmt, va)  ffstr_growfmtv((ffstr*)(v), &(v)->cap, fmt, va)
 #endif

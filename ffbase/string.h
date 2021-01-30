@@ -536,6 +536,7 @@ do { \
 
 /** Set string: s = ffstr */
 #define ffstr_set2(s, src)  ffstr_set(s, (src)->ptr, (src)->len)
+#define ffstr_setstr(s, src)  ffstr_set(s, (src)->ptr, (src)->len)
 
 /** Set NULL-terminated string: s = sz */
 #define ffstr_setz(s, sz)  ffstr_set(s, sz, ffsz_len(sz))
@@ -742,7 +743,8 @@ static inline int ffstr_irmatch(const ffstr *s, const char *suffix, ffsize n)
 
 Format:
 % [width] S      ffstr*
-% [width] u      ffuint*
+% [width] [x] u  ffuint*
+% [width] [x] U  ffuint64*
 %%               %
 
 Algorithm:
@@ -758,6 +760,7 @@ static inline ffssize ffstr_matchfmtv(ffstr *s, const char *fmt, va_list args)
 {
 	ffsize is = 0;
 	ffuint width;
+	ffuint intflags;
 	for (ffsize i = 0;  fmt[i] != '\0';) {
 		int ch = fmt[i++];
 		if (ch != '%') {
@@ -777,10 +780,17 @@ static inline ffssize ffstr_matchfmtv(ffstr *s, const char *fmt, va_list args)
 		if (is + width > s->len)
 			return -1; // too small input
 
+		intflags = 0;
+		if (ch == 'x') {
+			ch = fmt[i++];
+			intflags = FFS_INTHEX;
+		}
+
 		ffstr chunk;
 		switch (ch) {
 		case 'S':
-		case 'u': {
+		case 'u':
+		case 'U': {
 			if (width != 0) {
 				ffstr_set(&chunk, &s->ptr[is], width);
 				is += width;
@@ -829,10 +839,18 @@ static inline ffssize ffstr_matchfmtv(ffstr *s, const char *fmt, va_list args)
 			break;
 		}
 
-		case 'u': {
-			ffuint *pint = va_arg(args, ffuint*);
+		case 'u':
+		case 'U': {
+			void *pint;
+			if (ch == 'u') {
+				intflags |= FFS_INT32;
+				pint = va_arg(args, ffuint*);
+			} else {
+				intflags |= FFS_INT64;
+				pint = va_arg(args, ffuint64*);
+			}
 			if (chunk.len == 0
-				|| chunk.len != ffs_toint(chunk.ptr, chunk.len, pint, FFS_INT32))
+				|| chunk.len != ffs_toint(chunk.ptr, chunk.len, pint, intflags))
 				return -1; // bad integer
 			break;
 		}

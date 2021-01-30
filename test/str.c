@@ -24,7 +24,8 @@ void test_ffstr_alloc()
 	*ffstr_push(&s) = '0';
 	*ffstr_push(&s) = '1';
 	x(3 == ffstr_add(&s, 5, data+2, 10-2));
-	x(NULL != ffstr_grow(&s, 5));
+	ffsize cap = 5;
+	x(NULL != ffstr_grow(&s, &cap, 5));
 	x(5 == ffstr_addz(&s, 10, data+2+3));
 	xseq(&s, "0123456789");
 
@@ -51,7 +52,7 @@ void test_ffstr_alloc()
 	xseq(&s, data);
 	ffstr_free(&s);
 
-	ffsize cap = 0;
+	cap = 0;
 	xieq(4, ffstr_growadd(&s, &cap, "0123", 4));
 	xseq(&s, "0123");
 	xieq(4, cap);
@@ -71,7 +72,7 @@ void test_ffstr_alloc()
 	xseq(&s, "A");
 	xieq(1, cap);
 	xieq(0, ffstr_addchar(&s, cap, 'A'));
-	x(NULL != ffstr_grow(&s, 1));
+	x(NULL != ffstr_grow(&s, &cap, 1));
 	cap = 2;
 	xieq(1, ffstr_addchar(&s, cap, 'B'));
 	xseq(&s, "AB");

@@ -59,7 +59,7 @@ CONVERT
 	ffstr_lower
 ALLOCATE
 	ffstr_alloc_stack
-	ffstr_alloc ffstr_realloc ffstr_grow ffstr_growtwice
+	ffstr_alloc ffstr_realloc ffstr_grow ffstr_growhalf ffstr_growtwice
 	ffstr_free
 COPY
 	ffstr_copy ffstr_copystr
@@ -73,7 +73,7 @@ ALLOCATE+COPY
 	ffstr_growfmt
 
 ALGORITHMS
-	_ffs_copyz
+	_ffs_copy _ffs_copyz
 	ffs_cmpz ffs_icmp ffs_icmpz ffs_matchz
 	ffs_findstr ffs_ifindstr ffs_findchar ffs_findany
 	ffs_rfindchar ffs_rfindstr ffs_rfindany
@@ -83,6 +83,13 @@ ALGORITHMS
 */
 
 // ALGORITHMS
+
+static inline ffsize _ffs_copy(char *dst, ffsize cap, const char *s, ffsize n)
+{
+	n = ffmin(n, cap);
+	ffmem_copy(dst, s, n);
+	return n;
+}
 
 static inline ffsize _ffs_copyz(char *dst, ffsize cap, const char *sz)
 {
@@ -512,7 +519,7 @@ static inline ffsize _ffsz_nlen(const char *s, ffsize maxlen)
 #define FFSTR_INITZ(s) \
 	{ ffsz_len(s), (char*)(s) }
 
-/** ffstr initializator: ffstr s = FFSTR_INITN("string") */
+/** ffstr initializator: ffstr s = FFSTR_INITN(ptr, n) */
 #define FFSTR_INITN(s, n) \
 	{ n, (char*)(s) }
 
@@ -1101,17 +1108,16 @@ static inline char* ffstr_realloc(ffstr *s, ffsize n)
 	return s->ptr;
 }
 
-/** Grow memory buffer.
-Return NULL on error (existing memory buffer is preserved) */
-#define ffstr_grow(s, by)  ffstr_realloc(s, (s)->len + by)
-
 /** Grow by 'by' bytes, but not less than the half of the currently used size */
 static inline char* ffstr_growhalf(ffstr *s, ffsize *cap, ffsize by)
 {
 	if (s->len + by <= *cap)
 		return s->ptr;
-	*cap = s->len + ffmax(by, s->len / 2);
-	return ffstr_realloc(s, *cap);
+	ffsize newcap = s->len + ffmax(by, s->len / 2);
+	if (NULL == ffstr_realloc(s, newcap))
+		return NULL;
+	*cap = newcap;
+	return s->ptr;
 }
 
 /** Grow by 'by' bytes, but not less than the currently used size */
@@ -1119,9 +1125,16 @@ static inline char* ffstr_growtwice(ffstr *s, ffsize *cap, ffsize by)
 {
 	if (s->len + by <= *cap)
 		return s->ptr;
-	*cap = s->len + ffmax(by, s->len);
-	return ffstr_realloc(s, *cap);
+	ffsize newcap = s->len + ffmax(by, s->len);
+	if (NULL == ffstr_realloc(s, newcap))
+		return NULL;
+	*cap = newcap;
+	return s->ptr;
 }
+
+/** Grow memory buffer.
+Return NULL on error (existing memory buffer is preserved) */
+#define ffstr_grow(s, cap_ptr, by)  ffstr_growhalf(s, cap_ptr, by)
 
 /** Free string buffer */
 static inline void ffstr_free(ffstr *s)
@@ -1256,12 +1269,8 @@ Return N of bytes copied, set 'cap' to the new capacity of reallocated buffer;
  0 on error */
 static inline ffsize ffstr_growadd(ffstr *s, ffsize *cap, const void *src, ffsize n)
 {
-	if (s->len + n > *cap) {
-		ffsize newcap = s->len + n;
-		if (NULL == ffstr_realloc(s, newcap))
-			return 0;
-		*cap = newcap;
-	}
+	if (NULL == ffstr_grow(s, cap, n))
+		return 0;
 
 	ffmem_copy(s->ptr + s->len, src, n);
 	s->len += n;
@@ -1273,24 +1282,16 @@ static inline ffsize ffstr_growadd(ffstr *s, ffsize *cap, const void *src, ffsiz
 
 static inline ffsize ffstr_growaddchar(ffstr *s, ffsize *cap, int ch)
 {
-	if (s->len + 1 > *cap) {
-		ffsize newcap = s->len + 1;
-		if (NULL == ffstr_realloc(s, newcap))
-			return 0;
-		*cap = newcap;
-	}
+	if (NULL == ffstr_grow(s, cap, 1))
+		return 0;
 	s->ptr[s->len++] = ch;
 	return 1;
 }
 
 static inline ffsize ffstr_growaddfill(ffstr *s, ffsize *cap, int ch, ffsize n)
 {
-	if (s->len + n > *cap) {
-		ffsize newcap = s->len + n;
-		if (NULL == ffstr_realloc(s, newcap))
-			return 0;
-		*cap = newcap;
-	}
+	if (NULL == ffstr_grow(s, cap, n))
+		return 0;
 
 	ffmem_fill(s->ptr + s->len, ch, n);
 	s->len += n;
@@ -1312,13 +1313,11 @@ static inline ffsize ffstr_growfmtv(ffstr *s, ffsize *cap, const char *fmt, va_l
 
 	if (n < 0) {
 		FF_ASSERT(newcap < (ffsize)-n);
-		newcap = s->len + -n;
-		if (NULL == ffstr_realloc(s, newcap))
+		if (NULL == ffstr_grow(s, cap, -n))
 			return 0;
-		*cap = newcap;
 
 		va_copy(args, va);
-		n = ffs_formatv(s->ptr + s->len, newcap - s->len, fmt, args);
+		n = ffs_formatv(s->ptr + s->len, *cap - s->len, fmt, args);
 		va_end(args);
 	}
 

@@ -30,6 +30,53 @@ void test_write_bitmap();
 void test_write_charmap();
 
 
+static void test_bits()
+{
+	x(0 == ffbit_find64(0));
+	x(64 == ffbit_find64(1));
+	x(5 == ffbit_find64(0x0880000000000000ULL));
+	x(0 == ffbit_find32(0));
+	x(5 == ffbit_find32(0x08800000));
+	x(32 == ffbit_find32(0x00000001));
+
+	x(0 == ffbit_rfind64(0));
+	x(1 == ffbit_rfind64(1));
+	x(64 == ffbit_rfind64(0x8000000000000000ULL));
+	x(0 == ffbit_rfind32(0));
+	x(32 == ffbit_rfind32(0x80000000));
+	x(1 == ffbit_rfind32(0x00000001));
+
+	ffuint i = 2;
+	x(0 == ffbit_test32(&i, 0));
+	x(0 != ffbit_test32(&i, 1));
+	x(0 == ffbit_test32(&i, 31));
+
+	i = 0;
+	x(0 == ffbit_set32(&i, 0));
+	x(i == 1);
+
+	i = 0;
+	x(0 == ffbit_set32(&i, 31));
+	x(i == 0x80000000);
+
+	i = 0x80000000;
+	x(0 != ffbit_set32(&i, 31));
+	x(i == 0x80000000);
+
+	i = 0x80000000;
+	x(0 != ffbit_reset32(&i, 31));
+	x(i == 0);
+
+	i = 0;
+	x(0 == ffbit_reset32(&i, 0));
+	x(i == 0);
+
+	x(!ffbit_array_test("\x7f\xff\xff\xff", 0));
+	x(ffbit_array_test("\x01\x00\x00\x00", 7));
+	x(ffbit_array_test("\x00\x00\x00\x80", 24));
+	x(!ffbit_array_test("\xff\xff\xff\xfe", 31));
+}
+
 void test_base()
 {
 	x(sizeof(ffbyte) == 1);
@@ -61,19 +108,7 @@ void test_base()
 	x(&t.i2 == FF_PTR(&t, 4));
 	x(&t == FF_STRUCTPTR(struct t, i2, &t + 4));
 
-	x(0 == ffbit_find64(0));
-	x(64 == ffbit_find64(1));
-	x(5 == ffbit_find64(0x0880000000000000ULL));
-	x(0 == ffbit_find32(0));
-	x(5 == ffbit_find32(0x08800000));
-	x(32 == ffbit_find32(0x00000001));
-
-	x(0 == ffbit_rfind64(0));
-	x(1 == ffbit_rfind64(1));
-	x(64 == ffbit_rfind64(0x8000000000000000ULL));
-	x(0 == ffbit_rfind32(0));
-	x(32 == ffbit_rfind32(0x80000000));
-	x(1 == ffbit_rfind32(0x00000001));
+	test_bits();
 
 #ifdef FF_LITTLE_ENDIAN
 	x(0x1234 == ffint_be_cpu16(0x3412));

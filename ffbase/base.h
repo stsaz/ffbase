@@ -30,6 +30,9 @@ Endian conversion:
 Bits:
 	ffbit_find32 ffbit_find64
 	ffbit_rfind32 ffbit_rfind64
+	ffbit_test32 ffbit_array_test
+	ffbit_set32
+	ffbit_reset32
 Integer align:
 	ffint_align_floor2 ffint_align_floor
 	ffint_align_ceil2 ffint_align_ceil
@@ -236,6 +239,43 @@ static inline ffuint ffbit_rfind32(ffuint n)
 static inline ffuint ffbit_rfind64(ffuint64 n)
 {
 	return __builtin_ffsll(n);
+}
+
+/** Return TRUE if bit is set */
+static inline int ffbit_test32(const ffuint *p, ffuint bit)
+{
+	FF_ASSERT(bit < 32);
+	return ((*p & (1U << bit)) != 0);
+}
+
+/** Set bit or return TRUE if it's set already */
+static inline int ffbit_set32(ffuint *p, ffuint bit)
+{
+	FF_ASSERT(bit < 32);
+	if ((*p & (1U << bit)) == 0) {
+		*p |= (1U << bit);
+		return 0;
+	}
+	return 1;
+}
+
+/** Reset bit and return TRUE if it was set */
+static inline int ffbit_reset32(ffuint *p, ffuint bit)
+{
+	FF_ASSERT(bit < 32);
+	if ((*p & (1U << bit)) != 0) {
+		*p &= ~(1U << bit);
+		return 1;
+	}
+	return 0;
+}
+
+/** Return TRUE if a bit is set in bit-array */
+static inline int ffbit_array_test(const void *d, ffsize bit)
+{
+	const ffbyte *b = (ffbyte*)d + bit / 8;
+	bit = 7 - (bit % 8);
+	return !!(*b & (1U << bit));
 }
 
 

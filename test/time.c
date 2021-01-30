@@ -9,6 +9,51 @@
 
 #define STR2(s)  (char*)(s), FFS_LEN(s)
 
+void test_time_fromstr()
+{
+	ffdatetime dt;
+	ffmem_zero_obj(&dt);
+	xieq(19, fftime_fromstr1(&dt, STR2("1970-01-02 04:05:06"), FFTIME_YMD));
+	x(dt.year == 1970);
+	x(dt.month == 1);
+	xieq(dt.day, 2);
+	x(dt.hour == 4);
+	x(dt.minute == 5);
+	x(dt.second == 6);
+	x(dt.weekday == 0);
+
+	ffmem_zero_obj(&dt);
+	xieq(29, fftime_fromstr1(&dt, STR2("Thu, 01 Feb 1972 04:05:06 GMT"), FFTIME_WDMY));
+	x(dt.year == 1972);
+	x(dt.month == 2);
+	x(dt.day == 1);
+	x(dt.hour == 4);
+	x(dt.minute == 5);
+	x(dt.second == 6);
+	x(dt.weekday == 4);
+
+	ffmem_zero_obj(&dt);
+	xieq(12, fftime_fromstr1(&dt, STR2("01:02:03.456"), FFTIME_HMS_MSEC_VAR));
+	x(dt.hour == 1);
+	x(dt.minute == 2);
+	x(dt.second == 3);
+	x(dt.nanosecond == 456000000);
+
+	ffmem_zero_obj(&dt);
+	xieq(6, fftime_fromstr1(&dt, STR2("03.456"), FFTIME_HMS_MSEC_VAR));
+	x(dt.hour == 0);
+	x(dt.minute == 0);
+	x(dt.second == 3);
+	x(dt.nanosecond == 456000000);
+
+	ffmem_zero_obj(&dt);
+	xieq(5, fftime_fromstr1(&dt, STR2("02:03"), FFTIME_HMS_MSEC_VAR));
+	x(dt.hour == 0);
+	x(dt.minute == 2);
+	x(dt.second == 3);
+	x(dt.nanosecond == 0);
+}
+
 void test_time()
 {
 	fftime t = {}, t2;
@@ -80,23 +125,7 @@ void test_time()
 	s.len = fftime_tostr1(&dt, buf, sizeof(buf), FFTIME_WDMY);
 	xseq(&s, "Thu, 01 Jan 1970 00:00:00 GMT");
 
-	xieq(19, fftime_fromstr1(&dt, STR2("1970-01-02 04:05:06"), FFTIME_YMD));
-	x(dt.year == 1970);
-	x(dt.month == 1);
-	xieq(dt.day, 2);
-	x(dt.hour == 4);
-	x(dt.minute == 5);
-	x(dt.second == 6);
-	x(dt.weekday == 0);
-
-	xieq(29, fftime_fromstr1(&dt, STR2("Thu, 01 Feb 1972 04:05:06 GMT"), FFTIME_WDMY));
-	x(dt.year == 1972);
-	x(dt.month == 2);
-	x(dt.day == 1);
-	x(dt.hour == 4);
-	x(dt.minute == 5);
-	x(dt.second == 6);
-	x(dt.weekday == 4);
+	test_time_fromstr();
 
 	// test each day since 1970
 	ffuint64 cursec = FFTIME_1970_SECONDS;

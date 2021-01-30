@@ -364,19 +364,21 @@ static int _fftime_time_fromstr(ffdatetime *dt, ffstr *str, ffuint flags)
 		if (0 == (r = ffs_toint(str->ptr, str->len, &val, FFS_INT32)))
 			return -1;
 		ffstr_shift(str, r);
-		if (!(str->len != 0 && ffstr_popfront(str) == ':')) {
+		if (!(str->len != 0 && str->ptr[0] == ':')) {
 			dt->second = val;
 			goto msec;
 		}
+		ffstr_shift(str, 1);
 		dt->minute = val;
 
 		if (0 == (r = ffs_toint(str->ptr, str->len, &val, FFS_INT32)))
 			return -1;
 		ffstr_shift(str, r);
-		if (!(str->len != 0 && ffstr_popfront(str) == ':')) {
+		if (!(str->len != 0 && str->ptr[0] == ':')) {
 			dt->second = val;
 			goto msec;
 		}
+		ffstr_shift(str, 1);
 		dt->hour = dt->minute;
 		dt->minute = val;
 

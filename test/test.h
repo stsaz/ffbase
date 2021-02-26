@@ -67,16 +67,31 @@ static inline void test_check_str_sz(int ok, ffsize slen, const char *s, const c
 	test_check_str_sz(ffstr_eqz(&__s, sz), __s.len, __s.ptr, sz, __FILE__, __LINE__, __func__); \
 })
 
-/** Read 4k file into a new buffer */
-static inline int file_readall(ffstr *a, const char *fn)
+/** Read file data into a new buffer */
+static inline int file_readall(const char *fn, ffstr *dst)
 {
 	int f = open(fn, O_RDONLY);
 	if (f < 0)
 		return -1;
-	ffstr_alloc(a, 4*1024);
-	a->len = read(f, a->ptr, 4*1024);
+
+	int r = -1;
+	struct stat info;
+	if (0 != fstat(f, &info))
+		goto end;
+	ffuint64 sz = info.st_size;
+
+	if (NULL == ffstr_realloc(dst, sz))
+		goto end;
+
+	if (sz != (ffsize)read(f, dst->ptr, sz))
+		goto end;
+
+	dst->len = sz;
+	r = 0;
+
+end:
 	close(f);
-	return 0;
+	return r;
 }
 
 #define FFARRAY_FOREACH(static_array, it) \

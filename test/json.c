@@ -133,7 +133,7 @@ void test_json_rw()
 	jwp.flags |= FFJSONW_FPRETTY_TABS;
 
 	ffstr s = {}, s2, c;
-	x(0 == file_readall(&s, "./data/test.json"));
+	x(0 == file_readall("./data/test.json", &s));
 	x(s.len != 0);
 	s2 = s;
 
@@ -207,7 +207,7 @@ void test_json_rw()
 	ffstr_free(&s2);
 
 	ffstr tc = {};
-	x(0 == file_readall(&tc, "./data/test-compressed.json"));
+	x(0 == file_readall("./data/test-compressed.json", &tc));
 	if (!ffslice_eq2T((ffslice*)&jw.buf, &tc, char)) {
 		write(2, jw.buf.ptr, jw.buf.len);
 		x(0);
@@ -215,7 +215,7 @@ void test_json_rw()
 	ffstr_free(&tc);
 
 	ffstr tp = {};
-	x(0 == file_readall(&tp, "./data/test-pretty.json"));
+	x(0 == file_readall("./data/test-pretty.json", &tp));
 	if (!ffslice_eq2T((ffslice*)&jwp.buf, &tp, char)) {
 		write(2, jwp.buf.ptr, jwp.buf.len);
 		x(0);
@@ -303,7 +303,7 @@ void test_json_scheme()
 {
 	ffstr err = {};
 	ffstr d = {};
-	x(0 == file_readall(&d, "./data/object.json"));
+	x(0 == file_readall("./data/object.json", &d));
 	ffstr s = d;
 
 	jstruct o = {};

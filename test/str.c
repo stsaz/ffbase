@@ -12,6 +12,47 @@ void test_str_conv();
 void test_ffstr_fmt();
 
 
+void test_ffstr_rm()
+{
+	ffstr s;
+	const char *data = "01234";
+	ffstr_setz(&s, data);
+	x(ffstr_popfront(&s) == '0');
+	xseq(&s, data+1);
+
+	ffstr_setz(&s, "  0  ");
+	ffstr_skipchar(&s, ' ');
+	xseq(&s, "0  ");
+
+	ffstr_setz(&s, " ,. 0 ,. ");
+	ffstr skip = FFSTR_INIT(" .,");
+	ffstr_skipany(&s, &skip);
+	xseq(&s, "0 ,. ");
+
+	ffstr_setz(&s, "  0  ");
+	ffstr_rskipchar(&s, ' ');
+	xseq(&s, "  0");
+
+	ffstr_setz(&s, "  0  ");
+	ffstr_rskipchar1(&s, ' ');
+	xseq(&s, "  0 ");
+
+	ffstr_setz(&s, "  0 ,. ");
+	ffstr_setz(&skip, " .,");
+	ffstr_rskipany(&s, &skip);
+	xseq(&s, "  0");
+
+	ffstr_setz(&s, " \n 0  \t ");
+	ffstr_trimwhite(&s);
+	xseq(&s, "0");
+
+	char d[8];
+	ffmem_copy(d, "1234567", 7);
+	ffstr_set(&s, d, 7);
+	ffstr_erase_left(&s, 3);
+	xseq(&s, "4567");
+}
+
 void test_ffstr_alloc()
 {
 	const char *data = "0123456789";
@@ -446,37 +487,7 @@ void test_str()
 	x(*ffstr_last(&s) == '9');
 	x(ffstr_end(&s) == data + 10);
 
-	x(ffstr_popfront(&s) == '0');
-	xseq(&s, data + 1);
-
-	ffstr_setz(&s, "  0  ");
-	ffstr_skipchar(&s, ' ');
-	xseq(&s, "0  ");
-
-	ffstr_setz(&s, " ,. 0 ,. ");
-	ffstr skip = FFSTR_INIT(" .,");
-	ffstr_skipany(&s, &skip);
-	xseq(&s, "0 ,. ");
-
-	ffstr_setz(&s, "  0  ");
-	ffstr_rskipchar(&s, ' ');
-	xseq(&s, "  0");
-
-	ffstr_setz(&s, "  0  ");
-	ffstr_rskipchar1(&s, ' ');
-	xseq(&s, "  0 ");
-
-	ffstr_setz(&s, "  0 ,. ");
-	ffstr_setz(&skip, " .,");
-	ffstr_rskipany(&s, &skip);
-	xseq(&s, "  0");
-
-	ffstr_setz(&s, " \n 0  \t ");
-	ffstr_trimwhite(&s);
-	xseq(&s, "0");
-
-	ffstr_null(&s);
-
+	test_ffstr_rm();
 	test_ffstr_alloc();
 	test_ffstr_cmp();
 	test_ffstr_match();

@@ -120,6 +120,9 @@ void test_base()
 	x(0x12345678 == ffint_be_cpu32(0x12345678));
 #endif
 
+	char *p = "\x01\x02\x03";
+	x(0x010203 == ffint_be_cpu24_ptr(p));
+
 	x(0x3412 == ffint_bswap16(0x1234));
 	x(0x78563412 == ffint_bswap32(0x12345678));
 	x(0x12efcdab78563412 == ffint_bswap64(0x12345678abcdef12));

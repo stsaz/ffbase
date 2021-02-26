@@ -211,6 +211,11 @@ e.g. "0x11223344" <-> "0x44332211" */
 #define ffint_be_cpu16_ptr(ptr)  ffint_be_cpu16(*(ffushort*)(ptr))
 #define ffint_be_cpu32_ptr(ptr)  ffint_be_cpu32(*(ffuint*)(ptr))
 #define ffint_be_cpu64_ptr(ptr)  ffint_be_cpu64(*(ffuint64*)(ptr))
+static inline ffuint ffint_be_cpu24_ptr(const void *p)
+{
+	const ffbyte *b = (ffbyte*)p;
+	return ((ffuint)b[0] << 16) | ((ffuint)b[1] << 8) | (ffuint)b[2];
+}
 
 
 /** Find the most significant 1-bit

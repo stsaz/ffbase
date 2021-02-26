@@ -50,6 +50,7 @@ SKIP
 	ffstr_skipchar ffstr_skipany
 	ffstr_rskipchar ffstr_rskipchar1 ffstr_rskipany
 	ffstr_trimwhite
+	ffstr_erase_left
 SPLIT
 	ffstr_split ffstr_splitby ffstr_rsplitby ffstr_splitbyany
 CONVERT
@@ -1006,6 +1007,14 @@ static inline void ffstr_trimwhite(ffstr *s)
 	ffstr ws = FFSTR_INIT(" \t\r\n");
 	ffstr_skipany(s, &ws);
 	ffstr_rskipany(s, &ws);
+}
+
+/** Delete data at the beginning.  Move remaining data to the left. */
+static inline void ffstr_erase_left(ffstr *s, ffsize n)
+{
+	FF_ASSERT(n <= s->len);
+	s->len -= n;
+	ffmem_move(s->ptr, &s->ptr[n], s->len);
 }
 
 

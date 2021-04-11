@@ -246,6 +246,7 @@ static inline ffsize ffvec_add(ffvec *v, const void *src, ffsize n, ffsize elsiz
 	return n;
 }
 
+#define ffvec_add2(v, vsrc, elsize)  ffvec_add(v, (vsrc)->ptr, (vsrc)->len, elsize)
 #define ffvec_addT(v, src, n, T)  ffvec_add(v, src, n, sizeof(T))
 #define ffvec_add2T(v, vsrc, T)  ffvec_add(v, (vsrc)->ptr, (vsrc)->len, sizeof(T))
 

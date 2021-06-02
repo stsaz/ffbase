@@ -493,6 +493,14 @@ static inline void* ffmem_copy(void *dst, const void *src, ffsize len)
 	return (char*)dst + len;
 }
 
+/** Return N of bytes copied */
+static inline ffsize ffmem_ncopy(void *dst, ffsize cap, const void *src, ffsize len)
+{
+	len = ffmin(len, cap);
+	memcpy(dst, src, len);
+	return len;
+}
+
 /** Safely copy data (overlapping regions) */
 #define ffmem_move(dst, src, len)  (void) memmove(dst, src, len)
 

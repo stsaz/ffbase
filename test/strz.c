@@ -70,6 +70,14 @@ void test_strz()
 	xieq(4, ffsz_copyz(buf, 4, "12345"));
 	x(ffsz_eq(buf, "123"));
 
+	ffmem_zero_obj(buf);
+	ffsz_copyn(buf, 4, "123456", 2);
+	x(ffsz_eq(buf, "12"));
+
+	ffmem_zero_obj(buf);
+	ffsz_copyn(buf, 4, "123456", 6);
+	x(ffsz_eq(buf, "123"));
+
 	xieq(4, ffsz_findchar("asdf1234", '1'));
 	xieq(-1, ffsz_findchar("asdf1234", '\0'));
 	xieq(-1, ffsz_findchar("asdf1234", '5'));

@@ -3,6 +3,19 @@
 */
 
 /*
+ffutf8_encode
+ffutf8_decode
+ffutf8_valid
+ffutf8_from_utf16
+ffutf8_to_utf16
+ffutf8_from_cp
+ffutf_bom
+Windows-only:
+	ffs_wtou ffs_wtouz ffsz_wtou
+	ffsz_utow
+*/
+
+/*
 UTF-8:
 U+0000..U+007F      0xxxxxxx
 U+0080..U+07FF      110xxxxx 10xxxxxx
@@ -23,19 +36,6 @@ U+E000..U+FFFF      XX XX
 #ifndef _FFBASE_BASE_H
 #include <ffbase/base.h>
 #endif
-
-/*
-ffutf8_encode
-ffutf8_decode
-ffutf8_valid
-ffutf8_from_utf16
-ffutf8_to_utf16
-ffutf8_from_cp
-ffutf_bom
-Windows-only:
-	ffs_wtou ffs_wtouz ffsz_wtou
-	ffsz_utow
-*/
 
 enum FFUNICODE {
 	FFUNICODE_UTF8,

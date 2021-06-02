@@ -10,7 +10,7 @@
 #include <ffbase/string.h>
 
 /*
-ffsz_copyz
+ffsz_copyz ffsz_copyn
 ffsz_dupn ffsz_dup
 ffsz_findchar
 ffsz_match ffsz_matchz
@@ -35,6 +35,16 @@ static inline ffsize ffsz_copyz(char *dst, ffsize cap, const char *sz)
 	}
 	dst[i] = '\0';
 	return i + 1;
+}
+
+static inline ffsize ffsz_copyn(char *dst, ffsize cap, const char *src, ffsize n)
+{
+	if (cap == 0)
+		return 0;
+	n = ffmin(n, cap - 1);
+	ffmem_copy(dst, src, n);
+	dst[n] = '\0';
+	return n + 1;
 }
 
 /** Allocate memory and copy string */

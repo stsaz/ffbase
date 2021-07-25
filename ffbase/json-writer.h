@@ -71,8 +71,13 @@ static inline int ffjsonw_addstrz(ffjsonw *j, const char *sz)
 /** Add key and value */
 static inline int ffjsonw_addpair(ffjsonw *j, const ffstr *key, const ffstr *val)
 {
-	return ffjsonw_add(j, FFJSON_TOBJ_KEY, key);
-	return ffjsonw_add(j, FFJSON_TSTR, val);
+	int r;
+	if ((r = ffjsonw_add(j, FFJSON_TOBJ_KEY, key)) < 0)
+		return r;
+	int n = r;
+	if ((r = ffjsonw_add(j, FFJSON_TSTR, val)) < 0)
+		return r;
+	return n + r;
 }
 
 /** Add key and value NULL-terminated string */
@@ -81,8 +86,7 @@ static inline int ffjsonw_addpairz(ffjsonw *j, const char *key, const char *val)
 	ffstr k, v;
 	ffstr_setz(&k, key);
 	ffstr_setz(&v, val);
-	return ffjsonw_add(j, FFJSON_TOBJ_KEY, &k);
-	return ffjsonw_add(j, FFJSON_TSTR, &v);
+	return ffjsonw_addpair(j, &k, &v);
 }
 
 /** Add null */

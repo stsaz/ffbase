@@ -11,7 +11,7 @@
 
 /*
 ffsz_copyz ffsz_copyn
-ffsz_dupn ffsz_dup
+ffsz_dupn ffsz_dup ffsz_dupstr
 ffsz_findchar
 ffsz_match ffsz_matchz
 ffszarr_find ffszarr_ifind
@@ -56,6 +56,11 @@ static inline char* ffsz_dupn(const char *src, ffsize n)
 	ffmem_copy(s, src, n);
 	s[n] = '\0';
 	return s;
+}
+
+static inline char* ffsz_dupstr(const ffstr *src)
+{
+	return ffsz_dupn(src->ptr, src->len);
 }
 
 /** Allocate memory and copy string */

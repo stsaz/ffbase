@@ -262,7 +262,11 @@ static inline ffssize ffs_ifindstr(const char *s, ffsize len, const char *search
 	for (ffsize i = 0;  i != len;  i++) {
 		if (search_len > len - i)
 			break;
-		if ((s[i] | 0x20) == c0
+
+		int ci = s[i];
+		if (ci >= 'A' && ci <= 'Z')
+			ci |= 0x20;
+		if (ci == c0
 			&& 0 == ffs_icmp(&s[i], search, search_len))
 			return i;
 	}

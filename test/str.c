@@ -197,7 +197,11 @@ void test_ffstr_cmp()
 	x(0 == ffstr_icmp(&s, "abcdefghij", 10));
 	x(0 == ffstr_icmp(&s, "ABCDEFGHIJ", 10));
 	x(0 == ffstr_icmp2(&s, &s));
+}
 
+void test_ffstr_find()
+{
+	ffstr s = FFSTR_INITZ("abcdeFGHIJ");
 	x(4 == ffstr_findchar(&s, 'e'));
 	x(4 == ffstr_rfindchar(&s, 'e'));
 
@@ -215,6 +219,7 @@ void test_ffstr_cmp()
 	x(4 == ffstr_ifindz(&s, "eFG"));
 	x(0 == ffstr_ifind2(&s, &s));
 	x(-1 == ffstr_ifindz(&s, "GHI#"));
+	xieq(4, ffs_ifindstr("asdf_qwer", 9, "_", 1));
 
 	xieq(7, ffstr_findany(&s, "JH", 2));
 	xieq(7, ffstr_findanyz(&s, "JHx"));
@@ -490,6 +495,7 @@ void test_str()
 	test_ffstr_rm();
 	test_ffstr_alloc();
 	test_ffstr_cmp();
+	test_ffstr_find();
 	test_ffstr_match();
 	test_ffstr_split();
 	test_str_conv();

@@ -19,6 +19,9 @@ void test_strz()
 
 	x(ffsz_eq("s123", "s123"));
 	x(0 == ffsz_cmp("s123", "s123"));
+	x(0 == ffsz_icmp("A123b", "a123B"));
+	x(ffsz_icmp("A123c", "a123B") > 0);
+	x(ffsz_icmp("A123b", "a123C") < 0);
 
 	x(ffsz_match("key=val", "key", 3));
 	x(ffsz_match("key=val", "key=val", 7));

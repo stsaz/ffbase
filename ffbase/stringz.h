@@ -13,6 +13,7 @@
 ffsz_copyz ffsz_copyn
 ffsz_dupn ffsz_dup ffsz_dupstr
 ffsz_findchar
+ffsz_cmp ffsz_icmp ffsz_eq
 ffsz_match ffsz_matchz
 ffszarr_find ffszarr_ifind
 ffszarr_findsorted ffszarr_ifindsorted
@@ -69,6 +70,10 @@ static inline char* ffsz_dup(const char *sz)
 	return ffsz_dupn(sz, ffsz_len(sz));
 }
 
+/** Compare
+Return 0 if equal
+ <0: sz < cmpz;
+ >0: sz > cmpz */
 static inline int ffsz_cmp(const char *sz, const char *cmpz)
 {
 	ffsize i = 0;
@@ -77,6 +82,33 @@ static inline int ffsz_cmp(const char *sz, const char *cmpz)
 			return sz[i] - cmpz[i];
 	} while (sz[i++] != '\0');
 	return 0;
+}
+
+/** Compare (case-insensitive)
+Return 0 if equal
+ <0: sz < cmpz;
+ >0: sz > cmpz */
+static inline int ffsz_icmp(const char *sz, const char *cmpz)
+{
+	for (ffsize i = 0;  ;  i++) {
+		int cl = sz[i];
+		int cr = cmpz[i];
+
+		if (cl != cr) {
+			if (cl >= 'A' && cl <= 'Z')
+				cl |= 0x20;
+			if (cr >= 'A' && cr <= 'Z')
+				cr |= 0x20;
+			if (cl != cr) {
+				if (cl < cr)
+					return -1; // s < sz
+				return 1; // s > sz
+			}
+
+		} else if (cl == '\0') {
+			return 0; // s == sz
+		}
+	}
 }
 
 static inline int ffsz_eq(const char *sz, const char *cmpz)

@@ -146,8 +146,8 @@ Don't use any standard functions directly, otherwise it will be impossible to su
 
 ### Test
 
-	make
 	cd test
+	make
 	./fftest all
 
 on FreeBSD:
@@ -156,13 +156,13 @@ on FreeBSD:
 
 on Linux for Windows:
 
-	make OS=win CPREFIX=x86_64-w64-mingw32-
+	make OS=windows
 
 To another directory:
 
 	mkdir /tmp/ffbase
 	cd /tmp/ffbase
-	make -Rrf MYSRC/ffbase/Makefile SRCDIR=MYSRC/ffbase
+	make -Rrf MYSRC/ffbase/test/Makefile SRCDIR=MYSRC/ffbase
 	cp -ruv MYSRC/ffbase/test/data /tmp/ffbase
 	./fftest all
 
@@ -186,4 +186,4 @@ I started FFOS and FF libraries in 2013, and since then they've grown and become
 
 1. It's convenient to just copy several .h files into another project.
 2. There's no need to include its Makefile when using ffbase.
-3. ffbase's functionality is restricted to base containers and algorithms, so it won't become too large.
+3. ffbase's functionality is limited to base containers and algorithms, so it won't become too large.

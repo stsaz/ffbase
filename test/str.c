@@ -58,8 +58,10 @@ void test_ffstr_alloc()
 	const char *data = "0123456789";
 	ffstr s = {};
 
+#ifdef FFBASE_DEBUG
 	x(NULL != ffstr_alloc_stack(&s, 10));
 	ffstr_null(&s);
+#endif
 
 	x(NULL != ffstr_alloc(&s, 5));
 	*ffstr_push(&s) = '0';

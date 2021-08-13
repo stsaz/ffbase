@@ -65,7 +65,7 @@ void test_strz()
 		"e",
 	};
 	xieq(-1, ffcharr_findsorted(sss, FF_COUNT(sss), sizeof(sss[0]), "z", 1));
-	for (uint i = 0;  i != FF_COUNT(sss);  i++) {
+	for (ffuint i = 0;  i != FF_COUNT(sss);  i++) {
 		xieq(i, ffcharr_findsorted(sss, FF_COUNT(sss), sizeof(sss[0]), sss[i], ffmin(ffsz_len(sss[i]), 4)));
 	}
 

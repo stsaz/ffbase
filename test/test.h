@@ -94,5 +94,23 @@ end:
 	return r;
 }
 
+/** Create (overwrite) file from buffer */
+static inline int file_writeall(const char *fn, const void *data, ffsize len)
+{
+	int rc = -1;
+	int f;
+	if (-1 == (f = open(fn, O_CREAT | O_EXCL | O_TRUNC | O_WRONLY, 0666)))
+		return -1;
+
+	if (len != (ffsize)write(f, data, len))
+		goto end;
+
+	rc = 0;
+
+end:
+	rc |= close(f);
+	return rc;
+}
+
 #define FFARRAY_FOREACH(static_array, it) \
 	for (it = static_array;  it != static_array + FF_COUNT(static_array);  it++)

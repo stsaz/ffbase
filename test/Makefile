@@ -1,99 +1,67 @@
 # ffbase makefile
 # 2020, Simon Zolin
 
-# set OS
-ifndef $(OS)
-	uname := $(shell uname)
-	ifeq ($(uname),Linux)
-		OS := linux
-	else ifeq ($(uname),FreeBSD)
-		OS := freebsd
-	else ifeq ($(uname),Darwin)
-		OS := apple
-	else
-		OS := win
-	endif
-endif
-
-# set compiler
-CPREFIX :=
-# CPREFIX := x86_64-w64-mingw32-
-COMPILER := gcc
-ifeq ($(OS),freebsd)
-	COMPILER := clang
-endif
-ifeq ($(OS),apple)
-	COMPILER := clang
-endif
-C := $(CPREFIX)gcc -c
-CXX := $(CPREFIX)g++ -c
-LINKER := $(CPREFIX)gcc
-ifeq ($(COMPILER),clang)
-	C := clang -c
-	CXX := clang++ -c
-	LINKER := clang
-endif
-
-# set utils
-RM := rm -f
-
-SRCDIR := .
+SRCDIR := ..
 HDR := $(wildcard $(SRCDIR)/ffbase/*.h)
 
-TEST_OUTDIR := $(SRCDIR)/test
+include $(SRCDIR)/test/makeconf
 
-TESTER := $(TEST_OUTDIR)/fftest
-ifeq ($(OS),win)
-	TESTER := $(TEST_OUTDIR)/fftest.exe
-endif
+TESTER := ./fftest$(DOTEXE)
 
 TEST_OBJ := \
-	$(TEST_OUTDIR)/main.o \
-	$(TEST_OUTDIR)/mem.o \
+	./main.o \
+	./mem.o \
 	\
-	$(TEST_OUTDIR)/slice.o \
-	$(TEST_OUTDIR)/vector.o \
-	$(TEST_OUTDIR)/sort.o \
+	./slice.o \
+	./vector.o \
+	./sort.o \
 	\
-	$(TEST_OUTDIR)/str.o \
-	$(TEST_OUTDIR)/strz.o \
-	$(TEST_OUTDIR)/str-conv.o \
-	$(TEST_OUTDIR)/str-fmt.o \
-	$(TEST_OUTDIR)/unicode.o \
+	./str.o \
+	./strz.o \
+	./str-conv.o \
+	./str-fmt.o \
+	./unicode.o \
 	\
-	$(TEST_OUTDIR)/list.o \
-	$(TEST_OUTDIR)/rbtree.o \
-	$(TEST_OUTDIR)/map.o \
-	$(TEST_OUTDIR)/ring.o \
+	./list.o \
+	./rbtree.o \
+	./map.o \
+	./ring.o \
 	\
-	$(TEST_OUTDIR)/atomic.o \
-	$(TEST_OUTDIR)/lock.o \
+	./atomic.o \
+	./lock.o \
 	\
-	$(TEST_OUTDIR)/json.o \
+	./json.o \
 	\
-	$(TEST_OUTDIR)/time.o \
-	$(TEST_OUTDIR)/compat.o
+	./time.o \
+	./compat.o
+HDR += $(SRCDIR)/test/test.h $(SRCDIR)/test/Makefile
 
 all: $(TESTER)
 
 clean:
 	$(RM) $(TESTER) $(TEST_OBJ)
 
-TEST_CFLAGS := -I$(SRCDIR) -Wall -Wextra -Werror -fvisibility=hidden
-TEST_CFLAGS += -DFF_DEBUG -O0 -g
+TEST_CFLAGS := -I$(SRCDIR) \
+	-Wall -Wextra -Wno-return-local-addr -Wno-stringop-overflow \
+	-DFF_DEBUG -g
+ifeq "$(OPT)" "0"
+	TEST_CFLAGS += -O0 -DFFBASE_DEBUG
+else
+	TEST_CFLAGS += -O3
+endif
 TEST_CXXFLAGS := $(TEST_CFLAGS)
 TEST_CFLAGS += -std=gnu99
 # TEST_CFLAGS += -fsanitize=address
 # TEST_LDFLAGS += -fsanitize=address
 
-$(TEST_OUTDIR)/str.o: $(SRCDIR)/test/str.c $(HDR) $(SRCDIR)/test/test.h $(SRCDIR)/test/Makefile
+./str.o: $(SRCDIR)/test/str.c $(HDR)
 	$(C) -Wno-array-bounds $(TEST_CFLAGS) $< -o $@
 
-$(TEST_OUTDIR)/%.o: $(SRCDIR)/test/%.c $(HDR) $(SRCDIR)/test/test.h $(SRCDIR)/test/Makefile
+./%.o: $(SRCDIR)/test/%.c $(HDR)
 	$(C) $(TEST_CFLAGS) $< -o $@
 
-$(TEST_OUTDIR)/%.o: $(SRCDIR)/test/%.cpp $(HDR) $(SRCDIR)/test/test.h $(SRCDIR)/test/Makefile
+./%.o: $(SRCDIR)/test/%.cpp $(HDR)
 	$(CXX) $(TEST_CXXFLAGS) $< -o $@
 
 $(TESTER): $(TEST_OBJ)
-	$(LINKER) $(TEST_LDFLAGS) $+ -o $@
+	$(LINK) $(TEST_LDFLAGS) $+ -o $@

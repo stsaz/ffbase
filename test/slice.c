@@ -15,8 +15,10 @@ void test_ffslice_alloc_add()
 	x(NULL == ffslice_allocT(&a, 0xffffffffffffffff / 8 + 1, void*)); // multiply overflow
 #endif
 
+#ifdef FFBASE_DEBUG
 	x(NULL != ffslice_alloc_stack(&a, 10, 1));
 	ffslice_null(&a);
+#endif
 
 	x(NULL != ffslice_zallocT(&a, 10, char));
 	static char empty[10];

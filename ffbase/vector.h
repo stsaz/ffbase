@@ -234,6 +234,11 @@ static inline void* ffvec_push(ffvec *v, ffsize elsize)
 
 #define ffvec_pushT(v, T)  ((T*)ffvec_push(v, sizeof(T)))
 
+static inline void* _ffvec_push(ffvec *v, ffsize elsize)
+{
+	return (char*)v->ptr + v->len++ * elsize;
+}
+
 /** Add data into array's tail: a[len..] = src[]
 Return N of elements copied */
 static inline ffsize ffvec_add(ffvec *v, const void *src, ffsize n, ffsize elsize)

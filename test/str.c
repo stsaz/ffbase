@@ -21,7 +21,7 @@ void test_ffstr_rm()
 	xseq(&s, data+1);
 
 	ffstr_setz(&s, "  0  ");
-	ffstr_skipchar(&s, ' ');
+	xieq(2, ffstr_skipchar(&s, ' '));
 	xseq(&s, "0  ");
 
 	ffstr_setz(&s, " ,. 0 ,. ");

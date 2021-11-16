@@ -528,7 +528,7 @@ static inline ffsize _ffsz_nlen(const char *s, ffsize maxlen)
 
 /** ffstr initializator: ffstr s = FFSTR_INIT2(ffstr) */
 #define FFSTR_INITSTR(str) \
-	{ (str)->len, (str)->ptr }
+	{ (str)->len, (char*)(str)->ptr }
 
 /** Set data pointer and length: s = {data, length} */
 #define ffstr_set(s, data, n) \
@@ -796,12 +796,14 @@ static inline ffssize ffstr_rfindany(const ffstr *s, const char *anyof, ffsize n
 Return -1 if not found */
 #define ffstr_find(s, search, search_len)  ffs_findstr((s)->ptr, (s)->len, search, search_len)
 #define ffstr_find2(s, search)  ffs_findstr((s)->ptr, (s)->len, (search)->ptr, (search)->len)
+#define ffstr_findstr(s, search)  ffs_findstr((s)->ptr, (s)->len, (search)->ptr, (search)->len)
 #define ffstr_findz(s, sz)  ffs_findstr((s)->ptr, (s)->len, sz, ffsz_len(sz))
 
 /** Find substring (case-insensitive)
 Return -1 if not found */
 #define ffstr_ifind(s, search, search_len)  ffs_ifindstr((s)->ptr, (s)->len, search, search_len)
 #define ffstr_ifind2(s, search)  ffs_ifindstr((s)->ptr, (s)->len, (search)->ptr, (search)->len)
+#define ffstr_ifindstr(s, search)  ffs_ifindstr((s)->ptr, (s)->len, (search)->ptr, (search)->len)
 #define ffstr_ifindz(s, sz)  ffs_ifindstr((s)->ptr, (s)->len, sz, ffsz_len(sz))
 
 /** Find substring from the end
@@ -814,11 +816,12 @@ Return the position from the beginning
 // Note: don't use these functions for the string with allocated buffer.
 
 /** Remove bytes from the beginning */
-static inline void ffstr_skipchar(ffstr *s, int skip_char)
+static inline ffsize ffstr_skipchar(ffstr *s, int skip_char)
 {
 	ffsize i = ffs_skipchar(s->ptr, s->len, skip_char);
 	s->ptr += i;
 	s->len -= i;
+	return i;
 }
 
 /** Remove any of matching bytes from the beginning */

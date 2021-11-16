@@ -67,6 +67,9 @@ static inline void test_check_str_sz(int ok, ffsize slen, const char *s, const c
 	test_check_str_sz(ffstr_eqz(&__s, sz), __s.len, __s.ptr, sz, __FILE__, __LINE__, __func__); \
 })
 
+#ifdef FF_WIN
+#else
+
 /** Read file data into a new buffer */
 static inline int file_readall(const char *fn, ffstr *dst)
 {
@@ -112,5 +115,45 @@ end:
 	return rc;
 }
 
+#endif
+
 #define FFARRAY_FOREACH(static_array, it) \
 	for (it = static_array;  it != static_array + FF_COUNT(static_array);  it++)
+
+#ifdef FF_WIN
+static inline ffssize test_std_write(HANDLE h, const void *data, ffsize len)
+{
+	DWORD written;
+	if (!WriteFile(h, data, len, &written, 0))
+		return -1;
+	return written;
+}
+static inline ffssize test_stdout_write(const void *data, ffsize len)
+{
+	return test_std_write(GetStdHandle(STD_OUTPUT_HANDLE), data, len);
+}
+#else
+static inline ffssize test_stdout_write(const void *data, ffsize len)
+{
+	return write(1, data, len);
+}
+#endif
+
+/** %-formatted output to stdout
+NOT printf()-compatible (see ffs_formatv()) */
+static inline ffssize test_stdout_fmt(const char *fmt, ...)
+{
+	va_list args;
+	va_start(args, fmt);
+	ffstr s = {};
+	ffsize cap = 0;
+	ffsize r = ffstr_growfmtv(&s, &cap, fmt, args);
+	va_end(args);
+	if (r != 0)
+		r = test_stdout_write(s.ptr, r);
+	ffstr_free(&s);
+	return r;
+}
+
+/** Write %-formatted text line to stdout */
+#define xlog(fmt, ...)  (void) test_stdout_fmt(fmt "\n", ##__VA_ARGS__)

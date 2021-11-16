@@ -231,14 +231,13 @@ static inline ffssize ffs_findstr(const char *s, ffsize len, const char *search,
 	if (search_len == 0)
 		return (len != 0) ? 0 : -1;
 
-	int c0 = *search++;
-	search_len--;
+	int c0 = *search;
 
 	for (ffsize i = 0;  i != len;  i++) {
 		if (search_len > len - i)
 			break;
 		if (s[i] == c0
-			&& 0 == ffmem_cmp(&s[i + 1], search, search_len))
+			&& 0 == ffmem_cmp(&s[i], search, search_len))
 			return i;
 	}
 

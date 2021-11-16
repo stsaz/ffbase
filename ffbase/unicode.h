@@ -450,6 +450,8 @@ static inline ffssize ffutf8_from_cp(char *dst, ffsize cap, const char *src, ffs
 				return -1;
 			n += r;
 		} else {
+			if (n >= cap)
+				return -1;
 			dst[n++] = src[i];
 		}
 	}

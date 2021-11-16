@@ -458,6 +458,41 @@ static void test_str_wildcard()
 	x(0 != ffs_wildcard(STR("*ab*"), STR("ac.ac"), 0));
 }
 
+void test_ffstr_replace()
+{
+	ffstr in, out = {}, sch, repl;
+	ffsize cap = 0;
+
+	ffstr_setz(&in, "abcabc");
+	ffstr_setz(&sch, "bcb");
+	ffstr_setz(&repl, "123");
+	xieq(0, ffstr_growadd_replace(&out, &cap, &in, &sch, &repl, 0));
+	xseq(&out, "abcabc");
+
+	ffstr_setz(&in, "abcabc");
+	ffstr_setz(&sch, "bc");
+	ffstr_setz(&repl, "123");
+	out.len = 0;
+	xieq(1, ffstr_growadd_replace(&out, &cap, &in, &sch, &repl, 0));
+	xseq(&out, "a123abc");
+
+	ffstr_setz(&in, "abcabc");
+	ffstr_setz(&sch, "bc");
+	ffstr_setz(&repl, "123");
+	out.len = 0;
+	xieq(2, ffstr_growadd_replace(&out, &cap, &in, &sch, &repl, FFSTR_REPLACE_ALL));
+	xseq(&out, "a123a123");
+
+	ffstr_setz(&in, "aBCabc");
+	ffstr_setz(&sch, "bC");
+	ffstr_setz(&repl, "123");
+	out.len = 0;
+	xieq(2, ffstr_growadd_replace(&out, &cap, &in, &sch, &repl, FFSTR_REPLACE_ICASE | FFSTR_REPLACE_ALL));
+	xseq(&out, "a123a123");
+
+	ffstr_free(&out);
+}
+
 void test_str()
 {
 	const char *data = "0123456789";
@@ -507,6 +542,7 @@ void test_str()
 	test_ffstr_gather();
 	test_str_wildcard();
 	test_ffstr_matchfmt();
+	test_ffstr_replace();
 }
 
 void test_write_bitmap()

@@ -70,6 +70,7 @@ ALLOCATE+COPY
 	ffstr_dup_lower ffstr_dupstr_lower
 	ffstr_growaddfill ffstr_growadd ffstr_growadd2 ffstr_growaddz
 	ffstr_growfmt
+	ffstr_growadd_replace
 
 ALGORITHMS
 	_ffs_copy _ffs_copyz
@@ -1243,6 +1244,43 @@ static inline ffsize ffstr_growadd_codepage(ffstr *s, ffsize *cap, const char *s
 }
 
 #endif // _FFBASE_UNICODE_H
+
+enum FFSTR_REPLACE {
+	FFSTR_REPLACE_ICASE = 1,
+	FFSTR_REPLACE_ALL = 2,
+};
+
+/** Grow buffer and append data while replacing search text
+flags: enum FFSTR_REPLACE
+Return N of replacements */
+static inline ffsize ffstr_growadd_replace(ffstr *output, ffsize *cap, const ffstr *input, const ffstr *search, const ffstr *replace, ffuint flags)
+{
+	ffstr in = *input;
+	ffssize n = 0, pos;
+	for (;;) {
+
+		if (flags & FFSTR_REPLACE_ICASE)
+			pos = ffstr_ifindstr(&in, search);
+		else
+			pos = ffstr_findstr(&in, search);
+		if (pos < 0)
+			break;
+
+		if ((ffsize)pos != ffstr_growadd(output, cap, in.ptr, pos)
+			|| replace->len != ffstr_growadd2(output, cap, replace))
+			return 0;
+
+		n++;
+		ffstr_shift(&in, pos + search->len);
+
+		if (!(flags & FFSTR_REPLACE_ALL))
+			break;
+	}
+
+	if (in.len != ffstr_growadd2(output, cap, &in))
+		return 0;
+	return n;
+}
 
 /** Gather contiguous data of the specified size
 If the required data is already available (from the container or from input data), don't copy any data

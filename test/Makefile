@@ -47,7 +47,7 @@ TEST_CFLAGS := -I$(SRCDIR) \
 ifeq "$(OPT)" "0"
 	TEST_CFLAGS += -O0 -DFFBASE_DEBUG
 else
-	TEST_CFLAGS += -O3
+	TEST_CFLAGS += -O3 -fno-strict-aliasing
 endif
 TEST_CXXFLAGS := $(TEST_CFLAGS)
 TEST_CFLAGS += -std=gnu99

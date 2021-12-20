@@ -35,6 +35,13 @@ void test_ffstr_fmtcap()
 	xieq(-32-1-32-1, ffs_format(NULL, 0, "%f", (double)123.456));
 }
 
+void test_ffs_format_r0()
+{
+	char buf[4+1];
+	x(4 == ffs_format_r0(buf, sizeof(buf), "%u", 1234));
+	x(0 == ffs_format_r0(buf, sizeof(buf), "%u", 12345));
+}
+
 void test_ffsz_allocfmt()
 {
 	ffstr s;
@@ -230,4 +237,5 @@ void test_ffstr_fmt()
 
 	test_ffstr_fmtcap();
 	test_ffsz_allocfmt();
+	test_ffs_format_r0();
 }

@@ -39,7 +39,7 @@ REVERSE MATCH
 	ffstr_irmatch ffstr_irmatch2 ffstr_irmatchcz
 FIND CHARACTER
 	ffstr_findchar ffstr_findany ffstr_findanyz
-	ffstr_rfindchar ffstr_rfindany
+	ffstr_rfindchar ffstr_rfindany ffstr_rfindanyz
 FIND SUBSTRING
 	ffstr_find ffstr_find2 ffstr_findz
 	ffstr_ifind ffstr_ifind2 ffstr_ifindstr ffstr_ifindz
@@ -78,6 +78,7 @@ ALGORITHMS
 	ffs_findstr ffs_ifindstr ffs_findchar ffs_findany
 	ffs_rfindchar ffs_rfindstr ffs_rfindany
 	ffs_skipchar ffs_skipany
+	ffs_rskipany
 	ffs_lower ffs_upper ffs_titlecase
 	ffs_wildcard
 */
@@ -359,6 +360,17 @@ static inline ffsize ffs_skipany(const char *s, ffsize len, const char *skip_cha
 			break;
 	}
 	return i;
+}
+
+/** Remove any of matching bytes from the end */
+static inline ffsize ffs_rskipany(const char *s, ffsize len, const char *skip_chars, ffsize skip_chars_len)
+{
+	ffssize i;
+	for (i = len - 1;  i >= 0;  i--) {
+		if (ffs_findchar(skip_chars, skip_chars_len, s[i]) < 0)
+			break;
+	}
+	return len - (i + 1);
 }
 
 /** Convert case (ANSI).
@@ -788,6 +800,7 @@ static inline ffssize ffstr_rfindany(const ffstr *s, const char *anyof, ffsize n
 }
 
 #define ffstr_findanyz(s, anyof_sz)  ffstr_findany(s, anyof_sz, ffsz_len(anyof_sz))
+#define ffstr_rfindanyz(s, anyof_sz)  ffstr_rfindany(s, anyof_sz, ffsz_len(anyof_sz))
 
 
 // FIND SUBSTRING
@@ -850,15 +863,11 @@ static inline void ffstr_rskipchar1(ffstr *s, int skip_char)
 		s->len--;
 }
 
-/** Remove any of matching bytes from the beginning */
+/** Remove any of matching bytes from the end */
 static inline void ffstr_rskipany(ffstr *s, const ffstr *skip_chars)
 {
-	ffssize i;
-	for (i = s->len - 1;  i >= 0;  i--) {
-		if (ffstr_findchar(skip_chars, s->ptr[i]) < 0)
-			break;
-	}
-	s->len = i + 1;
+	ffsize i = ffs_rskipany(s->ptr, s->len, skip_chars->ptr, skip_chars->len);
+	s->len -= i;
 }
 
 /** Remove whitespace from beginning and end */

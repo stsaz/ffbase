@@ -11,8 +11,8 @@ ffutf8_to_utf16
 ffutf8_from_cp
 ffutf_bom
 Windows-only:
-	ffs_wtou ffs_wtouz ffsz_wtou
-	ffsz_utow
+	ffs_wtou ffs_wtouz ffsz_wtou ffsz_alloc_wtou
+	ffsz_utow ffsz_alloc_utow
 */
 
 /*

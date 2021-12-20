@@ -3,7 +3,7 @@
 */
 
 /*
-ffs_format ffs_formatv
+ffs_format ffs_formatv ffs_format_r0
 ffsz_allocfmt ffsz_allocfmtv
 ffstr_matchfmt ffstr_matchfmtv
 */
@@ -368,6 +368,18 @@ static inline ffssize ffs_format(char *buf, ffsize cap, const char *fmt, ...)
 	ffssize r = ffs_formatv(buf, cap, fmt, args);
 	va_end(args);
 	return r;
+}
+
+/**
+More convenient variant in case we don't need the exact data size if there was not enough space.
+Return 0 on error */
+static inline ffsize ffs_format_r0(char *buf, ffsize cap, const char *fmt, ...)
+{
+	va_list args;
+	va_start(args, fmt);
+	ffssize r = ffs_formatv(buf, cap, fmt, args);
+	va_end(args);
+	return (r >= 0) ? r : 0;
 }
 
 /** Allocate buffer and add %-formatted data to a NULL-terminated string.

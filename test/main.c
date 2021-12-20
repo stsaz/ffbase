@@ -75,6 +75,10 @@ static void test_bits()
 	x(ffbit_array_test("\x01\x00\x00\x00", 7));
 	x(ffbit_array_test("\x00\x00\x00\x80", 24));
 	x(!ffbit_array_test("\xff\xff\xff\xfe", 31));
+
+	char buf[] = "\x01\x00\x00\x00";
+	x(!ffbit_array_set(buf, 31));
+	x(ffbit_array_set(buf, 31));
 }
 
 void test_base()

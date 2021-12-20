@@ -27,8 +27,8 @@ enum FFS_INT {
 	// 0000 000x - size
 	FFS_INT8 = 1,
 	FFS_INT16 = 2,
-	FFS_INT32 = 3,
-	FFS_INT64 = 4,
+	FFS_INT32 = 4,
+	FFS_INT64 = 8,
 
 	// 0000 00x0 - base
 	// DEC = 0

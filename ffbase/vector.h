@@ -26,7 +26,7 @@ ALLOCATE
 COPY
 	ffvec_push ffvec_pushT ffvec_add ffvec_addT ffvec_add2T
 	ffvec_addchar
-	ffvec_addsz
+	ffvec_addstr ffvec_addsz
 	ffvec_addfmt
 */
 
@@ -260,6 +260,7 @@ static inline ffsize ffvec_addchar(ffvec *v, char ch)
 	return ffvec_add(v, &ch, 1, 1);
 }
 
+#define ffvec_addstr(v, str)  ffvec_add(v, (str)->ptr, (str)->len, 1)
 #define ffvec_addsz(v, sz)  ffvec_add(v, sz, ffsz_len(sz), 1)
 
 #ifdef _FFBASE_STRING_H

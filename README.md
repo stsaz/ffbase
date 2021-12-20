@@ -6,15 +6,15 @@ C language doesn't have this functionality by default (contrary to almost all ot
 
 ffbase is header-only (`.h`-only) and doesn't need to be built into `.a/.so/.dll` before use - you just include `.h` file and that's all.
 
-
 Contents:
-* Naming
-* Features
-* Requirements
-* Where to use
-* How to use
-* Configure
-* Develop
+
+* [Naming](#naming)
+* [Features](#features)
+* [Requirements](#requirements)
+* [Where to use](#where-to-use)
+* [How to use](#how-to-use)
+* [Configure](#configure)
+* [Develop](#develop)
 
 
 ## Naming

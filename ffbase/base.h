@@ -283,6 +283,17 @@ static inline int ffbit_array_test(const void *d, ffsize bit)
 	return !!(*b & (1U << bit));
 }
 
+/** Set bit and return its previous value */
+static inline int ffbit_array_set(const void *d, ffsize bit)
+{
+	ffbyte *b = (ffbyte*)d + bit / 8;
+	bit = 7 - (bit % 8);
+	if (!!(*b & (1U << bit)))
+		return 1;
+	*b |= (1U << bit);
+	return 0;
+}
+
 
 /** Align number to lower/upper boundary
 align: must be a power of 2 */

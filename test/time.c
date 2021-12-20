@@ -22,6 +22,11 @@ void test_time_fromstr()
 	x(dt.second == 6);
 	x(dt.weekday == 0);
 
+	xieq(10, fftime_fromstr1(&dt, STR2("1970-01-02"), FFTIME_DATE_YMD));
+	x(dt.year == 1970);
+	x(dt.month == 1);
+	xieq(dt.day, 2);
+
 	ffmem_zero_obj(&dt);
 	xieq(29, fftime_fromstr1(&dt, STR2("Thu, 01 Feb 1972 04:05:06 GMT"), FFTIME_WDMY));
 	x(dt.year == 1972);

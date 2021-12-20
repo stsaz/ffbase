@@ -338,7 +338,10 @@ static int _fftime_date_fromstr(ffdatetime *dt, ffstr *str, ffuint flags)
 		return -1;
 	}
 
-	ffstr_shift(str, r-1);
+	if (r == 0)
+		str->len = 0;
+	else
+		ffstr_shift(str, r-1);
 	return 0;
 }
 

@@ -16,6 +16,7 @@
 
 #include <ffbase/atomic.h>
 #include <ffbase/lock.h>
+#include <ffbase/cpuid.h>
 
 #include <ffbase/json.h>
 #include <ffbase/json-writer.h>

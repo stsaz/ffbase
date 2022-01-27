@@ -33,6 +33,7 @@ TEST_OBJ := \
 	./json.o \
 	\
 	./time.o \
+	./cpu.o \
 	./compat.o
 HDR += $(SRCDIR)/test/test.h $(SRCDIR)/test/Makefile
 

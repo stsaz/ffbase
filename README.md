@@ -55,6 +55,7 @@ Atomic:
 
 Other:
 * `time.h` - date/time functions
+* `cpuid.h` - get CPU features
 
 
 ## Requirements:

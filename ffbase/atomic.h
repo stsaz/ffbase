@@ -45,7 +45,7 @@ Return old value */
 #elif defined __aarch64__
 	#define _ffcpu_dmb(opt)  __asm volatile("dmb " #opt : : : "memory")
 	#define ffcpu_fence_release()  _ffcpu_dmb(sy)
-	#define ffcpu_fence_acquire()  _ff_dmb(ld)
+	#define ffcpu_fence_acquire()  _ffcpu_dmb(ld)
 
 #else
 	#define ffcpu_fence_release()  __sync_synchronize()

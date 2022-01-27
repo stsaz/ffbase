@@ -20,7 +20,8 @@ fflock_unlock
 #define ffthread_yield  sched_yield
 #endif
 
-#define ffcpu_pause()  __asm volatile("pause")
+#include <emmintrin.h>
+#define ffcpu_pause()  _mm_pause()
 
 
 #define FFLOCK_SPIN  2048

@@ -92,6 +92,9 @@ static inline ffsize _ffs_copy(char *dst, ffsize cap, const char *s, ffsize n)
 	return n;
 }
 
+#define _ffs_copycz(dst, cap, sz) \
+	_ffs_copy(dst, cap, sz, ffsz_len(sz))
+
 static inline ffsize _ffs_copyz(char *dst, ffsize cap, const char *sz)
 {
 	for (ffsize i = 0;  i != cap;  i++) {
@@ -231,14 +234,14 @@ static inline ffssize ffs_findstr(const char *s, ffsize len, const char *search,
 	if (search_len == 0)
 		return (len != 0) ? 0 : -1;
 
-	int c0 = *search;
-
-	for (ffsize i = 0;  i != len;  i++) {
-		if (search_len > len - i)
+	const char *p = s, *end = s + len;
+	while (p != end) {
+		p = (char*)ffmem_findbyte(p, end - p, search[0]);
+		if (p == NULL || search_len > (ffsize)(end - p))
 			break;
-		if (s[i] == c0
-			&& 0 == ffmem_cmp(&s[i], search, search_len))
-			return i;
+		if (0 == ffmem_cmp(p, search, search_len))
+			return p - s;
+		p++;
 	}
 
 	return -1;
@@ -910,10 +913,7 @@ static inline int ffstr_irmatch(const ffstr *s, const char *suffix, ffsize n)
 Return -1 if not found */
 static inline ffssize ffstr_findchar(const ffstr *s, int search)
 {
-	const char *pos = (char*)ffmem_findbyte(s->ptr, s->len, search);
-	if (pos == NULL)
-		return -1;
-	return pos - s->ptr;
+	return ffs_findchar(s->ptr, s->len, search);
 }
 
 /** Find character from the end
@@ -921,11 +921,7 @@ Return the position from the beginning
   -1: not found */
 static inline ffssize ffstr_rfindchar(const ffstr *s, int search)
 {
-	for (ffssize i = s->len - 1;  i >= 0;  i--) {
-		if (search == s->ptr[i])
-			return i;
-	}
-	return -1;
+	return ffs_rfindchar(s->ptr, s->len, search);
 }
 
 /** Find the position of any byte from 'anyof' in 's'
@@ -940,11 +936,7 @@ Return the position from the beginning
   -1: not found */
 static inline ffssize ffstr_rfindany(const ffstr *s, const char *anyof, ffsize n)
 {
-	for (ffssize i = s->len - 1;  i >= 0;  i--) {
-		if (NULL != ffmem_findbyte(anyof, n, s->ptr[i]))
-			return i;
-	}
-	return -1;
+	return ffs_rfindany(s->ptr, s->len, anyof, n);
 }
 
 #define ffstr_findanyz(s, anyof_sz)  ffstr_findany(s, anyof_sz, ffsz_len(anyof_sz))

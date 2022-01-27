@@ -31,6 +31,7 @@ An `ffslice` object can be assigned to a buffer (e.g. reserved on stack or alloc
 
 > Don't call ffslice_free() in this case!
 
+```c
 	int N = ...;
 	struct S array[N] = {...};
 
@@ -40,9 +41,10 @@ An `ffslice` object can be assigned to a buffer (e.g. reserved on stack or alloc
 
 	// walk through each element
 	struct S *it;
-	FFSLICE_WALK_T(&a, it, struct S) {
+	FFSLICE_WALK(&a, it) {
 		...
 	}
+```
 
 
 ## Dynamically allocated buffer
@@ -50,6 +52,7 @@ An `ffslice` object can be assigned to a buffer (e.g. reserved on stack or alloc
 The buffer is allocated via `ffslice_allocT()`, can be resized when necessary via `ffslice_reallocT()`.
 Must free with `ffslice_free()`.
 
+```c
 	// allocate buffer
 	int CAP = 10;
 	ffslice a = {};
@@ -62,3 +65,4 @@ Must free with `ffslice_free()`.
 
 	// free buffer
 	ffslice_free(&a);
+```

@@ -290,7 +290,7 @@ static inline int ffmap_rm(ffmap *m, const void *key, ffsize keylen, void *opaqu
 
 /** Find element
 Return user's value or NULL on error */
-static inline void* ffmap_find_hash(ffmap *m, ffuint hash, const void *key, ffsize keylen, void *opaque)
+static inline void* ffmap_find_hash(const ffmap *m, ffuint hash, const void *key, ffsize keylen, void *opaque)
 {
 	if (m->len == 0)
 		return NULL;
@@ -315,14 +315,14 @@ static inline void* ffmap_find_hash(ffmap *m, ffuint hash, const void *key, ffsi
 	return NULL;
 }
 
-static inline void* ffmap_find(ffmap *m, const void *key, ffsize keylen, void *opaque)
+static inline void* ffmap_find(const ffmap *m, const void *key, ffsize keylen, void *opaque)
 {
 	ffuint hash = ffmap_hash(key, keylen);
 	return ffmap_find_hash(m, hash, key, keylen, opaque);
 }
 
 /** Print statistics info */
-static inline void _ffmap_stats(ffmap *m, ffuint flags)
+static inline void _ffmap_stats(const ffmap *m, ffuint flags)
 {
 	ffsize nlen = 0, ncoll = 0;
 	ffsize max_coll = 0, max_coll_n = 0;

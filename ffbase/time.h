@@ -220,26 +220,26 @@ flags: enum FFTIME_FMT
 Return N of bytes written;  0 on error */
 static inline ffsize fftime_tostr1(const ffdatetime *dt, char *dst, ffsize cap, ffuint flags)
 {
-	ffsize i = 0;
+	int i = 0, r = 0;
 
 	switch (flags & 0x0f) {
 	case FFTIME_DATE_YMD:
-		i += ffs_format(dst, cap, "%04u-%02u-%02u"
+		i = ffs_format(dst, cap, "%04u-%02u-%02u"
 			, dt->year, dt->month, dt->day);
 		break;
 
 	case FFTIME_DATE_WDMY:
-		i += ffs_format(dst, cap, "%s, %02u %s %04u"
+		i = ffs_format(dst, cap, "%s, %02u %s %04u"
 			, _fftime_week_days[dt->weekday], dt->day, _fftime_months[dt->month - 1], dt->year);
 		break;
 
 	case FFTIME_DATE_MDY:
-		i += ffs_format(dst, cap, "%02u/%02u/%04u"
+		i = ffs_format(dst, cap, "%02u/%02u/%04u"
 			, dt->month, dt->day, dt->year);
 		break;
 
 	case FFTIME_DATE_DMY:
-		i += ffs_format(dst, cap, "%02u.%02u.%04u"
+		i = ffs_format(dst, cap, "%02u.%02u.%04u"
 			, dt->day, dt->month, dt->year);
 		break;
 
@@ -250,22 +250,25 @@ static inline ffsize fftime_tostr1(const ffdatetime *dt, char *dst, ffsize cap, 
 		return 0; // unknown date format
 	}
 
-	if (!!(flags & 0x0f) && !!(flags & 0xf0) && i < cap)
+	if (i < 0)
+		return 0;
+
+	if (!!(flags & 0x0f) && !!(flags & 0xf0) && (ffuint)i < cap)
 		dst[i++] = ' ';
 
 	switch (flags & 0xf0) {
 	case FFTIME_HMS:
-		i += ffs_format(dst + i, cap - i, "%02u:%02u:%02u"
+		r = ffs_format(dst + i, cap - i, "%02u:%02u:%02u"
 			, dt->hour, dt->minute, dt->second);
 		break;
 
 	case FFTIME_HMS_MSEC:
-		i += ffs_format(dst + i, cap - i, "%02u:%02u:%02u.%03u"
+		r = ffs_format(dst + i, cap - i, "%02u:%02u:%02u.%03u"
 			, dt->hour, dt->minute, dt->second, dt->nanosecond / 1000000);
 		break;
 
 	case FFTIME_HMS_GMT:
-		i += ffs_format(dst + i, cap - i, "%02u:%02u:%02u GMT"
+		r = ffs_format(dst + i, cap - i, "%02u:%02u:%02u GMT"
 			, dt->hour, dt->minute, dt->second);
 		break;
 
@@ -276,9 +279,9 @@ static inline ffsize fftime_tostr1(const ffdatetime *dt, char *dst, ffsize cap, 
 		return 0; // unknown time format
 	}
 
-	if (i == cap)
+	if (r < 0)
 		return 0;
-	return i;
+	return i + r;
 }
 
 static int _fftime_date_fromstr(ffdatetime *dt, ffstr *str, ffuint flags)

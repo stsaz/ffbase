@@ -127,6 +127,9 @@ void test_time()
 	s.len = fftime_tostr1(&dt, buf, sizeof(buf), FFTIME_YMD);
 	xseq(&s, "1970-01-01 00:00:00");
 
+	xieq(0, fftime_tostr1(&dt, buf, 19, FFTIME_YMD));
+	x(0 != fftime_tostr1(&dt, buf, 20, FFTIME_YMD));
+
 	s.len = fftime_tostr1(&dt, buf, sizeof(buf), FFTIME_WDMY);
 	xseq(&s, "Thu, 01 Jan 1970 00:00:00 GMT");
 

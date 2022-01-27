@@ -79,7 +79,7 @@ static inline int ffsz_cmp(const char *sz, const char *cmpz)
 	ffsize i = 0;
 	do {
 		if (sz[i] != cmpz[i])
-			return sz[i] - cmpz[i];
+			return (ffbyte)sz[i] - (ffbyte)cmpz[i];
 	} while (sz[i++] != '\0');
 	return 0;
 }
@@ -91,8 +91,8 @@ Return 0 if equal
 static inline int ffsz_icmp(const char *sz, const char *cmpz)
 {
 	for (ffsize i = 0;  ;  i++) {
-		int cl = sz[i];
-		int cr = cmpz[i];
+		ffuint cl = (ffbyte)sz[i];
+		ffuint cr = (ffbyte)cmpz[i];
 
 		if (cl != cr) {
 			if (cl >= 'A' && cl <= 'Z')

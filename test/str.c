@@ -201,6 +201,60 @@ void test_ffstr_cmp()
 	x(0 == ffstr_icmp2(&s, &s));
 }
 
+#if 0
+void bench()
+{
+	static ffstr longurl = FFSTR_INITZ("http://hosthosthosthosthosthosthosthosthosthost:8080/path/my%20file/path/my%20file/path/my%20file/path/my%20file/path/my%20file/path/my%20file/path/my%20file/path/my%20file?query%20stringquery%20stringquery%20stringquery%20stringquery%20stringquery%20stringquery%20stringquery%20stringquery%20stringquery%20stringquery%20stringquery%20stringquery%20stringquery%20stringquery%20string#sharpsharpsharpsharpsharp");
+	for (int i = 0;  i != 5*1000*1000;  i++) {
+		static int r;
+		r = ffs_ifindstr(longurl.ptr, longurl.len, "SHarp", 5);
+		if (r < 0)
+			_exit(0);
+	}
+}
+#endif
+
+void test_ffs_findany()
+{
+	static char d[] = "012345678905cdef""yz";
+	ffuint dn = sizeof(d)-1;
+	static char dz[] = "012345678905\x00""cde""yz";
+	ffuint dzn = sizeof(dz)-1;
+
+	x(5 == ffs_findany(d, dn, "75", 2));
+	x(16-3 == ffs_findany(d+3, dn-3, "yz", 2));
+	x(-1 == ffs_findany(d, dn, "gh", 2));
+	x(0 == ffs_findany(dz, dzn, "70", 2));
+	x(12 == ffs_findany(dz, dzn, "c\x00", 2));
+
+	x(_ffcpu_features & (1<<20));
+	if (_ffcpu_features & (1<<20)) {
+		// aligned
+		x(d == _ffmem_findany_sse42(d, dn, "70", 2));
+		x(d+5 == _ffmem_findany_sse42(d, dn, "75", 2));
+		x(d+16 == _ffmem_findany_sse42(d, dn, "yz", 2));
+		x(NULL == _ffmem_findany_sse42(d, dn, "gh", 2));
+		x(NULL == _ffmem_findany_sse42(d, dn-1, "zz", 2));
+
+		// NUL byte
+		x(dz == _ffmem_findany_sse42(dz, dzn, "70", 2));
+		x(dz+12 == _ffmem_findany_sse42(dz, dzn, "c\0", 2));
+		x(NULL == _ffmem_findany_sse42(dz, dzn, "gh", 2));
+		x(NULL == _ffmem_findany_sse42(dz, dzn-1, "zz", 2));
+
+		// unaligned
+		x(d+7 == _ffmem_findany_sse42(d+1, dn-1, "70", 2));
+		x(d+5 == _ffmem_findany_sse42(d+1, dn-1, "75", 2));
+		x(d+16 == _ffmem_findany_sse42(d+1, dn-1, "yz", 2));
+		x(NULL == _ffmem_findany_sse42(d+1, dn-1, "gh", 2));
+
+		// NUL byte
+		x(dz+7 == _ffmem_findany_sse42(dz+1, dzn-1, "70", 2));
+		x(dz+12 == _ffmem_findany_sse42(dz+1, dzn-1, "c\0", 2));
+		x(NULL == _ffmem_findany_sse42(dz+1, dzn-1, "gh", 2));
+	}
+}
+
 void test_ffstr_find()
 {
 	ffstr s = FFSTR_INITZ("abcdeFGHIJ");
@@ -493,6 +547,17 @@ void test_ffstr_replace()
 	ffstr_free(&out);
 }
 
+void test_ffs_skip_ranges()
+{
+	xieq(3, ffs_skip_ranges("key val", 7, "01\x21\x7f", 4));
+	xieq(0, ffs_skip_ranges(" key val", 8, "01\x21\x7f", 4));
+	xieq(-1, ffs_skip_ranges("keyval", 6, "01\x21\x7f", 4));
+
+	xieq(3, ffs_skip_ranges("key val", 7, "0123456789\x21\x7f" "012345", 18));
+	xieq(0, ffs_skip_ranges(" key val", 8, "0123456789\x21\x7f" "012345", 18));
+	xieq(-1, ffs_skip_ranges("keyval", 6, "0123456789\x21\x7f" "012345", 18));
+}
+
 void test_str()
 {
 	const char *data = "0123456789";
@@ -532,6 +597,7 @@ void test_str()
 	test_ffstr_rm();
 	test_ffstr_alloc();
 	test_ffstr_cmp();
+	test_ffs_findany();
 	test_ffstr_find();
 	test_ffstr_match();
 	test_ffstr_split();
@@ -543,6 +609,7 @@ void test_str()
 	test_str_wildcard();
 	test_ffstr_matchfmt();
 	test_ffstr_replace();
+	test_ffs_skip_ranges();
 }
 
 void test_write_bitmap()

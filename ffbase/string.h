@@ -77,7 +77,7 @@ ALGORITHMS
 	ffs_cmpz ffs_icmp ffs_icmpz ffs_matchz
 	ffs_findstr ffs_ifindstr ffs_findchar ffs_findany
 	ffs_rfindchar ffs_rfindstr ffs_rfindany
-	ffs_skipchar ffs_skipany
+	ffs_skipchar ffs_skipany ffs_skip_ranges
 	ffs_rskipany
 	ffs_lower ffs_upper ffs_titlecase
 	ffs_wildcard
@@ -244,6 +244,8 @@ static inline ffssize ffs_findstr(const char *s, ffsize len, const char *search,
 	return -1;
 }
 
+static ffssize ffs_findany(const char *s, ffsize len, const char *anyof, ffsize anyof_len);
+
 /** Find substring (case-insensitive)
 Return -1 if not found */
 static inline ffssize ffs_ifindstr(const char *s, ffsize len, const char *search, ffsize search_len)
@@ -254,20 +256,25 @@ static inline ffssize ffs_ifindstr(const char *s, ffsize len, const char *search
 	if (search_len == 0)
 		return (len != 0) ? 0 : -1;
 
+	// prepare an array containing upper- and lower-case first character of the search string
+	char chars[2] = { *search, *search };
 	int c0 = *search;
-	if (c0 >= 'A' && c0 <= 'Z')
-		c0 |= 0x20;
+	if (c0 >= 'A' && c0 <= 'Z') {
+		chars[1] = c0 | 0x20;
+	} else if (c0 >= 'a' && c0 <= 'z') {
+		chars[0] = c0 & ~0x20;
+	}
 
-	for (ffsize i = 0;  i != len;  i++) {
-		if (search_len > len - i)
+	const char *p = s, *end = s + len;
+	while (p != end) {
+		ffssize i = ffs_findany(p, end - p, chars, 2);
+		p += i;
+		if (i < 0 || search_len > (ffsize)(end - p))
 			break;
 
-		int ci = s[i];
-		if (ci >= 'A' && ci <= 'Z')
-			ci |= 0x20;
-		if (ci == c0
-			&& 0 == ffs_icmp(&s[i], search, search_len))
-			return i;
+		if (0 == ffs_icmp(p, search, search_len))
+			return p - s;
+		p++;
 	}
 
 	return -1;
@@ -295,13 +302,125 @@ static inline ffssize ffs_rfindchar(const char *s, ffsize len, int search)
 	return -1;
 }
 
+#ifdef __SSE4_2__
+#include <ffbase/cpuid.h>
+#include <nmmintrin.h>
+#include <smmintrin.h>
+
+/* Similar to SSE-optimized strpbrk() except it doesn't stop at NUL character */
+static void* _ffmem_findany_sse42(const void *d, ffsize n, const char *anyof, ffuint anyof_len)
+{
+	__m128i mask;
+	// we should just use memcpy() here, but there's no guarantee it will be inlined
+	switch (anyof_len) {
+	case 2:
+		*(ffushort*)&mask = *(ffushort*)anyof; break;
+	case 4:
+		*(ffuint*)&mask = *(ffuint*)anyof; break;
+	case 6:
+		*(ffuint*)&mask = *(ffuint*)anyof;
+		*(ffushort*)(((char*)&mask)+4) = *(ffushort*)(anyof+4);
+		break;
+	case 8:
+		*(ffuint64*)&mask = *(ffuint64*)anyof; break;
+	}
+
+	const __m128i *p = (__m128i*)d, *end = (__m128i*)((char*)d+n);
+	while (p+1 <= end) {
+		__m128i r = _mm_loadu_si128(p);
+		ffuint i = _mm_cmpestri(mask, anyof_len, r, 16, _SIDD_CMP_EQUAL_ANY);
+		if (i != 16)
+			return (char*)p + i;
+
+		p++;
+	}
+
+	// check trailer
+	if (p != end) {
+		n = (char*)end - (char*)p;
+		__m128i r;
+		if (((ffsize)(p+1) & ~0x0f) == ((ffsize)(p+1) & ~0x0fff)) // avoid the possibility of crashing if the 16byte region crosses 4k boundary
+			ffmem_copy(&r, p, n);
+		else
+			r = _mm_loadu_si128(p);
+		ffuint i = _mm_cmpestri(mask, anyof_len, r, n, _SIDD_CMP_EQUAL_ANY);
+		if (i != 16)
+			return (char*)p + i;
+	}
+
+	return NULL;
+}
+
+static int _ffs_skip_ranges_sse42(const void *d, ffsize n, const char *ranges, ffuint ranges_len)
+{
+	__m128i mask;
+	// we should just use memcpy() here, but there's no guarantee it will be inlined
+	switch (ranges_len) {
+	case 2:
+		*(ffushort*)&mask = *(ffushort*)ranges; break;
+	case 4:
+		*(ffuint*)&mask = *(ffuint*)ranges; break;
+	case 6:
+		*(ffuint*)&mask = *(ffuint*)ranges;
+		*(ffushort*)(((char*)&mask)+4) = *(ffushort*)(ranges+4);
+		break;
+	case 8:
+		*(ffuint64*)&mask = *(ffuint64*)ranges; break;
+	case 10:
+		*(ffuint64*)&mask = *(ffuint64*)ranges;
+		*(ffushort*)(((char*)&mask)+8) = *(ffushort*)(ranges+8);
+		break;
+	}
+
+	const __m128i *p = (__m128i*)d, *end = (__m128i*)((char*)d+n);
+	while (p+1 <= end) {
+		__m128i r = _mm_loadu_si128(p);
+		ffuint i = _mm_cmpestri(mask, ranges_len, r, 16, _SIDD_CMP_RANGES | _SIDD_NEGATIVE_POLARITY);
+		if (i != 16)
+			return (char*)p+i - (char*)d;
+		p++;
+	}
+
+	// check trailer
+	if (p != end) {
+		n = (char*)end - (char*)p;
+		__m128i r;
+		if (((ffsize)(p+1) & ~0x0f) == ((ffsize)(p+1) & ~0x0fff)) // avoid the possibility of crashing if the 16byte region crosses 4k boundary
+			ffmem_copy(&r, p, n);
+		else
+			r = _mm_loadu_si128(p);
+		ffuint i = _mm_cmpestri(mask, ranges_len, r, n, _SIDD_CMP_RANGES | _SIDD_NEGATIVE_POLARITY);
+		if (i != n)
+			return (char*)p+i - (char*)d;
+	}
+
+	return -1;
+}
+
+#endif // __SSE4_2__
+
 /** Find the position of any byte from 'anyof' in 's'
 Return -1 if not found */
 static inline ffssize ffs_findany(const char *s, ffsize len, const char *anyof, ffsize anyof_len)
 {
+#ifdef __SSE4_2__
+	if (_ffcpu_features == 0) {
+		struct ffcpuid i = {};
+		ffcpuid(&i, FFCPUID_FEATURES);
+		_ffcpu_features = i.features[0];
+	}
+
+	if ((anyof_len == 2 || anyof_len == 4 || anyof_len == 6 || anyof_len == 8) && (_ffcpu_features & (1<<20))) {
+		void *r = _ffmem_findany_sse42(s, len, anyof, anyof_len);
+		return (r != NULL) ? (char*)r - (char*)s : -1;
+	}
+#endif
+
 	for (ffsize i = 0;  i != len;  i++) {
-		if (NULL != ffmem_findbyte(anyof, anyof_len, s[i]))
-			return i;
+		for (ffsize j = 0;  j != anyof_len;  j++) {
+			if (s[i] == anyof[j])
+				return i;
+		}
 	}
 	return -1;
 }
@@ -312,8 +431,10 @@ Return the position from the beginning
 static inline ffssize ffs_rfindany(const char *s, ffsize len, const char *anyof, ffsize anyof_len)
 {
 	for (ffssize i = len - 1;  i >= 0;  i--) {
-		if (NULL != ffmem_findbyte(anyof, anyof_len, s[i]))
-			return i;
+		for (ffsize j = 0;  j != anyof_len;  j++) {
+			if (s[i] == anyof[j])
+				return i;
+		}
 	}
 	return -1;
 }
@@ -371,6 +492,37 @@ static inline ffsize ffs_rskipany(const char *s, ffsize len, const char *skip_ch
 			break;
 	}
 	return len - (i + 1);
+}
+
+/** Skip bytes while they are within the specified range
+Return N of bytes skipped
+ <0 on error */
+static inline int ffs_skip_ranges(const char *s, ffsize len, const char *ranges, ffsize ranges_len)
+{
+	FF_ASSERT(ranges_len%2 == 0);
+
+#ifdef __SSE4_2__
+	if (_ffcpu_features == 0) {
+		struct ffcpuid i = {};
+		ffcpuid(&i, FFCPUID_FEATURES);
+		_ffcpu_features = i.features[0];
+	}
+
+	if ((ranges_len == 2 || ranges_len == 4 || ranges_len == 6 || ranges_len == 8 || ranges_len == 10) && (_ffcpu_features & (1<<20))) {
+		return _ffs_skip_ranges_sse42(s, len, ranges, ranges_len);
+	}
+#endif
+
+	for (ffsize i = 0;  i != len;  i++) {
+		ffsize j;
+		for (j = 0;  j != ranges_len;  j+=2) {
+			if (ranges[j] <= s[i] && s[i] <= ranges[j+1])
+				break;
+		}
+		if (j == ranges_len)
+			return i;
+	}
+	return -1;
 }
 
 /** Convert case (ANSI).
@@ -780,11 +932,7 @@ static inline ffssize ffstr_rfindchar(const ffstr *s, int search)
 Return -1 if not found */
 static inline ffssize ffstr_findany(const ffstr *s, const char *anyof, ffsize n)
 {
-	for (ffsize i = 0;  i != s->len;  i++) {
-		if (NULL != ffmem_findbyte(anyof, n, s->ptr[i]))
-			return i;
-	}
-	return -1;
+	return ffs_findany(s->ptr, s->len, anyof, n);
 }
 
 /** Find (from the end) the position of any byte from 'anyof' in 's'

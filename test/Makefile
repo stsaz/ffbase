@@ -45,6 +45,7 @@ clean:
 TEST_CFLAGS := -I$(SRCDIR) \
 	-Wall -Wextra -Wno-return-local-addr -Wno-stringop-overflow \
 	-DFF_DEBUG -g
+TEST_CFLAGS += -msse4.2
 ifeq "$(OPT)" "0"
 	TEST_CFLAGS += -O0 -DFFBASE_DEBUG
 else

@@ -515,4 +515,6 @@ static inline ffsize ffmem_ncopy(void *dst, ffsize cap, const void *src, ffsize 
 /** Safely copy data (overlapping regions) */
 #define ffmem_move(dst, src, len)  (void) memmove(dst, src, len)
 
+FF_EXTERN int _ffcpu_features;
+
 #endif

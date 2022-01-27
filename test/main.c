@@ -7,6 +7,7 @@
 #include <test/test.h>
 #include <stdio.h>
 
+int _ffcpu_features;
 
 void test_base();
 void test_mem();

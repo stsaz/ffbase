@@ -314,7 +314,6 @@ static inline ffrbt_node* _ffrbt_node_rm(ffrbt_node *node, ffrbt_node **proot, f
 	_ffrbt_relink_parent(node, nnew, proot, sentl);
 
 	node->left = node->right = node->parent = NULL;
-	node->key = 0;
 	return x;
 }
 

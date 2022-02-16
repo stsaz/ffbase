@@ -8,6 +8,7 @@
 
 /*
 ffthread_yield ffcpu_pause
+ffint_wait_until_equal
 fflock_init
 fflock_trylock fflock_lock
 fflock_unlock
@@ -23,6 +24,21 @@ fflock_unlock
 
 #include <emmintrin.h>
 #define ffcpu_pause()  _mm_pause()
+
+
+/** Block execution until the variable is modified by another thread */
+static inline void ffint_wait_until_equal(ffuint *p, ffuint expected)
+{
+	for (;;) {
+		for (ffuint n = 0;  n != 2048;  n++) {
+			if (FFINT_READONCE(*p) == expected)
+				return;
+			ffcpu_pause();
+		}
+
+		ffthread_yield();
+	}
+}
 
 
 #define FFLOCK_SPIN  2048

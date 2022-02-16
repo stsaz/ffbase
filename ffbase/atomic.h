@@ -9,6 +9,7 @@
 #endif
 
 /*
+ff_likely ff_unlikely
 FFINT_READONCE
 FFINT_WRITEONCE
 ffint_fetch_add
@@ -19,6 +20,10 @@ ffatomic_store
 ffatomic_fetch_add
 ffatomic_cmpxchg
 */
+
+#define ff_likely(x)  __builtin_expect(!!(x), 1)
+
+#define ff_unlikely(x)  __builtin_expect(!!(x), 0)
 
 #define FFINT_READONCE(obj)  (*(volatile __typeof__(obj)*)&(obj))
 

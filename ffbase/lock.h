@@ -7,6 +7,7 @@
 #include <ffbase/atomic.h>
 
 /*
+ffthread_yield ffcpu_pause
 fflock_init
 fflock_trylock fflock_lock
 fflock_unlock

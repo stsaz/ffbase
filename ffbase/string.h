@@ -85,6 +85,14 @@ ALGORITHMS
 
 // ALGORITHMS
 
+static inline ffsize _ffs_addchar(char *dst, ffsize cap, char c)
+{
+	if (cap == 0)
+		return 0;
+	*dst = c;
+	return 1;
+}
+
 static inline ffsize _ffs_copy(char *dst, ffsize cap, const char *s, ffsize n)
 {
 	n = ffmin(n, cap);
@@ -518,7 +526,7 @@ static inline int ffs_skip_ranges(const char *s, ffsize len, const char *ranges,
 
 	for (ffsize i = 0;  i != len;  i++) {
 		ffsize j;
-		for (j = 0;  j != ranges_len;  j+=2) {
+		for (j = 0;  j != ranges_len;  j += 2) {
 			if (ranges[j] <= s[i] && s[i] <= ranges[j+1])
 				break;
 		}

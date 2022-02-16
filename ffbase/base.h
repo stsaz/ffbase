@@ -153,6 +153,9 @@ static inline ffuint64 ffmin64(ffuint64 a, ffuint64 b)
 	(_n >= 0) ? _n : -_n; \
 })
 
+#define FFINT_JOIN64(hi, lo) \
+	(((ffuint64)hi) << 32) | (lo)
+
 
 /** Get N of elements in a static C array */
 #define FF_COUNT(ar)  (sizeof(ar) / sizeof(ar[0]))

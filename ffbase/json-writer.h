@@ -9,6 +9,7 @@
 /*
 ffjsonw_init ffjsonw_close
 ffjsonw_addstr ffjsonw_addstrz
+ffjsonw_addkey ffjsonw_addkeyz
 ffjsonw_addpair ffjsonw_addpairz
 ffjsonw_addnull
 ffjsonw_addint ffjsonw_addnum
@@ -66,6 +67,18 @@ static inline int ffjsonw_addstrz(ffjsonw *j, const char *sz)
 	ffstr s;
 	ffstr_setz(&s, sz);
 	return ffjsonw_add(j, FFJSON_TSTR, &s);
+}
+
+static inline int ffjsonw_addkey(ffjsonw *j, const ffstr *key)
+{
+	return ffjsonw_add(j, FFJSON_TOBJ_KEY, key);
+}
+
+static inline int ffjsonw_addkeyz(ffjsonw *j, const char *key)
+{
+	ffstr s;
+	ffstr_setz(&s, key);
+	return ffjsonw_add(j, FFJSON_TOBJ_KEY, &s);
 }
 
 /** Add key and value */

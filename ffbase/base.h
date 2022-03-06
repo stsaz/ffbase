@@ -25,8 +25,8 @@ FF_STRUCTPTR
 Endian conversion:
 	ffint_be_cpu16 ffint_be_cpu32 ffint_be_cpu64
 	ffint_le_cpu16 ffint_le_cpu32 ffint_le_cpu64
-	ffint_le_cpu16_ptr ffint_le_cpu32_ptr ffint_le_cpu64_ptr
-	ffint_be_cpu16_ptr ffint_be_cpu32_ptr ffint_be_cpu64_ptr
+	ffint_le_cpu16_ptr ffint_le_cpu24_ptr ffint_le_cpu32_ptr ffint_le_cpu64_ptr
+	ffint_be_cpu16_ptr ffint_be_cpu24_ptr ffint_be_cpu32_ptr ffint_be_cpu64_ptr
 Bits:
 	ffbit_find32 ffbit_find64
 	ffbit_rfind32 ffbit_rfind64
@@ -211,6 +211,11 @@ e.g. "0x11223344" <-> "0x44332211" */
 #define ffint_le_cpu16_ptr(ptr)  ffint_le_cpu16(*(ffushort*)(ptr))
 #define ffint_le_cpu32_ptr(ptr)  ffint_le_cpu32(*(ffuint*)(ptr))
 #define ffint_le_cpu64_ptr(ptr)  ffint_le_cpu64(*(ffuint64*)(ptr))
+static inline ffuint ffint_le_cpu24_ptr(const void *p)
+{
+	const ffbyte *b = (ffbyte*)p;
+	return ((ffuint)b[2] << 16) | ((ffuint)b[1] << 8) | b[0];
+}
 #define ffint_be_cpu16_ptr(ptr)  ffint_be_cpu16(*(ffushort*)(ptr))
 #define ffint_be_cpu32_ptr(ptr)  ffint_be_cpu32(*(ffuint*)(ptr))
 #define ffint_be_cpu64_ptr(ptr)  ffint_be_cpu64(*(ffuint64*)(ptr))

@@ -62,6 +62,15 @@ static inline void ffvec_set(ffvec *v, const void *data, ffsize n)
 /** Set data pointer and length: v = src */
 #define ffvec_set2(v, src)  ffvec_set(v, (src)->ptr, (src)->len)
 
+/** Set data pointer, length, capacity: v = {data, length, cap} */
+static inline void ffvec_set3(ffvec *v, const void *data, ffsize n, ffsize cap)
+{
+	ffvec_free(v);
+	v->ptr = (void*)data;
+	v->len = n;
+	v->cap = cap;
+}
+
 static inline void ffvec_null(ffvec *v)
 {
 	v->ptr = NULL;

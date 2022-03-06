@@ -12,7 +12,7 @@ ffutf8_from_cp
 ffutf_bom
 Windows-only:
 	ffs_wtou ffs_wtouz ffsz_wtou ffsz_alloc_wtou
-	ffsz_utow ffsz_alloc_utow
+	ffsz_utow ffsz_utow_n ffsz_alloc_utow
 */
 
 /*
@@ -488,16 +488,29 @@ static inline ffssize ffsz_wtou(char *dst, ffsize cap, const wchar_t *wsz)
 	return r;
 }
 
-static inline ffssize ffsz_utow(wchar_t *dst, ffsize cap_wchars, const char *sz)
+static inline ffssize ffsz_utow_n(wchar_t *dst, ffsize cap_wchars, const char *s, ffsize len)
 {
-	ffsize len = ffsz_len(sz);
-	ffssize r = ffutf8_to_utf16((char*)dst, cap_wchars * 2, sz, len + 1, FFUNICODE_UTF16LE);
-	if (r <= 0) {
-		if (cap_wchars != 0)
-			dst[0] = '\0';
+	ffsize cap = (cap_wchars != 0) ? cap_wchars-1 : 0;
+	ffssize r = ffutf8_to_utf16((char*)dst, cap * 2, s, len, FFUNICODE_UTF16LE);
+	if (dst == NULL)
+		return (r < 0) ? r : r+1;
+
+	if (cap_wchars == 0)
+		return 0;
+
+	if (r < 0) {
+		dst[0] = '\0';
 		return r;
 	}
-	return r / 2;
+
+	r /= 2;
+	dst[r++] = '\0';
+	return r;
+}
+
+static inline ffssize ffsz_utow(wchar_t *dst, ffsize cap_wchars, const char *sz)
+{
+	return ffsz_utow_n(dst, cap_wchars, sz, ffsz_len(sz));
 }
 
 /** Allocate memory and convert NULL-terminated UTF-16LE string to a NULL-terminated UTF-8 string

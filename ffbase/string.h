@@ -75,6 +75,7 @@ ALLOCATE+COPY
 ALGORITHMS
 	_ffs_copy _ffs_copyz
 	ffs_cmpz ffs_icmp ffs_icmpz ffs_matchz
+	ffs_split
 	ffs_findstr ffs_ifindstr ffs_findchar ffs_findany
 	ffs_rfindchar ffs_rfindstr ffs_rfindany
 	ffs_skipchar ffs_skipany ffs_skip_ranges

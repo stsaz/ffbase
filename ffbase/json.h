@@ -155,7 +155,7 @@ static inline int ffjson_strval_acquire(ffjson *j, ffstr *dst)
 	if (j->buf.cap != 0) {
 		FF_ASSERT(j->val.ptr == j->buf.ptr);
 		*dst = j->val;
-		ffvec_free(&j->buf);
+		ffvec_null(&j->buf);
 		return 0;
 	}
 	if (NULL == ffstr_dup2(dst, &j->val))

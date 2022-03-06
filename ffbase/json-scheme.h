@@ -7,6 +7,7 @@
 #include <ffbase/json.h>
 
 /*
+ffjson_scheme_init ffjson_scheme_destroy
 ffjson_scheme_addctx
 ffjson_scheme_process
 ffjson_parse_object
@@ -14,7 +15,9 @@ ffjson_parse_object
 
 /** Maps JSON key name to a C struct field offset or a handler function */
 typedef struct ffjson_arg {
-	/** Key name or "*" for an array element */
+	/** Key name
+	 or "*" for an array element
+	 or NULL for the last element */
 	const char *name;
 
 	/**
@@ -45,6 +48,11 @@ typedef struct ffjson_arg {
 	 int handler(ffjson_scheme *js, void *obj)
 	 User gets JSON type from js->jtype
 	 'name' MUST be "*"
+
+	FFJSON_TARR_CLOSE or FFJSON_TOBJ_CLOSE:
+	 int handler(ffjson_scheme *js, void *obj)
+	 'name' MUST be NULL
+	 Must be the last entry
 	*/
 	ffuint flags;
 
@@ -92,6 +100,14 @@ typedef struct ffjson_scheme {
 	ffvec ctxs; // struct ffjson_schemectx[]
 	const char *errmsg;
 } ffjson_scheme;
+
+/**
+flags: enum FFJSON_SCHEMEF */
+static inline void ffjson_scheme_init(ffjson_scheme *js, ffjson *j, ffuint flags)
+{
+	js->parser = j;
+	js->flags = flags;
+}
 
 static inline void ffjson_scheme_destroy(ffjson_scheme *js)
 {
@@ -204,6 +220,19 @@ static inline int ffjson_scheme_process(ffjson_scheme *js, int r)
 
 	case FFJSON_TOBJ_CLOSE:
 	case FFJSON_TARR_CLOSE:
+		for (ffuint i = 0;  ;  i++) {
+			if (ctx->args[i].name == NULL) {
+				js->arg = &ctx->args[i];
+				t = js->arg->flags & 0x0f;
+				if (t == FFJSON_TARR_CLOSE || t == FFJSON_TOBJ_CLOSE) {
+					u.b = (ffbyte*)js->arg->dst;
+					if (0 != (r2 = u.func(js, ctx->obj)))
+						return -r2; // user error
+				}
+				break;
+			}
+		}
+
 		js->ctxs.len--;
 
 		if (js->parser->ctxs.len != 0
@@ -292,8 +321,7 @@ static inline int ffjson_parse_object(const ffjson_arg *args, void *obj, ffstr *
 	j.flags = parser_flags;
 
 	ffjson_scheme js = {};
-	js.flags = scheme_flags;
-	js.parser = &j;
+	ffjson_scheme_init(&js, &j, scheme_flags);
 	ffjson_scheme_addctx(&js, args, obj);
 
 	for (;;) {

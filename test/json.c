@@ -242,15 +242,22 @@ struct jstruct {
 	jstruct *obj;
 	ffvec arr; // int64[]
 	jstruct *arr_obj;
+	int arr_done;
 };
 
 static int js_obj(ffjson_scheme *js, jstruct *o);
 static int js_arr(ffjson_scheme *js, jstruct *o);
 static int js_arr_el(ffjson_scheme *js, jstruct *o);
+static int js_arr_done(ffjson_scheme *js, jstruct *o)
+{
+	(void)js;
+	o->arr_obj->arr_done = 1;
+	return 0;
+}
 
 static const ffjson_arg jargs_arr[] = {
 	{ "*",	FFJSON_TANY,	(ffsize)js_arr_el },
-	{},
+	{ NULL, FFJSON_TARR_CLOSE, (ffsize)js_arr_done },
 };
 
 #define OFF(m)  FF_OFF(jstruct, m)
@@ -335,6 +342,7 @@ void test_json_scheme()
 	x(*ffslice_itemT(&o.obj->arr, 0, ffint64) == 1);
 	x(*ffslice_itemT(&o.obj->arr, 1, ffint64) == 2);
 	xieq(12345, o.obj->arr_obj->n);
+	xieq(1, o.obj->arr_obj->arr_done);
 	ffstr_free(&o.obj->s);
 	ffmem_free(o.obj->obj);
 	ffmem_free(o.obj);

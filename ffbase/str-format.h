@@ -486,7 +486,6 @@ static inline ffssize ffstr_matchfmtv(ffstr *s, const char *fmt, va_list args)
 				break;
 			}
 
-			int stop_char;
 			if (fmt[i] == '\0') {
 				width = s->len - is;
 				chunk.ptr = &s->ptr[is];  chunk.len = width;
@@ -495,28 +494,44 @@ static inline ffssize ffstr_matchfmtv(ffstr *s, const char *fmt, va_list args)
 
 			} else if (fmt[i] == '%') {
 				if (fmt[i+1] == '%') { // "%S%%"
-					stop_char = '%';
-					i += 2;
+					i++;
 				} else {
 					return -1; // "%S%?" - bad format string
 				}
-
-			} else {
-				stop_char = fmt[i++];
 			}
+			int stop_char = fmt[i++];
 
-			chunk.ptr = &s->ptr[is];
+			chunk.ptr = &s->ptr[is];  chunk.len = 0;
 			for (;;) {
 				if (is == s->len) {
 					return -1; // mismatch
 				}
 				if (s->ptr[is] == stop_char) {
-					break;
+					// match text until next %-var or EOS
+					ffsize is2 = is, i2 = i;
+					is++;
+					for (;; i++, is++) {
+
+						if (fmt[i] == '\0') {
+							goto delim_ok;
+						} else if (fmt[i] == '%') {
+							if (fmt[i+1] != '%')
+								goto delim_ok;
+							// "%%"
+							i++;
+						}
+
+						if (s->ptr[is] != fmt[i])
+							break; // continue search
+					}
+
+					is = is2;
+					i = i2;
 				}
 				is++;
+				chunk.len++;
 			}
-			chunk.len = &s->ptr[is] - chunk.ptr;
-			is++;
+delim_ok:
 			break;
 		}
 		}

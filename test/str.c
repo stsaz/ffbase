@@ -351,6 +351,15 @@ void test_ffstr_matchfmt()
 	ffstr_setz(&in, "a{#q");
 	xieq(-1, ffstr_matchfmt(&in, "%S{#%S}", &s1, &s2));
 
+	ffstr_setz(&in, "a b - c");
+	xieq(0, ffstr_matchfmt(&in, "%S - %S", &s1, &s2));
+	xseq(&s1, "a b");
+	xseq(&s2, "c");
+
+	ffstr_setz(&in, "a b - ");
+	xieq(0, ffstr_matchfmt(&in, "%S - ", &s1));
+	xseq(&s1, "a b");
+
 	ffstr_setz(&in, "");
 	xieq(-1, ffstr_matchfmt(&in, "%S{#%S}", &s1, &s2));
 

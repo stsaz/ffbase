@@ -40,7 +40,7 @@ Return NULL on error */
 static inline ffringqueue* ffrq_alloc(ffsize cap)
 {
 	cap = ffint_align_power2(cap);
-	ffringqueue *q = ffmem_align(sizeof(ffringqueue) + cap * sizeof(void*), 64);
+	ffringqueue *q = (ffringqueue*)ffmem_align(sizeof(ffringqueue) + cap * sizeof(void*), 64);
 	if (q == NULL)
 		return NULL;
 	q->cap = cap;

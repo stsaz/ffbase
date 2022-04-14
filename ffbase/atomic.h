@@ -14,7 +14,7 @@ FFINT_READONCE
 FFINT_WRITEONCE
 ffint_fetch_add
 ffint_cmpxchg
-ffcpu_fence_release
+ffcpu_fence_release ffcpu_fence_acquire
 ffatomic_load
 ffatomic_store
 ffatomic_fetch_add

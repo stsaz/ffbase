@@ -28,35 +28,36 @@ All components follow this convention.
 
 
 ## Features
-
+```
 String/text:
-* `string.h` - string container
-* `stringz.h` - NULL-terminated string functions
-* `unicode.h` - Unicode functions
+  string.h        String container
+  stringz.h       NULL-terminated string functions
+  unicode.h       Unicode functions
 
 Containers:
-* `slice.h` - simple array container
-* `vector.h` - array container
-* `sort.h` - array sorting (merge-sort)
-* `chain.h` - simple chain
-* `list.h` - doubly-linked list
-* `rbtree.h` - red-black tree
-* `map.h` - hash table
-* `ring.h` - ring buffer
+  slice.h         Simple array container
+  vector.h        Array container
+  sort.h          Array sorting (merge-sort)
+  chain.h         Simple chain
+  list.h          Doubly-linked list
+  rbtree.h        Red-black tree
+  map.h           Hash table
+  ringueue.h      Fixed-size lockless ring queue, multi-producer, multi-consumer
+  ring.h          Ring buffer
 
 JSON:
-* `json.h` - low-level JSON parser
-* `json-scheme.h` - JSON parser with scheme
-* `json-writer.h` - JSON writer
+  json.h          Low-level JSON parser
+  json-scheme.h   JSON parser with scheme
+  json-writer.h   JSON writer
 
 Atomic:
-* `atomic.h` - atomic operations
-* `lock.h` - spinlock
+  atomic.h        Atomic operations
+  lock.h          Spinlock
 
 Other:
-* `time.h` - date/time functions
-* `cpuid.h` - get CPU features
-
+  time.h          Date/time functions
+  cpuid.h         Get CPU features
+```
 
 ## Requirements:
 

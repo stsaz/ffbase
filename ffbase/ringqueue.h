@@ -43,6 +43,8 @@ static inline ffringqueue* ffrq_alloc(ffsize cap)
 	ffringqueue *q = (ffringqueue*)ffmem_align(sizeof(ffringqueue) + cap * sizeof(void*), 64);
 	if (q == NULL)
 		return NULL;
+	q->whead = q->wtail = 0;
+	q->rhead = q->rtail = 0;
 	q->cap = cap;
 	q->mask = cap - 1;
 	return q;
@@ -112,7 +114,8 @@ static inline int _ffrq_fetch(ffringqueue *q, void **item, ffuint sr, ffuint *us
 	*item = q->data[i];
 
 	// wait until previous readers finish their work
-	ffint_wait_until_equal(&q->rtail, rh);
+	if (!sr)
+		ffint_wait_until_equal(&q->rtail, rh);
 
 	ffcpu_fence_release();
 	FFINT_WRITEONCE(q->rtail, nrh);

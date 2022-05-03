@@ -43,7 +43,7 @@ Containers:
   rbtree.h        Red-black tree
   map.h           Hash table
   ringueue.h      Fixed-size lockless ring queue, multi-producer, multi-consumer
-  ring.h          Ring buffer
+  ring.h          Fixed-size lockless ring buffer, single-producer/consumer
 
 JSON:
   json.h          Low-level JSON parser

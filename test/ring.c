@@ -1,52 +1,208 @@
-/** ffbase/ringf.h tester
-2020, Simon Zolin
+/** ffbase/ring.h tester
+2022, Simon Zolin
 */
 
 #include <ffbase/ring.h>
 #include <test/test.h>
 
+void test_ring_io_some(ffring *rb)
+{
+	ffstr s1;
+	ffring_head h, h1, h2;
+	ffsize free, used;
+
+	// ""
+	h = ffring_read_begin(rb, 6, &s1, &used);
+	x(s1.len == 0);
+	x(used == 0);
+
+	// "" -> "12345"
+	h = ffring_write_begin(rb, 5, &s1, &free);
+	x(s1.len == 5);
+	x(free == 3);
+	ffmem_copy(s1.ptr, "12345", 5);
+	ffring_write_finish(rb, h);
+
+	// "12345" -> "123456" -> "1234567"
+	h1 = ffring_write_begin(rb, 1, &s1, &free);
+	x(s1.len == 1);
+	x(free == 2);
+	ffmem_copy(s1.ptr, "6", 1);
+	h2 = ffring_write_begin(rb, 1, &s1, &free);
+	x(s1.len == 1);
+	x(free == 1);
+	ffmem_copy(s1.ptr, "7", 1);
+	ffring_write_finish(rb, h1);
+	ffring_write_finish(rb, h2);
+
+	// "1234567" -> "...4567" -> ".....67"
+	h1 = ffring_read_begin(rb, 3, &s1, &used);
+	xseq(&s1, "123");
+	x(used == 4);
+	h2 = ffring_read_begin(rb, 2, &s1, &used);
+	xseq(&s1, "45");
+	x(used == 2);
+	ffring_read_finish(rb, h1);
+	ffring_read_finish(rb, h2);
+
+	// ".....67" -> ".....678" -> "90...678"
+	h = ffring_write_begin(rb, 3, &s1, &free);
+	x(s1.len == 1);
+	x(free == 5);
+	ffmem_copy(s1.ptr, "8", 1);
+	ffring_write_finish(rb, h);
+	h = ffring_write_begin(rb, 2, &s1, &free);
+	x(s1.len == 2);
+	x(free == 3);
+	ffmem_copy(s1.ptr, "90", 2);
+	ffring_write_finish(rb, h);
+
+	// "90...678" -> "90" -> ".."
+	h = ffring_read_begin(rb, 5, &s1, &used);
+	xseq(&s1, "678");
+	x(used == 2);
+	ffring_read_finish(rb, h);
+	h = ffring_read_begin(rb, 5, &s1, &used);
+	xseq(&s1, "90");
+	x(used == 0);
+	ffring_read_finish(rb, h);
+
+	// ".." -> "..xxxxxx" -> "xxxxxxxx"
+	h = ffring_write_begin(rb, 9, &s1, &free);
+	x(s1.len == 6);
+	x(free == 2);
+	h = ffring_write_begin(rb, 8, &s1, &free);
+	x(s1.len == 2);
+	x(free == 0);
+	ffring_write_finish(rb, h);
+
+	// "xxxxxxxx"
+	h = ffring_write_begin(rb, 1, &s1, &free);
+	x(s1.len == 0);
+	x(free == 0);
+
+	ffring_reset(rb);
+
+	// "" -> "12345" -> "12345678"
+	x(5 == ffring_write(rb, "12345", 5));
+	x(3 == ffring_write(rb, "6789", 4));
+	x(0 == ffring_write(rb, "9", 1));
+
+	// "12345678" -> ""
+	h = ffring_read_begin(rb, 8, &s1, &used);
+	xseq(&s1, "12345678");
+	x(used == 0);
+}
+
+void test_ring_io_all(ffring *rb)
+{
+	ffstr s1, s2;
+	ffring_head h, h1, h2;
+	ffsize free, used;
+
+	// ""
+	h = ffring_read_all_begin(rb, 6, &s1, &s2, &used);
+	x(s1.len == 0);
+	x(s2.len == 0);
+	x(used == 0);
+
+	// "" -> "12345"
+	h = ffring_write_all_begin(rb, 5, &s1, &s2, &free);
+	x(s1.len == 5);
+	x(s2.len == 0);
+	x(free == 3);
+	ffmem_copy(s1.ptr, "12345", 5);
+	ffring_write_finish(rb, h);
+
+	// "12345" -> "123456" -> "1234567"
+	h1 = ffring_write_all_begin(rb, 1, &s1, &s2, &free);
+	x(s1.len == 1);
+	x(s2.len == 0);
+	x(free == 2);
+	ffmem_copy(s1.ptr, "6", 1);
+	h2 = ffring_write_all_begin(rb, 1, &s1, &s2, &free);
+	x(s1.len == 1);
+	x(s2.len == 0);
+	x(free == 1);
+	ffmem_copy(s1.ptr, "7", 1);
+	ffring_write_finish(rb, h1);
+	ffring_write_finish(rb, h2);
+
+	// "1234567" -> "...4567" -> ".....67"
+	h1 = ffring_read_all_begin(rb, 3, &s1, &s2, &used);
+	xseq(&s1, "123");
+	x(s2.len == 0);
+	x(used == 4);
+	h2 = ffring_read_all_begin(rb, 2, &s1, &s2, &used);
+	xseq(&s1, "45");
+	x(s2.len == 0);
+	x(used == 2);
+	ffring_read_finish(rb, h1);
+	ffring_read_finish(rb, h2);
+
+	// ".....67" -> "90...678"
+	h = ffring_write_all_begin(rb, 3, &s1, &s2, &free);
+	x(s1.len == 1);
+	x(s2.len == 2);
+	x(free == 3);
+	ffmem_copy(s1.ptr, "8", 1);
+	ffmem_copy(s2.ptr, "90", 2);
+	ffring_write_finish(rb, h);
+
+	// "90...678"
+	h = ffring_read_all_begin(rb, 6, &s1, &s2, &used);
+	x(s1.len == 0);
+	x(s2.len == 0);
+	x(used == 5);
+
+	// "90...678" -> ".."
+	h = ffring_read_all_begin(rb, 5, &s1, &s2, &used);
+	xseq(&s1, "678");
+	xseq(&s2, "90");
+	x(used == 0);
+	ffring_read_finish(rb, h);
+
+	// ".."
+	h = ffring_write_all_begin(rb, 9, &s1, &s2, &free);
+	x(s1.len == 0);
+	x(s2.len == 0);
+	x(free == 8);
+
+	// ".." -> "xxxxxxxx"
+	h = ffring_write_all_begin(rb, 8, &s1, &s2, &free);
+	x(s1.len == 6);
+	x(s2.len == 2);
+	x(free == 0);
+	ffring_write_finish(rb, h);
+
+	// "xxxxxxxx"
+	h = ffring_write_all_begin(rb, 1, &s1, &s2, &free);
+	x(s1.len == 0);
+	x(s2.len == 0);
+	x(free == 0);
+
+	ffring_reset(rb);
+
+	// "" -> "12345" -> "12345678"
+	x(5 == ffring_write_all(rb, "12345", 5));
+	x(0 == ffring_write_all(rb, "asdf", 4));
+	x(3 == ffring_write_all(rb, "678", 3));
+	x(0 == ffring_write_all(rb, "9", 1));
+
+	// "12345678" -> ""
+	h = ffring_read_all_begin(rb, 8, &s1, &s2, &used);
+	xseq(&s1, "12345678");
+	x(s2.len == 0);
+	x(used == 0);
+}
 
 void test_ring()
 {
-	ffring r = {};
-	x(NULL != ffring_create(&r, 8));
+	ffring *rb = ffring_alloc(7, FFRING_1_READER | FFRING_1_WRITER);
 
-	xieq(0, ffring_filled(&r));
-	xieq(4, ffring_write(&r, "data", 4));
-	xieq(4, ffring_filled(&r));
-	xieq(4, ffring_write(&r, "12345", 5));
-	xieq(8, ffring_filled(&r));
+	test_ring_io_all(rb);
+	ffring_reset(rb);
+	test_ring_io_some(rb);
 
-	ffstr s = ffring_acquire_read(&r);
-	xieq(8, s.len);
-	s.len = 4;
-	xseq(&s, "data");
-	ffring_release_read(&r, 4);
-
-	s = ffring_acquire_read(&r);
-	xieq(4, s.len);
-	xseq(&s, "1234");
-	ffring_release_read(&r, 3);
-
-	ffring_clear(&r);
-	xieq(0, ffring_filled(&r));
-
-	// "(rw)........"
-	s = ffring_acquire_read(&r);
-	xseq(&s, "");
-	xieq(7, ffring_write(&r, "1234567", 7)); // "(r)1234567(w)."
-	s = ffring_acquire_read(&r);
-	xseq(&s, "1234567");
-	ffring_release_read(&r, 2); // "..(r)34567(w)."
-	xieq(1, ffring_write(&r, "abcdef", 5)); // "(w)..(r)34567a"
-	xieq(2, ffring_write(&r, "bcdef", 4)); // "bc(rw)34567a"
-	s = ffring_acquire_read(&r);
-	xieq(6, s.len);
-	xseq(&s, "34567a");
-	ffring_release_read(&r, s.len); // "(r)bc(rw)......"
-	s = ffring_acquire_read(&r);
-	xseq(&s, "bc");
-	ffring_release_read(&r, 2);
-
-	ffring_free(&r);
+	ffring_free(rb);
 }

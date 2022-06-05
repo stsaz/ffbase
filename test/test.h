@@ -141,19 +141,31 @@ static inline ffssize test_stdout_write(const void *data, ffsize len)
 
 /** %-formatted output to stdout
 NOT printf()-compatible (see ffs_formatv()) */
-static inline ffssize test_stdout_fmt(const char *fmt, ...)
+static inline ffssize test_stdout_fmtv(const char *fmt, va_list va)
 {
-	va_list args;
-	va_start(args, fmt);
 	ffstr s = {};
 	ffsize cap = 0;
-	ffsize r = ffstr_growfmtv(&s, &cap, fmt, args);
-	va_end(args);
+	ffsize r = ffstr_growfmtv(&s, &cap, fmt, va);
 	if (r != 0)
 		r = test_stdout_write(s.ptr, r);
 	ffstr_free(&s);
 	return r;
 }
 
+static inline ffssize test_stdout_fmt(const char *fmt, ...)
+{
+	va_list args;
+	va_start(args, fmt);
+	ffsize r = test_stdout_fmtv(fmt, args);
+	va_end(args);
+	return r;
+}
+
 /** Write %-formatted text line to stdout */
 #define xlog(fmt, ...)  (void) test_stdout_fmt(fmt "\n", ##__VA_ARGS__)
+
+static inline void xlogv(const char *fmt, va_list va)
+{
+	test_stdout_fmtv(fmt, va);
+	test_stdout_write("\n", 1);
+}

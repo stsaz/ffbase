@@ -2,6 +2,13 @@
 2020, Simon Zolin
 */
 
+/*
+ffchar_tohex
+ffs_toint ffs_fromint
+ffs_tofloat ffs_fromfloat
+ffs_tohex ffs_fromhex
+*/
+
 #pragma once
 #define _FFBASE_STRCONVERT_H
 #include <math.h>

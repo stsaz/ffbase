@@ -507,8 +507,8 @@ static inline ffsize ffs_rskipany(const char *s, ffsize len, const char *skip_ch
 }
 
 /** Skip bytes while they are within the specified range
-Return N of bytes skipped
- <0 on error */
+Return offset of the first out-of-range byte
+ <0: all bytes were skipped */
 static inline int ffs_skip_ranges(const char *s, ffsize len, const char *ranges, ffsize ranges_len)
 {
 	FF_ASSERT(ranges_len%2 == 0);

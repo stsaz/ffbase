@@ -38,6 +38,13 @@ void test_time_fromstr()
 	x(dt.weekday == 4);
 
 	ffmem_zero_obj(&dt);
+	xieq(12, fftime_fromstr1(&dt, STR2("01:02:03.456xxx"), FFTIME_HMS_MSEC));
+	x(dt.hour == 1);
+	x(dt.minute == 2);
+	x(dt.second == 3);
+	x(dt.nanosecond == 456000000);
+
+	ffmem_zero_obj(&dt);
 	xieq(12, fftime_fromstr1(&dt, STR2("01:02:03.456xxx"), FFTIME_HMS_MSEC_VAR));
 	x(dt.hour == 1);
 	x(dt.minute == 2);

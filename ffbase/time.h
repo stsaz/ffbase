@@ -360,6 +360,13 @@ static int _fftime_time_fromstr(ffdatetime *dt, ffstr *str, ffuint flags)
 			return -1;
 		break;
 
+	case FFTIME_HMS_MSEC:
+		if (0 > (r = ffstr_matchfmt(str, "%2u:%2u:%2u.%3u"
+			, &dt->hour, &dt->minute, &dt->second, &dt->nanosecond)))
+			return -1;
+		dt->nanosecond *= 1000000;
+		break;
+
 	case FFTIME_HMS_GMT:
 		if (0 > (r = ffstr_matchfmt(str, "%2u:%2u:%2u GMT"
 			, &dt->hour, &dt->minute, &dt->second)))

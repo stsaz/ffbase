@@ -436,11 +436,8 @@ static inline ffsize fftime_fromstr1(ffdatetime *dt, const char *s, ffsize len, 
 	if (0 != _fftime_time_fromstr(&dt2, &str, flags))
 		goto end;
 
-	if (str.len != 0)
-		goto end;
-
 	*dt = dt2;
-	return len;
+	return len - str.len;
 
 end:
 	return 0;

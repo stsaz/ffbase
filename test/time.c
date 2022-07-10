@@ -13,7 +13,7 @@ void test_time_fromstr()
 {
 	ffdatetime dt;
 	ffmem_zero_obj(&dt);
-	xieq(19, fftime_fromstr1(&dt, STR2("1970-01-02 04:05:06"), FFTIME_YMD));
+	xieq(19, fftime_fromstr1(&dt, STR2("1970-01-02 04:05:06xxx"), FFTIME_YMD));
 	x(dt.year == 1970);
 	x(dt.month == 1);
 	xieq(dt.day, 2);
@@ -22,13 +22,13 @@ void test_time_fromstr()
 	x(dt.second == 6);
 	x(dt.weekday == 0);
 
-	xieq(10, fftime_fromstr1(&dt, STR2("1970-01-02"), FFTIME_DATE_YMD));
+	xieq(10, fftime_fromstr1(&dt, STR2("1970-01-02xxx"), FFTIME_DATE_YMD));
 	x(dt.year == 1970);
 	x(dt.month == 1);
 	xieq(dt.day, 2);
 
 	ffmem_zero_obj(&dt);
-	xieq(29, fftime_fromstr1(&dt, STR2("Thu, 01 Feb 1972 04:05:06 GMT"), FFTIME_WDMY));
+	xieq(29, fftime_fromstr1(&dt, STR2("Thu, 01 Feb 1972 04:05:06 GMTxxx"), FFTIME_WDMY));
 	x(dt.year == 1972);
 	x(dt.month == 2);
 	x(dt.day == 1);
@@ -38,7 +38,7 @@ void test_time_fromstr()
 	x(dt.weekday == 4);
 
 	ffmem_zero_obj(&dt);
-	xieq(12, fftime_fromstr1(&dt, STR2("01:02:03.456"), FFTIME_HMS_MSEC_VAR));
+	xieq(12, fftime_fromstr1(&dt, STR2("01:02:03.456xxx"), FFTIME_HMS_MSEC_VAR));
 	x(dt.hour == 1);
 	x(dt.minute == 2);
 	x(dt.second == 3);

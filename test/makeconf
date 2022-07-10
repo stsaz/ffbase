@@ -69,6 +69,7 @@ endif
 
 # Set utils
 WGET := wget
+MKDIR := mkdir -p
 RM := rm -rf
 CP := cp -u
 UNTAR_ZST := tar -x --zstd -f

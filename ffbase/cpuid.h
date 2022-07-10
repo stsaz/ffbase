@@ -10,6 +10,7 @@ ffcpu_rdtsc
 
 #pragma once
 #include <ffbase/base.h>
+#include <x86intrin.h>
 #include <immintrin.h>
 
 enum FFCPUID_FEAT {

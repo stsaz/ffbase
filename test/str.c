@@ -556,6 +556,14 @@ void test_ffstr_replace()
 	ffstr_free(&out);
 }
 
+void test_ffs_skipany()
+{
+	xieq(12, ffs_skipany(" \t\r\n \t\r\n \t\r\n", 12, "\t\n\r ", 4));
+	xieq(12, ffs_skipany(" \t\r\n \t\r\n \t\r\nkey", 12+3, "\t\n\r ", 4));
+	xieq(12, ffs_rskipany(" \t\r\n \t\r\n \t\r\n", 12, "\t\n\r ", 4));
+	xieq(12, ffs_rskipany("key \t\r\n \t\r\n \t\r\n", 12+3, "\t\n\r ", 4));
+}
+
 void test_ffs_skip_ranges()
 {
 	xieq(3, ffs_skip_ranges("key val", 7, "01\x21\x7f", 4));
@@ -618,6 +626,7 @@ void test_str()
 	test_str_wildcard();
 	test_ffstr_matchfmt();
 	test_ffstr_replace();
+	test_ffs_skipany();
 	test_ffs_skip_ranges();
 }
 

@@ -55,7 +55,7 @@ LINK_RPATH_ORIGIN :=
 LINK_INSTALLNAME_LOADERPATH :=
 ifeq "$(OS)" "linux"
 	LINK_RPATH_ORIGIN := '-Wl,-rpath,$$ORIGIN' -Wl,--disable-new-dtags
-else ifeq "$(OS)" "bsd"
+else ifeq "$(OS)" "freebsd"
 	LINK_RPATH_ORIGIN := '-Wl,-rpath,$$ORIGIN'
 else ifeq "$(OS)" "apple"
 	LINK_INSTALLNAME_LOADERPATH := -Wl,-install_name -Wl,@loader_path/$@
@@ -66,8 +66,15 @@ ifneq "$(OS)" "windows"
 	LINK_PTHREAD := -pthread
 endif
 
+LINKFLAGS :=
+ifeq "$(OS)" "linux"
+	LINKFLAGS := -Wl,-no-undefined
+else ifeq "$(OS)" "freebsd"
+	LINKFLAGS := -Wl,-no-undefined
+endif
 
 # Set utils
+WINDRES := $(CROSS_PREFIX)windres
 WGET := wget
 MKDIR := mkdir -p
 RM := rm -rf

@@ -382,6 +382,10 @@ static int _ffs_skip_ranges_sse42(const void *d, ffsize n, const char *ranges, f
 		*(ffuint64*)&mask = *(ffuint64*)ranges;
 		*(ffushort*)(((char*)&mask)+8) = *(ffushort*)(ranges+8);
 		break;
+	case 16:
+		*(ffuint64*)&mask = *(ffuint64*)ranges;
+		*(ffuint64*)(((char*)&mask)+8) = *(ffuint64*)(ranges+8);
+		break;
 	}
 
 	const __m128i *p = (__m128i*)d, *end = (__m128i*)((char*)d+n);
@@ -484,26 +488,34 @@ static inline ffsize ffs_skipchar(const char *s, ffsize len, int skip_char)
 	return i;
 }
 
-/** Remove any of matching bytes from the beginning */
+/** Remove any of matching bytes from the beginning.
+Return N of bytes skipped */
 static inline ffsize ffs_skipany(const char *s, ffsize len, const char *skip_chars, ffsize skip_chars_len)
 {
-	ffsize i;
-	for (i = 0;  i != len;  i++) {
-		if (ffs_findchar(skip_chars, skip_chars_len, s[i]) < 0)
-			break;
+	for (ffsize i = 0;  i != len;  i++) {
+		for (ffsize j = 0;  ;  j++) {
+			if (j == skip_chars_len)
+				return i;
+			if (s[i] == skip_chars[j])
+				break;
+		}
 	}
-	return i;
+	return len;
 }
 
-/** Remove any of matching bytes from the end */
+/** Remove any of matching bytes from the end.
+Return N of bytes skipped */
 static inline ffsize ffs_rskipany(const char *s, ffsize len, const char *skip_chars, ffsize skip_chars_len)
 {
-	ffssize i;
-	for (i = len - 1;  i >= 0;  i--) {
-		if (ffs_findchar(skip_chars, skip_chars_len, s[i]) < 0)
-			break;
+	for (ffssize i = len - 1;  i >= 0;  i--) {
+		for (ffsize j = 0;  ;  j++) {
+			if (j == skip_chars_len)
+				return len - (i + 1);
+			if (s[i] == skip_chars[j])
+				break;
+		}
 	}
-	return len - (i + 1);
+	return len;
 }
 
 /** Skip bytes while they are within the specified range
@@ -520,19 +532,19 @@ static inline int ffs_skip_ranges(const char *s, ffsize len, const char *ranges,
 		_ffcpu_features = i.features[0];
 	}
 
-	if ((ranges_len == 2 || ranges_len == 4 || ranges_len == 6 || ranges_len == 8 || ranges_len == 10) && (_ffcpu_features & (1<<20))) {
+	if ((ranges_len == 2 || ranges_len == 4 || ranges_len == 6 || ranges_len == 8 || ranges_len == 10 || ranges_len == 16)
+		&& (_ffcpu_features & (1<<20))) {
 		return _ffs_skip_ranges_sse42(s, len, ranges, ranges_len);
 	}
 #endif
 
 	for (ffsize i = 0;  i != len;  i++) {
-		ffsize j;
-		for (j = 0;  j != ranges_len;  j += 2) {
+		for (ffsize j = 0;  ;  j += 2) {
+			if (j == ranges_len)
+				return i;
 			if (ranges[j] <= s[i] && s[i] <= ranges[j+1])
 				break;
 		}
-		if (j == ranges_len)
-			return i;
 	}
 	return -1;
 }

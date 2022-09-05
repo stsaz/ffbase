@@ -241,7 +241,19 @@ static inline void* ffvec_push(ffvec *v, ffsize elsize)
 	return (char*)v->ptr + v->len++ * elsize;
 }
 
+/** Add a new empty (zeroed) element */
+static inline void* ffvec_zpush(ffvec *v, ffsize elsize)
+{
+	if (NULL == ffvec_grow(v, 1, elsize))
+		return NULL;
+
+	char *p = (char*)v->ptr + v->len++ * elsize;
+	ffmem_zero(p, elsize);
+	return p;
+}
+
 #define ffvec_pushT(v, T)  ((T*)ffvec_push(v, sizeof(T)))
+#define ffvec_zpushT(v, T)  ((T*)ffvec_zpush(v, sizeof(T)))
 
 static inline void* _ffvec_push(ffvec *v, ffsize elsize)
 {

@@ -408,6 +408,7 @@ static inline char* ffsz_allocfmtv(const char *fmt, va_list va)
 	if (n < 0) {
 		FF_ASSERT(cap - 1 < (ffsize)-n);
 		cap = -n + 1;
+		ffmem_free(d);
 		if (NULL == (d = (char*)ffmem_alloc(cap)))
 			goto fail;
 

@@ -2,6 +2,11 @@
 2020, Simon Zolin
 */
 
+/*
+ffmem_print
+ffmem_alprint
+*/
+
 #pragma once
 
 #include <ffbase/string.h>
@@ -15,27 +20,37 @@ enum FFMEM_PRINT {
 /** Represent data as hex string and text
 Format:
   OFFSET  XX XX XX XX  XX XX XX XX  .... ....
+buf: NULL: just get the N of bytes needed
 flags: line_width | enum FFMEM_PRINT
-Return newly allocated buffer, free with ffstr_free() */
-static inline ffstr ffmem_print(const void *data, ffsize len, ffuint flags)
+Return N of bytes written
+  0 if not enough space */
+static inline ffsize ffmem_print(void *buf, ffsize cap, const void *data, ffsize len, ffuint64 offset, ffuint flags)
 {
 	ffuint width = flags & 0xff;
 	if (width == 0)
 		width = 16;
 	ffuint blocks = width / 4;
-	ffstr s = {};
-	if (NULL == ffstr_alloc(&s, (8 + FFS_LEN("  XX XX XX XX")*blocks + 1 + FFS_LEN(" ....")*blocks + 1) * (len/width + 1)))
-		return s;
+	ffsize need = (8 + FFS_LEN("  XX XX XX XX")*blocks + 1 + FFS_LEN(" ....")*blocks + 1) * (len/width + 1);
+
+	if (buf == NULL)
+		return need;
+
+	if (need > cap)
+		return 0;
+
+	ffstr s = FFSTR_INITN(buf, 0);
 
 	const ffbyte *d = (ffbyte*)data;
 	for (ffsize i = 0;  i != len; ) {
 
 		// print offset
-		ffsize off = i;
-		for (int k = 0;  k != 8;  k++) {
-			s.ptr[s.len++] = ffhex[(off & 0xf0000000) >> 28];
-			off <<= 4;
+		ffuint64 off = offset;
+		offset += width;
+		for (int k = 7;  k >= 0;  k--) {
+			s.ptr[s.len + k] = ffhex[off & 0x0f];
+			off >>= 4;
 		}
+		s.len += 8;
 
 		ffsize itext = s.len + FFS_LEN("  XX XX XX XX")*blocks, itext_begin = itext;
 		s.ptr[itext++] = ' ';
@@ -73,5 +88,17 @@ static inline ffstr ffmem_print(const void *data, ffsize len, ffuint flags)
 
 		s.ptr[s.len++] = '\n';
 	}
+	return s.len;
+}
+
+/**
+Return newly allocated buffer, free with ffstr_free() */
+static inline ffstr ffmem_alprint(const void *data, ffsize len, ffuint flags)
+{
+	ffstr s = {};
+	ffsize n = ffmem_print(NULL, 0, data, len, 0, flags);
+	if (NULL == ffstr_alloc(&s, n))
+		return s;
+	s.len = ffmem_print(s.ptr, n, data, len, 0, flags);
 	return s;
 }

@@ -47,10 +47,13 @@ void test_mem_print()
 {
 	char ss[] = "asdfghjkzxcv12345678";
 	ffstr s;
-	s = ffmem_print(ss, sizeof(ss), 0);
+	s = ffmem_alprint(ss, sizeof(ss), 0);
 	printf("%.*s\n", (int)s.len, s.ptr);
-	s = ffmem_print(ss, sizeof(ss), FFMEM_PRINT_NO_TEXT);
+	ffstr_free(&s);
+	s = ffmem_alprint(ss, sizeof(ss), FFMEM_PRINT_NO_TEXT);
 	printf("%.*s\n", (int)s.len, s.ptr);
-	s = ffmem_print(ss, sizeof(ss), FFMEM_PRINT_ZEROSPACE);
+	ffstr_free(&s);
+	s = ffmem_alprint(ss, sizeof(ss), FFMEM_PRINT_ZEROSPACE);
 	printf("%.*s\n", (int)s.len, s.ptr);
+	ffstr_free(&s);
 }

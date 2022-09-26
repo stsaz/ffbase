@@ -9,6 +9,34 @@
 
 #define STR2(s)  (char*)(s), FFS_LEN(s)
 
+void test_time_tostr()
+{
+	ffdatetime dt = {};
+	dt.year = 1;
+	dt.month = 2;
+	dt.day = 3;
+	dt.hour = 4;
+	dt.minute = 5;
+	dt.second = 6;
+	dt.nanosecond = 123456789;
+	dt.weekday = 4;
+
+	char buf[64];
+	ffstr s;
+	s.ptr = buf;
+	s.len = fftime_tostr1(&dt, buf, sizeof(buf), FFTIME_YMD);
+	xseq(&s, "0001-02-03 04:05:06");
+
+	xieq(0, fftime_tostr1(&dt, buf, 19, FFTIME_YMD));
+	x(0 != fftime_tostr1(&dt, buf, 20, FFTIME_YMD));
+
+	s.len = fftime_tostr1(&dt, buf, sizeof(buf), FFTIME_WDMY);
+	xseq(&s, "Thu, 03 Feb 0001 04:05:06 GMT");
+
+	s.len = fftime_tostr1(&dt, buf, sizeof(buf), FFTIME_DATE_YMD | FFTIME_HMS_USEC);
+	xseq(&s, "0001-02-03 04:05:06.123456");
+}
+
 void test_time_fromstr()
 {
 	ffdatetime dt;
@@ -128,18 +156,7 @@ void test_time()
 	xieq(1, dt.month);
 	xieq(1, dt.day);
 
-	char buf[64];
-	ffstr s;
-	s.ptr = buf;
-	s.len = fftime_tostr1(&dt, buf, sizeof(buf), FFTIME_YMD);
-	xseq(&s, "1970-01-01 00:00:00");
-
-	xieq(0, fftime_tostr1(&dt, buf, 19, FFTIME_YMD));
-	x(0 != fftime_tostr1(&dt, buf, 20, FFTIME_YMD));
-
-	s.len = fftime_tostr1(&dt, buf, sizeof(buf), FFTIME_WDMY);
-	xseq(&s, "Thu, 01 Jan 1970 00:00:00 GMT");
-
+	test_time_tostr();
 	test_time_fromstr();
 
 	// test each day since 1970

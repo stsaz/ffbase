@@ -15,6 +15,7 @@ fftime_valid
 fftime_join1
 fftime_split1
 fftime_tostr1
+fftime_fromstr1
 */
 
 /** Time value */
@@ -25,6 +26,13 @@ typedef struct fftime {
 
 /** Seconds passed until 1970 */
 #define FFTIME_1970_SECONDS  62135596800ULL
+
+/** Set time from milliseconds */
+static inline void fftime_from_msec(fftime *t, ffuint64 msec)
+{
+	t->sec = msec / 1000;
+	t->nsec = (msec % 1000) * 1000000;
+}
 
 /** Add time value */
 static inline void fftime_add(fftime *t, const fftime *add)
@@ -204,6 +212,7 @@ enum FFTIME_FMT {
 	FFTIME_HMS_MSEC = 0x20, // hh:mm:ss.msc
 	FFTIME_HMS_GMT = 0x30, // hh:mm:ss GMT
 	FFTIME_HMS_MSEC_VAR = 0x40, // [[h:]m:]s[.ms] (optional hour, minute and millisecond)
+	FFTIME_HMS_USEC = 0x50, // hh:mm:ss.mcrsec
 
 	// date & time:
 	FFTIME_YMD = FFTIME_DATE_YMD | FFTIME_HMS, // yyyy-MM-dd hh:mm:ss (ISO 8601)
@@ -265,6 +274,11 @@ static inline ffsize fftime_tostr1(const ffdatetime *dt, char *dst, ffsize cap, 
 	case FFTIME_HMS_MSEC:
 		r = ffs_format(dst + i, cap - i, "%02u:%02u:%02u.%03u"
 			, dt->hour, dt->minute, dt->second, dt->nanosecond / 1000000);
+		break;
+
+	case FFTIME_HMS_USEC:
+		r = ffs_format(dst + i, cap - i, "%02u:%02u:%02u.%06u"
+			, dt->hour, dt->minute, dt->second, dt->nanosecond / 1000);
 		break;
 
 	case FFTIME_HMS_GMT:

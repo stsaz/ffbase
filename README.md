@@ -124,6 +124,8 @@ Use these preprocessor definitions to enable new functionality or to change the 
 
 * `FF_DEBUG` - use additional assert() checks when debugging
 * `FFBASE_HAVE_FFERR_STR` - enable "%E" for format strings
+* `_FFBASE_MEM_ALLOC` - don't define `ffmem_*` allocation functions (user must define them)
+* `FFBASE_MEM_ASSERT` - call assert() when memory allocation fails
 * To enable SSE4.2 code use `-msse4.2` compiler flag and provide storage for `int _ffcpu_features`.
 
 

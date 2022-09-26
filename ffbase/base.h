@@ -333,6 +333,18 @@ static inline ffuint64 ffint_align_power2(ffuint64 n)
 #define ffsz_len(sz)  strlen(sz)
 #define ffwsz_len(sz)  wcslen(sz)
 
+#define FFMEM_ASSERT(ptr)  (ptr)
+#ifdef FFBASE_MEM_ASSERT
+	#include <assert.h>
+	#undef FFMEM_ASSERT
+	/** Call assert() on memory allocation failure */
+	#define FFMEM_ASSERT(ptr) \
+	({ \
+		void *p = ptr; \
+		assert(p != NULL); \
+		p; \
+	})
+#endif
 
 /* Heap allocation */
 #if !defined _FFBASE_MEM_ALLOC
@@ -342,19 +354,19 @@ static inline ffuint64 ffint_align_power2(ffuint64 n)
 
 static inline void* ffmem_alloc(ffsize size)
 {
-	return HeapAlloc(GetProcessHeap(), 0, size);
+	return FFMEM_ASSERT(HeapAlloc(GetProcessHeap(), 0, size));
 }
 
 static inline void* ffmem_calloc(ffsize n, ffsize elsize)
 {
-	return HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, n * elsize);
+	return FFMEM_ASSERT(HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, n * elsize));
 }
 
 static inline void* ffmem_realloc(void *ptr, ffsize new_size)
 {
 	if (ptr == NULL)
-		return HeapAlloc(GetProcessHeap(), 0, new_size);
-	return HeapReAlloc(GetProcessHeap(), 0, ptr, new_size);
+		return FFMEM_ASSERT(HeapAlloc(GetProcessHeap(), 0, new_size));
+	return FFMEM_ASSERT(HeapReAlloc(GetProcessHeap(), 0, ptr, new_size));
 }
 
 static inline void ffmem_free(void *ptr)
@@ -366,17 +378,17 @@ static inline void ffmem_free(void *ptr)
 
 static inline void* ffmem_alloc(ffsize size)
 {
-	return malloc(size);
+	return FFMEM_ASSERT(malloc(size));
 }
 
 static inline void* ffmem_calloc(ffsize n, ffsize elsize)
 {
-	return calloc(n, elsize);
+	return FFMEM_ASSERT(calloc(n, elsize));
 }
 
 static inline void* ffmem_realloc(void *ptr, ffsize new_size)
 {
-	return realloc(ptr, new_size);
+	return FFMEM_ASSERT(realloc(ptr, new_size));
 }
 
 static inline void ffmem_free(void *ptr)

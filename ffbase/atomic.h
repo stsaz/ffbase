@@ -18,6 +18,7 @@ ffcpu_fence_release ffcpu_fence_acquire
 ffatomic_load
 ffatomic_store
 ffatomic_fetch_add
+ffatomic_fetch_and
 ffatomic_cmpxchg
 */
 
@@ -33,6 +34,11 @@ ffatomic_cmpxchg
 Return old value */
 #define ffint_fetch_add(ptr, add) \
 	__sync_fetch_and_add((volatile __typeof__(*ptr)*)(ptr), add)
+
+/** Atomically perform AND bit operation.
+Return old value */
+#define ffint_fetch_and(ptr, _and) \
+	__sync_fetch_and_and((volatile __typeof__(*ptr)*)(ptr), _and)
 
 /** Compare and, if equal, set new value
 Return old value */
@@ -79,6 +85,13 @@ Return old value */
 static inline ffsize ffatomic_fetch_add(ffatomic *a, ffssize add)
 {
 	return ffint_fetch_add(&a->val, add);
+}
+
+/** Atomically perform AND bit operation.
+Return old value */
+static inline ffsize ffatomic_fetch_and(ffatomic *a, ffsize _and)
+{
+	return ffint_fetch_and(&a->val, _and);
 }
 
 /** Compare and, if equal, set new value

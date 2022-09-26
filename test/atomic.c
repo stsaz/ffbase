@@ -16,4 +16,8 @@ void test_atomic()
 	xieq(3, ffatomic_cmpxchg(&a, 2, 5));
 	xieq(3, ffatomic_cmpxchg(&a, 3, 5));
 	xieq(5, ffatomic_load(&a));
+
+	ffatomic_store(&a, 0x17);
+	xieq(0x17, ffatomic_fetch_and(&a, 0xe6));
+	xieq(6, ffatomic_load(&a));
 }

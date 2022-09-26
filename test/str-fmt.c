@@ -61,7 +61,7 @@ void test_ffsz_allocfmt()
 
 void test_ffstr_fmt()
 {
-	ffstr s = {};
+	ffstr s = {}, s1;
 	ffstr_alloc(&s, 64);
 
 	x(0 == ffstr_addfmt(&s, 5, "%s", NULL));
@@ -90,6 +90,20 @@ void test_ffstr_fmt()
 
 	x(ffstr_addfmt(&s, 64, "%*s1", (ffsize)0, "abcdef"));
 	xseq(&s, "1");
+	s.len = 0;
+
+	ffstr_setz(&s1, "abcdef");
+	x(ffstr_addfmt(&s, 64, "%*S", (ffsize)3, &s1));
+	xseq(&s, "abcdef");
+	s.len = 0;
+
+	ffstr_setz(&s1, "abcdef");
+	x(ffstr_addfmt(&s, 64, "%*S", (ffsize)10, &s1));
+	xseq(&s, "abcdef    ");
+	s.len = 0;
+
+	x(ffstr_addfmt(&s, 64, "%10S", &s1));
+	xseq(&s, "abcdef    ");
 	s.len = 0;
 
 	x(ffstr_addfmt(&s, 64, "%%"));

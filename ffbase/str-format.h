@@ -52,7 +52,8 @@ String:
 %s                             char* (NULL-terminated string)
 % width s                      char*
 %*s                            ffsize, char*
-%S                             ffstr*
+% [width] S                    ffstr*
+%*S                            ffsize, ffstr*
 
 System string:
 %q                             char* on UNIX, wchar_t* on Windows (NULL-terminated string)
@@ -243,9 +244,17 @@ static inline ffssize ffs_formatv(char *dst, ffsize cap, const char *fmt, va_lis
 
 		case 'S': {
 			const ffstr *s = va_arg(va, ffstr*);
+
 			if (len + s->len < cap)
 				ffmem_copy(dst + len, s->ptr, s->len);
 			len += s->len;
+
+			r = width - s->len;
+			if (r > 0) {
+				if (len + r < cap)
+					ffmem_fill(dst + len, ' ', r);
+				len += r;
+			}
 			continue;
 		}
 

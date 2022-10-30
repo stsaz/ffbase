@@ -52,6 +52,11 @@ void test_utf8()
 	// invalid
 	xieq(0, ffutf8_decode("\x80", 1, &n));
 	xieq(0, ffutf8_decode("\xD1\x04", 2, &n));
+
+	// utf-8 -> utf-8
+	xieq(5, ffutf8_from_utf8(NULL, 0, "a\x80""b", 3, 0));
+	xieq(5, ffutf8_from_utf8(utf8, sizeof(utf8), "a\x80""b", 3, 0));
+	x(!memcmp(utf8, "a\xEF\xBF\xBD" "b", 5));
 }
 
 void test_utf16()

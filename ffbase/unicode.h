@@ -6,6 +6,7 @@
 ffutf8_encode
 ffutf8_decode
 ffutf8_valid
+ffutf8_from_utf8
 ffutf8_from_utf16
 ffutf8_to_utf16
 ffutf8_from_cp
@@ -195,6 +196,57 @@ static inline ffuint ffutf16_suppl(ffuint hi, ffuint lo)
 }
 
 #define _FFUTF8_REPLCHAR  "\xEF\xBF\xBD"
+
+/** Convert UTF-8 to UTF-8.
+Replace bad/incomplete codes with REPLACEMENT CHARACTER U+FFFD (UTF-8: 0xEF 0xBF 0xBD).
+dst: NULL: return required capacity
+Return
+  N of bytes written;
+  <0 if not enough space. */
+static inline ffssize ffutf8_from_utf8(char *dst, ffsize cap, const char *src, ffsize len, ffuint flags)
+{
+	(void)flags;
+	ffsize n = 0;
+	const char *end = src + len;
+	ffuint ch;
+
+	if (dst == NULL) {
+		while (src < end) {
+			int r = ffutf8_decode(src, end - src, &ch);
+			if (r < 0) {
+				n += 3;
+				break;
+			} else if (r == 0) {
+				src++;
+				n += 3;
+			} else {
+				src += r;
+				n += r;
+			}
+		}
+
+		return n;
+	}
+
+	while (src < end) {
+		int r = ffutf8_decode(src, end - src, &ch);
+		if (r <= 0) {
+			if (n + 3 > cap)
+				return -1;
+			ffmem_copy(dst + n, _FFUTF8_REPLCHAR, 3);
+			n += 3;
+			if (r < 0)
+				break;
+			src++;
+		} else {
+			ffmem_copy(dst + n, src, r);
+			src += r;
+			n += r;
+		}
+	}
+
+	return n;
+}
 
 /** Convert UTF-16 to UTF-8
 Replace bad/incomplete codes with REPLACEMENT CHARACTER U+FFFD (UTF-8: 0xEF 0xBF 0xBD).

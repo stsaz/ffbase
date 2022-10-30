@@ -22,9 +22,13 @@ fflock_unlock
 #define ffthread_yield  sched_yield
 #endif
 
+#ifdef FF_ARM
+#define ffcpu_pause()
+
+#else
 #include <emmintrin.h>
 #define ffcpu_pause()  _mm_pause()
-
+#endif
 
 /** Block execution until the variable is modified by another thread */
 static inline void ffint_wait_until_equal(ffuint *p, ffuint expected)

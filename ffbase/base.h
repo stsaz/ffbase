@@ -65,7 +65,13 @@ ffmem_copy ffmem_move
 
 #elif defined __arm__ || defined _M_ARM || defined __aarch64__
 	#define FF_ARM
-	#define FF_BIG_ENDIAN
+
+	#if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
+		#define FF_LITTLE_ENDIAN
+	#else
+		#define FF_BIG_ENDIAN
+	#endif
+
 	#ifdef __LP64__
 		#define FF_64
 	#endif

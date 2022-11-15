@@ -66,6 +66,23 @@ void freeptr(void **pp)
 	ffmem_free(*pp);
 }
 
+void test_ffslice_move()
+{
+	ffslice a = {};
+	ffslice_dupT(&a, "0123456789", 10, char);
+
+	void *p = ffslice_moveT(&a, 3, 7, 2, char);
+	x((char*)p == ((char*)a.ptr)+3);
+	x(ffslice_eqT(&a, "0123456349", 10, char));
+
+	ffslice_moveT(&a, 0, 8, 2, char);
+	x(ffslice_eqT(&a, "0123456301", 10, char));
+
+	// ffslice_moveT(&a, 3, 8, 3, char); // assert
+
+	ffslice_free(&a);
+}
+
 void test_ffslice_misc()
 {
 	ffslice a = {};
@@ -163,6 +180,7 @@ void test_slice()
 	ffslice_null(&a);
 
 	test_ffslice_alloc_add();
+	test_ffslice_move();
 	test_ffslice_misc();
 	test_arr();
 }

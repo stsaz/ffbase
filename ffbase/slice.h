@@ -380,6 +380,21 @@ static inline ffsize ffslice_add(ffslice *a, ffsize cap, const void *src, ffsize
 #define ffslice_addT(a, cap, src, n, T)  ffslice_add(a, cap, src, n, sizeof(T))
 #define ffslice_add2T(a, cap, asrc, T)  ffslice_add(a, cap, (asrc)->ptr, (asrc)->len, sizeof(T))
 
+/** Move elements (overwriting existing data)
+ so that the data within region [from..from+n) is copied into region [to..to+n).
+Return pointer to the element at index `from`. */
+static inline void* ffslice_move(ffslice *a, ffsize from, ffsize to, ffsize n, ffsize elsize)
+{
+	FF_ASSERT(ffmax(from, to) <= a->len);
+	FF_ASSERT(ffmax(from, to) + n <= a->len);
+	const char *src = (char*)a->ptr + from * elsize;
+	char *dst = (char*)a->ptr + to * elsize;
+	ffmem_move(dst, src, n * elsize);
+	return (void*)src;
+}
+
+#define ffslice_moveT(a, from, to, n, T)  (T*)ffslice_move(a, from, to, n, sizeof(T))
+
 
 // ALLOCATE+COPY
 

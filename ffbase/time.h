@@ -415,7 +415,8 @@ static int _fftime_time_fromstr(ffdatetime *dt, ffstr *str, ffuint flags)
 		dt->second = val;
 
 msec:
-		if (str->len != 0 && ffstr_popfront(str) == '.') {
+		if (str->len != 0 && str->ptr[0] == '.') {
+			ffstr_shift(str, 1);
 			if (0 == (r = ffs_toint(str->ptr, str->len, &val, FFS_INT32)))
 				return -1;
 			dt->nanosecond = val * 1000000;

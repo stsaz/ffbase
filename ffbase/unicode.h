@@ -475,8 +475,7 @@ static inline ffssize ffutf8_from_cp(char *dst, ffsize cap, const char *src, ffs
 	};
 
 	flags -= _FFUNICODE_CP_BEGIN;
-	if (flags >= FF_COUNT(codes))
-		return -1;
+	FF_ASSERT(flags < FF_COUNT(codes));
 
 	const ffushort *cp = codes[flags];
 	ffsize n = 0;

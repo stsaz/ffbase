@@ -25,6 +25,19 @@ else ifeq "$(OS)" "windows"
 	SO := dll
 endif
 
+# Set CPU arch: amd64 (x86_64), x86 (i686), arm64 (aarch64)
+# Note: Windows: must set CPU=... manually
+CPU := amd64
+ifneq "$(OS)" "windows"
+	CPU := $(shell uname -m)
+	ifeq "$(CPU)" "x86_64"
+		CPU := amd64
+	else ifeq "$(CPU)" "i686"
+		CPU := x86
+	else ifeq "$(CPU)" "aarch64"
+		CPU := arm64
+	endif
+endif
 
 # Set compiler
 COMPILER := gcc

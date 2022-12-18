@@ -40,12 +40,9 @@ ifneq "$(OS)" "windows"
 endif
 
 # Set compiler
-COMPILER := gcc
-ifeq "$(OS)" "freebsd"
-	COMPILER := clang
-endif
-ifeq "$(OS)" "apple"
-	COMPILER := clang
+COMPILER := clang
+ifeq "$(OS)" "linux"
+	COMPILER := gcc
 endif
 
 CROSS_PREFIX :=
@@ -58,10 +55,12 @@ endif
 C := $(CROSS_PREFIX)gcc -c -pipe
 CXX := $(CROSS_PREFIX)g++ -c -pipe
 LINK := $(CROSS_PREFIX)gcc -pipe
+LINKXX := $(CROSS_PREFIX)g++ -pipe
 ifeq "$(COMPILER)" "clang"
 	C := clang -c
 	CXX := clang++ -c
 	LINK := clang
+	LINKXX := clang++
 endif
 
 LINK_RPATH_ORIGIN :=
@@ -71,7 +70,7 @@ ifeq "$(OS)" "linux"
 else ifeq "$(OS)" "freebsd"
 	LINK_RPATH_ORIGIN := '-Wl,-rpath,$$ORIGIN'
 else ifeq "$(OS)" "apple"
-	LINK_INSTALLNAME_LOADERPATH := -Wl,-install_name -Wl,@loader_path/$@
+	LINK_INSTALLNAME_LOADERPATH = -Wl,-install_name -Wl,@loader_path/$@
 endif
 
 LINK_PTHREAD :=
@@ -85,12 +84,14 @@ ifeq "$(OS)" "linux"
 else ifeq "$(OS)" "freebsd"
 	LINKFLAGS := -Wl,-no-undefined
 endif
+LINKXXFLAGS := $(LINKFLAGS)
 
 # Set utils
 WINDRES := $(CROSS_PREFIX)windres
-WGET := wget
 MKDIR := mkdir -p
 RM := rm -rf
-CP := cp -u
-UNTAR_ZST := tar -x --zstd -f
-UNTAR_XZ := tar xJf
+CP := cp
+ifeq "$(OS)" "linux"
+	CP := cp -u
+endif
+SED := sed -i.old

@@ -7,10 +7,11 @@
 
 /*
 Detect CPU
-	FF_AMD64 FF_X86 FF_ARM FF_64
+	FF_AMD64 FF_X86 FF_ARM64 FF_ARM
 	FF_LITTLE_ENDIAN FF_BIG_ENDIAN
+	FF_64 FF_SSE2
 Detect OS
-	FF_UNIX FF_WIN FF_ANDROID
+	FF_UNIX FF_WIN FF_LINUX FF_ANDROID FF_BSD
 Base types
 	ffbyte ffushort ffint ffuint ffint64 ffuint64 ffsize ffssize
 FF_ASSERT
@@ -51,33 +52,34 @@ ffmem_copy ffmem_move
 */
 
 /* Detect CPU */
-#if defined FF_AMD64 || defined FF_X86 || defined FF_ARM
-	// already defined
-
-#elif defined __amd64__ || defined _M_AMD64
+#if defined __amd64__ || defined _M_AMD64
 	#define FF_AMD64
 	#define FF_LITTLE_ENDIAN
 	#define FF_64
+	#define FF_SSE2
 
 #elif defined __i386__ || defined _M_IX86
 	#define FF_X86
 	#define FF_LITTLE_ENDIAN
+	#define FF_SSE2
 
-#elif defined __arm__ || defined _M_ARM || defined __aarch64__
+#elif defined __aarch64__
+	#define FF_ARM64
+	#define FF_64
+
+#elif defined __arm__ || defined _M_ARM
 	#define FF_ARM
 
+#else
+	#warning "This CPU is not supported"
+#endif
+
+#if defined FF_ARM64 || defined FF_ARM
 	#if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
 		#define FF_LITTLE_ENDIAN
 	#else
 		#define FF_BIG_ENDIAN
 	#endif
-
-	#ifdef __LP64__
-		#define FF_64
-	#endif
-
-#else
-	#warning "This CPU is not supported"
 #endif
 
 
@@ -87,15 +89,33 @@ ffmem_copy ffmem_move
 
 #elif defined _WIN32 || defined _WIN64 || defined __CYGWIN__
 	#define FF_WIN
-	#include <windows.h>
-	#include <stdlib.h>
 
-#else
-	#if defined __linux__ && defined ANDROID
+#elif defined __APPLE__ && defined __MACH__
+	#define FF_UNIX
+	#define FF_APPLE
+
+#elif defined __linux__
+	#define FF_LINUX
+	#define FF_UNIX
+	#ifdef ANDROID
 		#define FF_ANDROID
 	#endif
 
+#elif defined __unix__
 	#define FF_UNIX
+	#include <sys/param.h>
+	#if defined BSD
+		#define FF_BSD
+	#endif
+
+#else
+	#warning "This OS is not supported"
+#endif
+
+#if defined FF_WIN
+	#include <windows.h>
+	#include <stdlib.h>
+#else
 	#include <stdlib.h>
 	#include <string.h>
 	#include <unistd.h>
@@ -183,6 +203,9 @@ static inline ffuint64 ffmin64(ffuint64 a, ffuint64 b)
 /** Get struct pointer by its field pointer */
 #define FF_STRUCTPTR(struct_type, field_name, field_ptr) \
 	((struct_type*)((char*)field_ptr - FF_OFF(struct_type, field_name)))
+
+/** Set alignment for a struct */
+#define FF_STRUCTALIGN(n)  __attribute__((aligned(n)))
 
 
 /** Swap bytes

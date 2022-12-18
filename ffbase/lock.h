@@ -22,12 +22,11 @@ fflock_unlock
 #define ffthread_yield  sched_yield
 #endif
 
-#ifdef FF_ARM
-#define ffcpu_pause()
-
+#if defined FF_SSE2
+	#include <emmintrin.h>
+	#define ffcpu_pause()  _mm_pause()
 #else
-#include <emmintrin.h>
-#define ffcpu_pause()  _mm_pause()
+	#define ffcpu_pause()
 #endif
 
 /** Block execution until the variable is modified by another thread */

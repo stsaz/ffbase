@@ -20,9 +20,12 @@ ff_printf
 ffmin ffmin64
 ffmax
 ffint_abs
+FFINT_JOIN64
+FFINT_DIVSAFE
 FF_COUNT FFS_LEN
 FF_OFF FF_PTR
 FF_STRUCTPTR
+FF_STRUCTALIGN
 Endian conversion:
 	ffint_be_cpu16 ffint_be_cpu32 ffint_be_cpu64
 	ffint_le_cpu16 ffint_le_cpu32 ffint_le_cpu64
@@ -181,6 +184,11 @@ static inline ffuint64 ffmin64(ffuint64 a, ffuint64 b)
 
 #define FFINT_JOIN64(hi, lo) \
 	(((ffuint64)hi) << 32) | (lo)
+
+/** Perform integer division and protect against division by zero.
+Return 0 on error */
+#define FFINT_DIVSAFE(val, by) \
+	((by) != 0 ? (val) / (by) : 0)
 
 
 /** Get N of elements in a static C array */

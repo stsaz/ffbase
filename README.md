@@ -183,7 +183,7 @@ Message:
 
 ## License
 
-This code is absolutely free.
+ffbase is in the public-domain.
 
 
 ## History

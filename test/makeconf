@@ -43,6 +43,8 @@ endif
 COMPILER := clang
 ifeq "$(OS)" "linux"
 	COMPILER := gcc
+else ifeq "$(OS)" "windows"
+	COMPILER := gcc
 endif
 
 CROSS_PREFIX :=

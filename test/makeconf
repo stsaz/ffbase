@@ -89,6 +89,7 @@ endif
 LINKXXFLAGS := $(LINKFLAGS)
 
 # Set utils
+AR := $(CROSS_PREFIX)ar
 WINDRES := $(CROSS_PREFIX)windres
 MKDIR := mkdir -p
 RM := rm -rf

@@ -14,7 +14,7 @@ MODIFY:
 	fflist_rm
 	fflist_movefront fflist_moveback
 ITERATE:
-	FFCHAIN_WALK FFCHAIN_RWALK FFCHAIN_FOR
+	FFLIST_WALK FFLIST_RWALK FFLIST_FOR
 */
 
 #pragma once

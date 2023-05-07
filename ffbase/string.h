@@ -23,6 +23,7 @@ typedef struct ffstr {
 GETTERS
 SET
 	FFSTR_INITZ FFSTR_INITN FFSTR_INITSTR
+	FFSTR_Z
 COMPARE
 	ffstr_cmp ffstr_cmp2 ffstr_cmpz
 	ffstr_eq ffstr_eq2 ffstr_eqz ffstr_eqcz
@@ -702,21 +703,29 @@ static inline ffsize _ffsz_nlen(const char *s, ffsize maxlen)
 // SET
 // Note: don't use these functions for the string with allocated buffer.
 
-/** ffstr initializator: ffstr s = FFSTR_INIT("string") */
+/** ffstr s = FFSTR_INITZ("string") */
+#define FFSTR_INITZ(sz) \
+	{ ffsz_len(sz), (char*)(sz) }
 #define FFSTR_INIT(s) \
 	{ ffsz_len(s), (char*)(s) }
 
-/** ffstr initializator: ffstr s = FFSTR_INITZ("string") */
-#define FFSTR_INITZ(s) \
-	{ ffsz_len(s), (char*)(s) }
-
-/** ffstr initializator: ffstr s = FFSTR_INITN(ptr, n) */
+/** ffstr s = FFSTR_INITN(ptr, n) */
 #define FFSTR_INITN(s, n) \
 	{ n, (char*)(s) }
 
-/** ffstr initializator: ffstr s = FFSTR_INIT2(ffstr) */
+/** ffstr s = FFSTR_INITSTR(ffstr) */
 #define FFSTR_INITSTR(str) \
 	{ (str)->len, (char*)(str)->ptr }
+
+/**
+void a(ffstr s) { ... }
+void b()
+{
+	a(FFSTR_Z("string"));
+}
+*/
+#define FFSTR_Z(sz) \
+	({ ffstr __s = { ffsz_len(sz), (char*)(sz) }; __s; })
 
 /** Set data pointer and length: s = {data, length} */
 #define ffstr_set(s, data, n) \

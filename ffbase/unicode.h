@@ -344,19 +344,24 @@ Return N of bytes written;
  <0 on error */
 static inline ffssize ffutf8_to_utf16(char *dst, ffsize cap, const char *src, ffsize len, ffuint flags)
 {
+	const ffushort U_REPL = 0xFFFD;
 	ffsize n = 0;
 	ffuint ch;
 
 	if (dst == NULL) {
 		for (ffsize i = 0;  i < len;  ) {
 			int r = ffutf8_decode(src + i, len - i, &ch);
-			if (r <= 0)
-				return -1;
+			if (r <= 0) {
+				n += 2;
+				continue;
+			}
 			i += r;
 
 			if (ch > 0xffff
-				|| !ffutf16_basic(ch))
-				return -1;
+				|| !ffutf16_basic(ch)) {
+				n += 2;
+				continue;
+			}
 			n++;
 		}
 
@@ -367,13 +372,19 @@ static inline ffssize ffutf8_to_utf16(char *dst, ffsize cap, const char *src, ff
 	cap /= 2;
 	for (ffsize i = 0;  i < len;  ) {
 		int r = ffutf8_decode(src + i, len - i, &ch);
-		if (r <= 0)
-			return -1;
-		i += r;
+		if (r <= 0) {
+			// bad UTF-8 char
+			ch = U_REPL;
+			i++;
+		} else {
+			i += r;
+		}
 
 		if (ch > 0xffff
-			|| !ffutf16_basic(ch))
-			return -1;
+			|| !ffutf16_basic(ch)) {
+			// too large value or need surrogate pair
+			ch = U_REPL;
+		}
 
 		if (n >= cap)
 			return -1;

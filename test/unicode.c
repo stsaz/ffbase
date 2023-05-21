@@ -101,6 +101,11 @@ void test_utf16()
 	xieq(2, ffutf8_to_utf16((char*)utf16, 1*2, "\xE0\xB8\x9D", 3, FFUNICODE_UTF16LE));
 	xieq(0x0E1D, utf16[0]);
 
+	// invalid UTF-8 char -> UTF-16 replace char
+	xieq(4, ffutf8_to_utf16((char*)utf16, 2*2, "\xFF\xE0\xB8\x9D", 4, FFUNICODE_UTF16LE));
+	xieq(0xFFFD, utf16[0]);
+	xieq(0x0E1D, utf16[1]);
+
 	// xieq(4, ffutf8_to_utf16(utf16, 2*2, "\xF0\x9F\x98\x80", 4, FFUNICODE_UTF16LE));
 }
 

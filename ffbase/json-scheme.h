@@ -215,6 +215,7 @@ static inline int ffjson_scheme_process(ffjson_scheme *js, int r)
 			break;
 		}
 
+		ctx = ffslice_lastT(&js->ctxs, struct ffjson_schemectx);
 		// treat "null" as "[]" or "{}"
 		// fallthrough
 

@@ -634,7 +634,7 @@ flags: enum FFS_WILDCARD
 Return 0 if match */
 static inline int ffs_wildcard(const char *pattern, ffsize pattern_len, const char *s, ffsize len, ffuint flags)
 {
-	ffsize i, is = 0, astk = -1, astk_is = -1;
+	ffsize i, is = 0, astk = 0, astk_is = -1;
 	int c, cs;
 
 	for (i = 0;  i != pattern_len;  ) {

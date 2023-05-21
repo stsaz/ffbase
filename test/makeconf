@@ -1,6 +1,9 @@
 # Global definitions for Makefile:
 # OS, compiler, utils
 
+# Undefine built-in rules, suffixes and variables
+MAKEFLAGS += -Rr
+
 # Set OS
 ifndef OS
 	uname := $(shell uname)

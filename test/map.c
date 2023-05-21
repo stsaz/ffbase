@@ -6,6 +6,7 @@
 #include <ffbase/map.h>
 #include <ffbase/string.h>
 #include <test/test.h>
+#define FFARRAY_FOREACH FF_FOREACH
 
 
 static inline int keyeq(void *opaque, const void *key, ffsize keylen, void *val)

@@ -227,6 +227,7 @@ void test_ffs_findany()
 	x(0 == ffs_findany(dz, dzn, "70", 2));
 	x(12 == ffs_findany(dz, dzn, "c\x00", 2));
 
+#ifdef __SSE4_2__
 	x(_ffcpu_features & (1<<20));
 	if (_ffcpu_features & (1<<20)) {
 		// aligned
@@ -253,6 +254,7 @@ void test_ffs_findany()
 		x(dz+12 == _ffmem_findany_sse42(dz+1, dzn-1, "c\0", 2));
 		x(NULL == _ffmem_findany_sse42(dz+1, dzn-1, "gh", 2));
 	}
+#endif
 }
 
 void test_ffstr_find()
@@ -457,12 +459,14 @@ void test_str_case()
 	ffstr s2 = {};
 	ffstr_dupstr_lower(&s2, &s1);
 	xseq(&s2, "asdfqwer");
+	ffstr_free(&s2);
 	}
 
 	{
 	ffstr s2 = {};
 	ffstr_dup_lower(&s2, "ASDFqwer", 5);
 	xseq(&s2, "asdfq");
+	ffstr_free(&s2);
 	}
 
 	s.len = ffs_lower(buf, sizeof(buf), STR("ASDFqwer"));

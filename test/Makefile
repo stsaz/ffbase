@@ -43,18 +43,24 @@ clean:
 	$(RM) $(TESTER) $(TEST_OBJ)
 
 TEST_CFLAGS := -I$(SRCDIR) \
-	-Wall -Wextra -Wno-return-local-addr -Wno-stringop-overflow \
+	-Wall -Wextra -Wno-return-local-addr \
 	-DFF_DEBUG -g
+ifeq "$(COMPILER)" "gcc"
+	TEST_CFLAGS += -Wno-stringop-overflow
+endif
 TEST_CFLAGS += -msse4.2
-ifeq "$(OPT)" "0"
+ifeq "$(DEBUG)" "1"
 	TEST_CFLAGS += -O0 -DFFBASE_DEBUG
 else
 	TEST_CFLAGS += -O3 -fno-strict-aliasing
 endif
 TEST_CXXFLAGS := $(TEST_CFLAGS)
 TEST_CFLAGS += -std=gnu99
-# TEST_CFLAGS += -fsanitize=address
-# TEST_LDFLAGS += -fsanitize=address
+
+ifeq "$(ASAN)" "1"
+	TEST_CFLAGS += -fsanitize=address
+	TEST_LDFLAGS += -fsanitize=address
+endif
 
 ./str.o: $(SRCDIR)/test/str.c $(HDR)
 	$(C) -Wno-array-bounds $(TEST_CFLAGS) $< -o $@

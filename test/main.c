@@ -6,6 +6,7 @@
 #include <ffbase/stringz.h>
 #include <test/test.h>
 #include <stdio.h>
+#define FFARRAY_FOREACH FF_FOREACH
 
 int _ffcpu_features;
 

@@ -245,6 +245,20 @@ struct jstruct {
 	int arr_done;
 };
 
+static void jstruct_destroy(struct jstruct *o)
+{
+	if (o->obj != NULL) {
+		jstruct_destroy(o->obj);
+		ffmem_free(o->obj);
+	}
+	if (o->arr_obj != NULL) {
+		jstruct_destroy(o->arr_obj);
+		ffmem_free(o->arr_obj);
+	}
+	ffstr_free(&o->s);
+	ffvec_free(&o->arr);
+}
+
 static int js_obj(ffjson_scheme *js, jstruct *o);
 static int js_arr(ffjson_scheme *js, jstruct *o);
 static int js_arr_el(ffjson_scheme *js, jstruct *o);
@@ -332,7 +346,6 @@ void test_json_scheme()
 	x(o.inull == 0);
 	x(o.fnull == 0);
 	x(o.snull.len == 0);
-	ffstr_free(&o.s);
 
 	xseq(&o.obj->s, "objstring");
 	x(o.obj->flt == 123.456);
@@ -343,10 +356,8 @@ void test_json_scheme()
 	x(*ffslice_itemT(&o.obj->arr, 1, ffint64) == 2);
 	xieq(12345, o.obj->arr_obj->n);
 	xieq(1, o.obj->arr_obj->arr_done);
-	ffstr_free(&o.obj->s);
-	ffmem_free(o.obj->obj);
-	ffmem_free(o.obj);
 
+	jstruct_destroy(&o);
 	ffstr_free(&d);
 }
 

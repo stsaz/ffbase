@@ -44,19 +44,17 @@ void test_ffs_format_r0()
 
 void test_ffsz_allocfmt()
 {
-	ffstr s;
+	char *s = ffsz_allocfmt("");
+	x(ffsz_eq(s, ""));
+	ffmem_free(s);
 
-	ffstr_setz(&s, ffsz_allocfmt(""));
-	xseq(&s, "");
-	ffstr_free(&s);
+	s = ffsz_allocfmt("a%5cz", '!');
+	x(ffsz_eq(s, "a!!!!!z"));
+	ffmem_free(s);
 
-	ffstr_setz(&s, ffsz_allocfmt("a%5cz", '!'));
-	xseq(&s, "a!!!!!z");
-	ffstr_free(&s);
-
-	ffstr_setz(&s, ffsz_allocfmt("a%80cz", '!'));
-	xseq(&s, "a!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!z");
-	ffstr_free(&s);
+	s = ffsz_allocfmt("a%80cz", '!');
+	x(ffsz_eq(s, "a!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!z"));
+	ffmem_free(s);
 }
 
 void test_ffstr_fmt()

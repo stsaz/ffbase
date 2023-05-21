@@ -117,9 +117,6 @@ end:
 
 #endif
 
-#define FFARRAY_FOREACH(static_array, it) \
-	for (it = static_array;  it != static_array + FF_COUNT(static_array);  it++)
-
 #ifdef FF_WIN
 static inline ffssize test_std_write(HANDLE h, const void *data, ffsize len)
 {

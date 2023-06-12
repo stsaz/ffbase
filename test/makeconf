@@ -92,6 +92,12 @@ endif
 LINKXXFLAGS := $(LINKFLAGS)
 
 # Set utils
+OBJCOPY := objcopy
+STRIP := strip
+ifeq "$(COMPILER)" "clang"
+	OBJCOPY := llvm-objcopy
+	STRIP := llvm-strip
+endif
 AR := $(CROSS_PREFIX)ar
 WINDRES := $(CROSS_PREFIX)windres
 MKDIR := mkdir -p

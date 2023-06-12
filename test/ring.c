@@ -3,6 +3,7 @@
 */
 
 #include <ffbase/ring.h>
+#include <ffbase/ringqueue.h>
 #include <test/test.h>
 
 void test_ring_io_some(ffring *rb)
@@ -196,6 +197,28 @@ void test_ring_io_all(ffring *rb)
 	x(used == 0);
 }
 
+void test_rq()
+{
+	ffringqueue *q = ffrq_alloc(10);
+	void *ptr;
+	ffuint used;
+
+	for (ffsize i = 0;  i < 16;  i++) {
+		x(!ffrq_add(q, (void*)i, &used));
+		x(used == i);
+	}
+	x(!!ffrq_add(q, (void*)0x1, &used)); // full
+
+	for (ffsize i = 0;  i < 16;  i++) {
+		x(!ffrq_fetch(q, &ptr, &used));
+		x(used == 16 - i);
+	}
+
+	x(!!ffrq_fetch(q, &ptr, &used)); // empty
+
+	ffrq_free(q);
+}
+
 void test_ring()
 {
 	ffring *rb = ffring_alloc(7, FFRING_1_READER | FFRING_1_WRITER);
@@ -205,4 +228,6 @@ void test_ring()
 	test_ring_io_some(rb);
 
 	ffring_free(rb);
+
+	test_rq();
 }

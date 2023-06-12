@@ -4,7 +4,7 @@
 /*
 ffrq_alloc
 ffrq_free
-ffrq_add
+ffrq_add ffrq_add_sw
 ffrq_fetch ffrq_fetch_sr
 */
 
@@ -55,22 +55,23 @@ static inline void ffrq_free(ffringqueue *q)
 	ffmem_alignfree(q);
 }
 
-/** Add an element
-unused: (output) N of unused (free) elements before this operation
-Return 0 on success */
-static inline int ffrq_add(ffringqueue *q, void *it, ffuint *unused)
+static int _ffrq_add(ffringqueue *q, void *it, ffuint sw, ffuint *used)
 {
-	ffuint wh, nwh;
+	ffuint wh, nwh, unused, n = 1;
 
 	// reserve space for new data
 	for (;;) {
 		wh = FFINT_READONCE(q->whead);
 		ffcpu_fence_acquire(); // read 'whead' before 'rtail'
-		*unused = q->cap + FFINT_READONCE(q->rtail) - wh;
-		if (ff_unlikely(1 > *unused))
+		unused = q->cap + FFINT_READONCE(q->rtail) - wh;
+		if (ff_unlikely(n > unused))
 			return -1;
 
-		nwh = wh + 1;
+		nwh = wh + n;
+		if (sw) {
+			q->whead = nwh;
+			break;
+		}
 		if (ff_likely(wh == ffint_cmpxchg(&q->whead, wh, nwh)))
 			break;
 		// another writer has just added an element
@@ -80,29 +81,34 @@ static inline int ffrq_add(ffringqueue *q, void *it, ffuint *unused)
 	q->data[i] = it;
 
 	// wait until previous writers finish their work
-	ffint_wait_until_equal(&q->wtail, wh);
+	if (!sw)
+		ffint_wait_until_equal(&q->wtail, wh);
 
-	ffcpu_fence_release();
+	ffcpu_fence_release(); // write data before 'wtail'
 	FFINT_WRITEONCE(q->wtail, nwh);
+	if (used != NULL) {
+		ffcpu_fence(); // write 'wtail' before reading 'rtail'
+		*used = wh - FFINT_READONCE(q->rtail);
+	}
 	return 0;
 }
 
-static inline int _ffrq_fetch(ffringqueue *q, void **item, ffuint sr, ffuint *used)
+static inline int _ffrq_fetch(ffringqueue *q, void **item, ffuint sr, ffuint *used_ptr)
 {
-	ffuint rh, nrh;
+	ffuint rh, nrh, used, n = 1;
 
 	// reserve items
 	for (;;) {
 		rh = FFINT_READONCE(q->rhead);
 		ffcpu_fence_acquire(); // read 'rhead' before 'wtail'
-		*used = FFINT_READONCE(q->wtail) - rh;
-		if (1 > *used)
+		used = FFINT_READONCE(q->wtail) - rh;
+		if (n > used)
 			return -1;
 
-		nrh = rh + 1;
+		nrh = rh + n;
 		if (sr) {
 			q->rhead = nrh;
-			ffcpu_fence_acquire();
+			ffcpu_fence_acquire(); // read 'wtail' before data
 			break;
 		}
 		if (ff_likely(rh == ffint_cmpxchg(&q->rhead, rh, nrh)))
@@ -117,22 +123,42 @@ static inline int _ffrq_fetch(ffringqueue *q, void **item, ffuint sr, ffuint *us
 	if (!sr)
 		ffint_wait_until_equal(&q->rtail, rh);
 
-	ffcpu_fence_release();
 	FFINT_WRITEONCE(q->rtail, nrh);
+	if (used_ptr != NULL) {
+		ffcpu_fence(); // write 'rtail' before reading 'wtail'
+		*used_ptr = FFINT_READONCE(q->wtail) - rh;
+	}
 	return 0;
 }
 
-/** Fetch and remove element
-Return 0 on success */
-static inline int ffrq_fetch(ffringqueue *q, void **item)
+/** Add an element
+used: (optional) N of used elements before this operation
+Return
+  0: success
+  <0: not enough free space */
+static inline int ffrq_add(ffringqueue *q, void *it, ffuint *used)
 {
-	ffuint used;
-	return _ffrq_fetch(q, item, 0, &used);
+	return _ffrq_add(q, it, 0, used);
+}
+
+/** Add an element (single writer) */
+static inline int ffrq_add_sw(ffringqueue *q, void *it, ffuint *used)
+{
+	return _ffrq_add(q, it, 1, used);
+}
+
+/** Fetch and remove element
+used: (optional) N of used elements before this operation
+Return
+  0: success
+  <0: empty */
+static inline int ffrq_fetch(ffringqueue *q, void **item, ffuint *used)
+{
+	return _ffrq_fetch(q, item, 0, used);
 }
 
 /** Fetch and remove element (single reader) */
-static inline int ffrq_fetch_sr(ffringqueue *q, void **item)
+static inline int ffrq_fetch_sr(ffringqueue *q, void **item, ffuint *used)
 {
-	ffuint used;
-	return _ffrq_fetch(q, item, 1, &used);
+	return _ffrq_fetch(q, item, 1, used);
 }

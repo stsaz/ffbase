@@ -153,6 +153,8 @@ ffmem_copy ffmem_move
 	#define FF_EXTERN extern
 #endif
 
+#define FF_EXPORT  __attribute__((visibility("default")))
+
 
 #include <stdio.h>
 /** Formatted print to stdout

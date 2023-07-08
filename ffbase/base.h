@@ -22,6 +22,7 @@ ffmax
 ffint_abs
 FFINT_JOIN64
 FFINT_DIVSAFE
+FF_SWAP
 FF_COUNT FFS_LEN
 FF_OFF FF_PTR
 FF_STRUCTPTR
@@ -192,6 +193,13 @@ Return 0 on error */
 #define FFINT_DIVSAFE(val, by) \
 	((by) != 0 ? (val) / (by) : 0)
 
+/** Set new value and return the old value. */
+#define FF_SWAP(ptr, val) \
+({ \
+	__typeof__(*ptr) __tmp = *ptr; \
+	*ptr = val; \
+	__tmp; \
+})
 
 /** Get N of elements in a static C array */
 #define FF_COUNT(ar)  (sizeof(ar) / sizeof(ar[0]))

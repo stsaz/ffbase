@@ -4,6 +4,7 @@
 
 /*
 ffs_format ffs_formatv ffs_format_r0
+ffsz_format ffsz_formatv
 ffsz_allocfmt ffsz_allocfmtv
 ffstr_matchfmt ffstr_matchfmtv
 */
@@ -389,6 +390,30 @@ static inline ffsize ffs_format_r0(char *buf, ffsize cap, const char *fmt, ...)
 	ffssize r = ffs_formatv(buf, cap, fmt, args);
 	va_end(args);
 	return (r >= 0) ? r : 0;
+}
+
+static inline ffssize ffsz_formatv(char *buf, ffsize cap, const char *fmt, va_list va)
+{
+	va_list args;
+	va_copy(args, va);
+	ffssize r = ffs_formatv(buf, (cap) ? cap - 1 : 0, fmt, args);
+	va_end(args);
+	if (cap != 0) {
+		if (r >= 0)
+			buf[r] = '\0';
+		else
+			buf[0] = '\0';
+	}
+	return r;
+}
+
+static inline ffssize ffsz_format(char *buf, ffsize cap, const char *fmt, ...)
+{
+	va_list args;
+	va_start(args, fmt);
+	ffssize r = ffsz_formatv(buf, cap, fmt, args);
+	va_end(args);
+	return r;
 }
 
 /** Allocate buffer and add %-formatted data to a NULL-terminated string.

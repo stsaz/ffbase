@@ -469,6 +469,8 @@ Format:
 % [width] S      ffstr*
 % [width] [x] u  ffuint*
 % [width] [x] U  ffuint64*
+% [width] [x] d  int*
+% [width] [x] D  ffint64*
 %%               %
 
 Algorithm:
@@ -480,7 +482,7 @@ Algorithm:
 Return 0 if matched;
  >0: match: return stop index +1 within input string;
  <0: no match or format error */
-static inline ffssize ffstr_matchfmtv(ffstr *s, const char *fmt, va_list args)
+static inline ffssize ffstr_matchfmtv(const ffstr *s, const char *fmt, va_list args)
 {
 	ffsize is = 0;
 	ffuint width;
@@ -513,6 +515,8 @@ static inline ffssize ffstr_matchfmtv(ffstr *s, const char *fmt, va_list args)
 		ffstr chunk;
 		switch (ch) {
 		case 'S':
+		case 'd':
+		case 'D':
 		case 'u':
 		case 'U': {
 			if (width != 0) {
@@ -578,16 +582,22 @@ delim_ok:
 			break;
 		}
 
+		case 'd':
+		case 'D':
 		case 'u':
 		case 'U': {
 			void *pint;
-			if (ch == 'u') {
+			if (ch == 'd' || ch == 'u') {
 				intflags |= FFS_INT32;
 				pint = va_arg(args, ffuint*);
 			} else {
 				intflags |= FFS_INT64;
 				pint = va_arg(args, ffuint64*);
 			}
+
+			if (ch == 'd' || ch == 'D')
+				intflags |= FFS_INTSIGN;
+
 			if (chunk.len == 0
 				|| chunk.len != ffs_toint(chunk.ptr, chunk.len, pint, intflags))
 				return -1; // bad integer
@@ -611,7 +621,7 @@ delim_ok:
 	return is + 1;
 }
 
-static inline ffssize ffstr_matchfmt(ffstr *s, const char *fmt, ...)
+static inline ffssize ffstr_matchfmt(const ffstr *s, const char *fmt, ...)
 {
 	va_list args;
 	va_start(args, fmt);

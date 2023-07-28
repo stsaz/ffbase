@@ -397,6 +397,20 @@ void test_ffstr_matchfmt()
 	xieq(1234, u64);
 	xseq(&s2, "abcd");
 
+// d
+	int i;
+	ffstr_setz(&in, "-1234 abcd");
+	xieq(0, ffstr_matchfmt(&in, "%d %S", &i, &s2));
+	xieq(-1234, i);
+	xseq(&s2, "abcd");
+
+// D
+	ffint64 i64;
+	ffstr_setz(&in, "-1234 abcd");
+	xieq(0, ffstr_matchfmt(&in, "%D %S", &i64, &s2));
+	xieq(-1234, i64);
+	xseq(&s2, "abcd");
+
 // xu
 	ffstr_setz(&in, "12ab abcd");
 	xieq(0, ffstr_matchfmt(&in, "%xu %S", &u, &s2));

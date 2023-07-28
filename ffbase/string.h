@@ -320,23 +320,35 @@ static inline ffssize ffs_rfindchar(const char *s, ffsize len, int search)
 #include <nmmintrin.h>
 #include <smmintrin.h>
 
+static void ffmem_copy_static(void *dst, const void *src, ffsize n)
+{
+	switch (n) {
+	case 2:
+		*(ffushort*)dst = *(ffushort*)src; break;
+	case 4:
+		*(ffuint*)dst = *(ffuint*)src; break;
+	case 6:
+		*(ffuint*)dst = *(ffuint*)src;
+		*(ffushort*)(((char*)dst)+4) = *(ffushort*)((char*)src+4);
+		break;
+	case 8:
+		*(ffuint64*)dst = *(ffuint64*)src; break;
+	case 10:
+		*(ffuint64*)dst = *(ffuint64*)src;
+		*(ffushort*)(((char*)dst)+8) = *(ffushort*)((char*)src+8);
+		break;
+	case 16:
+		*(ffuint64*)dst = *(ffuint64*)src;
+		*(ffuint64*)(((char*)dst)+8) = *(ffuint64*)((char*)src+8);
+		break;
+	}
+}
+
 /* Similar to SSE-optimized strpbrk() except it doesn't stop at NUL character */
 static void* _ffmem_findany_sse42(const void *d, ffsize n, const char *anyof, ffuint anyof_len)
 {
 	__m128i mask;
-	// we should just use memcpy() here, but there's no guarantee it will be inlined
-	switch (anyof_len) {
-	case 2:
-		*(ffushort*)&mask = *(ffushort*)anyof; break;
-	case 4:
-		*(ffuint*)&mask = *(ffuint*)anyof; break;
-	case 6:
-		*(ffuint*)&mask = *(ffuint*)anyof;
-		*(ffushort*)(((char*)&mask)+4) = *(ffushort*)(anyof+4);
-		break;
-	case 8:
-		*(ffuint64*)&mask = *(ffuint64*)anyof; break;
-	}
+	ffmem_copy_static(&mask, anyof, anyof_len);
 
 	const __m128i *p = (__m128i*)d, *end = (__m128i*)((char*)d+n);
 	while (p+1 <= end) {
@@ -367,27 +379,7 @@ static void* _ffmem_findany_sse42(const void *d, ffsize n, const char *anyof, ff
 static int _ffs_skip_ranges_sse42(const void *d, ffsize n, const char *ranges, ffuint ranges_len)
 {
 	__m128i mask;
-	// we should just use memcpy() here, but there's no guarantee it will be inlined
-	switch (ranges_len) {
-	case 2:
-		*(ffushort*)&mask = *(ffushort*)ranges; break;
-	case 4:
-		*(ffuint*)&mask = *(ffuint*)ranges; break;
-	case 6:
-		*(ffuint*)&mask = *(ffuint*)ranges;
-		*(ffushort*)(((char*)&mask)+4) = *(ffushort*)(ranges+4);
-		break;
-	case 8:
-		*(ffuint64*)&mask = *(ffuint64*)ranges; break;
-	case 10:
-		*(ffuint64*)&mask = *(ffuint64*)ranges;
-		*(ffushort*)(((char*)&mask)+8) = *(ffushort*)(ranges+8);
-		break;
-	case 16:
-		*(ffuint64*)&mask = *(ffuint64*)ranges;
-		*(ffuint64*)(((char*)&mask)+8) = *(ffuint64*)(ranges+8);
-		break;
-	}
+	ffmem_copy_static(&mask, ranges, ranges_len);
 
 	const __m128i *p = (__m128i*)d, *end = (__m128i*)((char*)d+n);
 	while (p+1 <= end) {

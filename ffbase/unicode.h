@@ -176,6 +176,8 @@ static inline int ffutf8_valid(const char *utf8, ffsize len)
 	return 1;
 }
 
+#define ffutf8_valid_str(str)  ffutf8_valid((str).ptr, (str).len)
+
 
 /** Return TRUE if UTF-16 code unit is in Basic Multilingual Plane
 (0..0xd7ff) and (0xe000..0xffff) */

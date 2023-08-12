@@ -56,6 +56,7 @@ Atomic:
   lock.h          Spinlock
 
 Other:
+  args.h          Process command-line arguments
   time.h          Date/time functions
   cpuid.h         Get CPU features
 ```

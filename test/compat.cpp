@@ -21,3 +21,5 @@
 #include <ffbase/json.h>
 #include <ffbase/json-writer.h>
 #include <ffbase/json-scheme.h>
+
+#include <ffbase/args.h>

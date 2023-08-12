@@ -3,6 +3,7 @@
 
 SRCDIR := ..
 HDR := $(wildcard $(SRCDIR)/ffbase/*.h)
+HDR += $(SRCDIR)/test/test.h $(SRCDIR)/test/Makefile
 
 include $(SRCDIR)/test/makeconf
 
@@ -31,11 +32,11 @@ TEST_OBJ := \
 	./lock.o \
 	\
 	./json.o \
+	./args.o \
 	\
 	./time.o \
 	./cpu.o \
 	./compat.o
-HDR += $(SRCDIR)/test/test.h $(SRCDIR)/test/Makefile
 
 all: $(TESTER)
 

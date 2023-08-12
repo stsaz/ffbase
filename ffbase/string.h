@@ -195,6 +195,18 @@ static inline int ffs_icmpz(const char *s, ffsize len, const char *sz)
 	return 0; // s == sz
 }
 
+/** Compare strings.
+Return 0 if equal;
+  or position +1 at which the strings differ. */
+static inline ffssize ffs_cmpz_n(const char *s, ffsize n, const char *sz)
+{
+	for (ffsize i = 0;  i != n;  i++) {
+		if (sz[i] == '\0' || s[i] != sz[i])
+			return ((ffbyte)s[i] < (ffbyte)sz[i]) ? -(ffssize)(i+1) : (ffssize)(i+1);
+	}
+	return (sz[n] != '\0') ? -(ffssize)(n+1) : 0;
+}
+
 /** Return TRUE if 's' starts with 'prefix' */
 static inline int ffs_match(const char *s, ffsize len, const char *prefix, ffsize prefix_len)
 {

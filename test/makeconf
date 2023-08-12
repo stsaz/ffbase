@@ -46,15 +46,6 @@ endif
 COMPILER := clang
 ifeq "$(OS)" "linux"
 	COMPILER := gcc
-else ifeq "$(OS)" "windows"
-	COMPILER := gcc
-endif
-
-CROSS_PREFIX :=
-ifndef CROSS_PREFIX
-	ifeq "$(OS)" "windows"
-		CROSS_PREFIX := x86_64-w64-mingw32-
-	endif
 endif
 
 C := $(CROSS_PREFIX)gcc -c -pipe

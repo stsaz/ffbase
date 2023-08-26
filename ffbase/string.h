@@ -376,7 +376,11 @@ static void* _ffmem_findany_sse42(const void *d, ffsize n, const char *anyof, ff
 	if (p != end) {
 		n = (char*)end - (char*)p;
 		__m128i r;
+#ifdef FFBASE_MEM_ASAN
+		if (1)
+#else
 		if (((ffsize)(p+1) & ~0x0f) == ((ffsize)(p+1) & ~0x0fff)) // avoid the possibility of crashing if the 16byte region crosses 4k boundary
+#endif
 			ffmem_copy(&r, p, n);
 		else
 			r = _mm_loadu_si128(p);
@@ -406,7 +410,11 @@ static int _ffs_skip_ranges_sse42(const void *d, ffsize n, const char *ranges, f
 	if (p != end) {
 		n = (char*)end - (char*)p;
 		__m128i r;
+#ifdef FFBASE_MEM_ASAN
+		if (1)
+#else
 		if (((ffsize)(p+1) & ~0x0f) == ((ffsize)(p+1) & ~0x0fff)) // avoid the possibility of crashing if the 16byte region crosses 4k boundary
+#endif
 			ffmem_copy(&r, p, n);
 		else
 			r = _mm_loadu_si128(p);

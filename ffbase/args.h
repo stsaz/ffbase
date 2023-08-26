@@ -38,6 +38,7 @@ void main(int argc, const char **argv)
 }
 */
 
+#pragma once
 #include <ffbase/string.h>
 #include <ffbase/stringz.h>
 
@@ -359,6 +360,32 @@ static inline int ffargs_process_argv(struct ffargs *as, const struct ffarg *sch
 	return (on_done) ? on_done(as->ax.obj) : 0;
 }
 
+/** Get next argument from command line.
+e.g. arg0 "arg 1" arg2 */
+static inline int _ffargs_next(ffstr *line, ffstr *arg)
+{
+	ffstr_skipchar(line, ' ');
+	if (line->len == 0)
+		return 1;
+
+	int ch = ' ';
+	if (line->ptr[0] == '"') {
+		ffstr_shift(line, 1);
+		ch = '"';
+	}
+	arg->ptr = line->ptr;
+	ffssize i = ffstr_findchar(line, ch);
+	if (i < 0) {
+		i = line->len;
+		ffstr_shift(line, i);
+	} else {
+		ffstr_shift(line, i + 1);
+	}
+
+	arg->len = i;
+	return 0;
+}
+
 /** Process command-line string.
 Return 0 on success;
   <0: enum FFARGS_E;
@@ -376,9 +403,8 @@ static inline int ffargs_process_line(struct ffargs *as, const struct ffarg *sch
 	ffstr arg, key = {};
 	for (;;) {
 
-		ffstr_skipchar(&as->line, ' ');
-		ffstr_splitby(&as->line, ' ', &arg, &as->line);
-		if (!arg.len) break;
+		if (_ffargs_next(&as->line, &arg))
+			break;
 
 		if (expecting_value) {
 			expecting_value = 0;

@@ -102,7 +102,7 @@ void com_check(struct com *com)
 	xieq(com->_uint, 123);
 	xieq(com->_int, -123);
 	x(com->_double == -123.1);
-	xseq(&com->str, "str");
+	xseq(&com->str, "str str");
 	x(com->done == 1);
 }
 
@@ -111,7 +111,7 @@ void test_args()
 	struct com com = {};
 	struct ffargs a = {};
 
-	char* argv[] = { "-str", "str",  "-strz", "strz",  "-uint", "123",  "-int", "-123",  "-float", "-123.1",  "-sw" };
+	char* argv[] = { "-str", "str str",  "-strz", "strz",  "-uint", "123",  "-int", "-123",  "-float", "-123.1",  "-sw" };
 	xieq(ffargs_process_argv(&a, scheme_obj, &com, 0, argv, FF_COUNT(argv)), 0);
 	com_check(&com);
 	x(ffsz_eq(com.sz, "strz"));
@@ -122,7 +122,7 @@ void test_args()
 	x(ffsz_eq(com.sz, "strz"));
 
 	ffmem_zero_obj(&a);  ffmem_zero_obj(&com);
-	xieq(ffargs_process_line(&a, scheme_obj, &com, 0, " -str str  -uint 123  -int -123  -float -123.1  -sw "), 0);
+	xieq(ffargs_process_line(&a, scheme_obj, &com, 0, " -str \"str str\"  -uint 123  -int -123  -float -123.1  -sw "), 0);
 	com_check(&com);
 
 	ffmem_zero_obj(&a);  ffmem_zero_obj(&com);

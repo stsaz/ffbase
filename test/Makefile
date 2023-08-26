@@ -32,6 +32,7 @@ TEST_OBJ := \
 	./lock.o \
 	\
 	./json.o \
+	./conf.o \
 	./args.o \
 	\
 	./time.o \

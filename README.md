@@ -57,6 +57,7 @@ Atomic:
 
 Other:
   args.h          Process command-line arguments
+  conf.h          Low-level key-value settings parser (SSE4.2)
   time.h          Date/time functions
   cpuid.h         Get CPU features
 ```

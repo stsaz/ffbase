@@ -104,7 +104,7 @@ static inline void ffslice_shift(ffslice *a, ffsize by, ffsize elsize)
 
 /** Reverse walk through array's elements */
 #define FFSLICE_RWALK_T(a, it, T) \
-	for (it = (T*)ffslice_lastT(a, T);  it >= (T*)(a)->ptr;  it--)
+	for (it = (T*)ffslice_lastT(a, T);  (ffssize)it >= (ffssize)(a)->ptr;  it--)
 #define FFSLICE_RWALK(a, it) \
 	FFSLICE_RWALK_T(a, it, __typeof__(*it))
 

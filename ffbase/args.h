@@ -33,7 +33,7 @@ static const struct ffarg schema[] = {
 void main(int argc, const char **argv)
 {
 	struct S obj = {};
-	struct ffargs = {};
+	struct ffargs args = {};
 	int r = ffargs_process_argv(&args, schema, &obj, 0, argv, argc);
 }
 */
@@ -61,6 +61,8 @@ struct ffarg {
 
 	's'		char* NULL-terminated string
 	'S'		ffstr string
+	Modifiers:
+	'='		Copy data rather than just assign pointers
 
 	'0'		function
 
@@ -85,6 +87,7 @@ enum FFARGS_E {
 	FFARGS_E_FLOAT,
 	FFARGS_E_REDIR,
 	FFARGS_E_SCHEMA,
+	FFARGS_E_NOMEM,
 };
 
 struct ffarg_ctx {
@@ -113,6 +116,7 @@ struct ffargs {
 #define _FFARG_TYPE(a)  (a->flags & 0xff)
 #define _FFARG_ANY(a)  (a->name[0] == '\0' && a->name[1] == '\1')
 #define _FFARG_MULTI(a)  ((a->flags & 0xff00) >> 8 == '+')
+#define _FFARG_COPY(a)  ((a->flags & 0xff00) >> 8 == '=')
 
 /** Set error message */
 static int _ffargs_err(struct ffargs *as, int e, const char *fmt, ...)
@@ -160,17 +164,26 @@ static int _ffargs_value(struct ffargs *as, const struct ffarg *a, ffstr key, ff
 	switch (t) {
 
 	case 'S':
-		if (off < MAX_OFF)
-			*u.s = val;
-		else
-			return uf.f_str(ax->obj, val);
-		break;
-
 	case 's':
-		if (off < MAX_OFF)
-			*u.sz = val.ptr;
-		else
-			return uf.f_sz(ax->obj, val.ptr);
+		if (_FFARG_COPY(a)) {
+			ffstr copy = {};
+			if (NULL == ffstr_dup(&copy, val.ptr, val.len))
+				return _ffargs_err(as, FFARGS_E_NOMEM, "no memory");
+			val = copy;
+		}
+
+		if (t == 'S') {
+			if (off < MAX_OFF)
+				*u.s = val;
+			else
+				return uf.f_str(ax->obj, val);
+
+		} else {
+			if (off < MAX_OFF)
+				*u.sz = val.ptr;
+			else
+				return uf.f_sz(ax->obj, val.ptr);
+		}
 		break;
 
 	case 'D':

@@ -12,6 +12,7 @@ struct com {
 	double _double;
 	ffstr str;
 	char *sz;
+	char *sz_copy;
 	uint done :1;
 };
 
@@ -25,6 +26,10 @@ int f_str(struct com *com, ffstr v) {
 }
 int f_sz(struct com *com, const char *v) {
 	com->sz = (char*)v;
+	return 0;
+}
+int f_sz_copy(struct com *com, const char *v) {
+	com->sz_copy = (char*)v;
 	return 0;
 }
 int f_uint64(struct com *com, ffuint64 v) {
@@ -49,6 +54,7 @@ const struct ffarg scheme_obj[] = {
 	{ "-float",	'F',	O(_double) },
 	{ "-int",	'd',	O(_int) },
 	{ "-str",	'S',	O(str) },
+	{ "-strcp",	'=s',	O(sz_copy) },
 	{ "-strz",	's',	O(sz) },
 	{ "-sw",	'1',	O(sw) },
 	{ "-uint",	'u',	O(_uint) },
@@ -59,6 +65,7 @@ const struct ffarg scheme_func[] = {
 	{ "-float",	'F',	f_float },
 	{ "-int",	'd',	f_int64 },
 	{ "-str",	'S',	f_str },
+	{ "-strcp",	'=s',	f_sz_copy },
 	{ "-strz",	's',	f_sz },
 	{ "-sw",	'0',	f_sw },
 	{ "-uint",	'u',	f_uint64 },
@@ -104,6 +111,8 @@ void com_check(struct com *com)
 	x(com->_double == -123.1);
 	xseq(&com->str, "str str");
 	x(com->done == 1);
+	x(ffsz_eq(com->sz_copy, "szcopy"));
+	ffmem_free(com->sz_copy);  com->sz_copy = NULL;
 }
 
 void test_args()
@@ -111,7 +120,7 @@ void test_args()
 	struct com com = {};
 	struct ffargs a = {};
 
-	char* argv[] = { "-str", "str str",  "-strz", "strz",  "-uint", "123",  "-int", "-123",  "-float", "-123.1",  "-sw" };
+	char* argv[] = { "-str", "str str",  "-strz", "strz",  "-strcp", "szcopy",  "-uint", "123",  "-int", "-123",  "-float", "-123.1",  "-sw" };
 	xieq(ffargs_process_argv(&a, scheme_obj, &com, 0, argv, FF_COUNT(argv)), 0);
 	com_check(&com);
 	x(ffsz_eq(com.sz, "strz"));
@@ -122,7 +131,7 @@ void test_args()
 	x(ffsz_eq(com.sz, "strz"));
 
 	ffmem_zero_obj(&a);  ffmem_zero_obj(&com);
-	xieq(ffargs_process_line(&a, scheme_obj, &com, 0, " -str \"str str\"  -uint 123  -int -123  -float -123.1  -sw "), 0);
+	xieq(ffargs_process_line(&a, scheme_obj, &com, 0, " -str \"str str\"  -strcp szcopy  -uint 123  -int -123  -float -123.1  -sw "), 0);
 	com_check(&com);
 
 	ffmem_zero_obj(&a);  ffmem_zero_obj(&com);

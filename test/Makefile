@@ -1,77 +1,76 @@
 # ffbase makefile
-# 2020, Simon Zolin
 
-SRCDIR := ..
-HDR := $(wildcard $(SRCDIR)/ffbase/*.h)
-HDR += $(SRCDIR)/test/test.h $(SRCDIR)/test/Makefile
+FFBASE := ..
 
-include $(SRCDIR)/test/makeconf
+include $(FFBASE)/conf.mk
 
-TESTER := ./fftest$(DOTEXE)
+TESTER := fftest$(DOTEXE)
 
-TEST_OBJ := \
-	./main.o \
-	./mem.o \
+OBJ := \
+	main.o \
+	mem.o \
 	\
-	./slice.o \
-	./vector.o \
-	./sort.o \
+	slice.o \
+	vector.o \
+	sort.o \
 	\
-	./str.o \
-	./strz.o \
-	./str-conv.o \
-	./str-fmt.o \
-	./unicode.o \
+	str.o \
+	strz.o \
+	str-conv.o \
+	str-fmt.o \
+	unicode.o \
 	\
-	./list.o \
-	./rbtree.o \
-	./map.o \
-	./ring.o \
+	list.o \
+	rbtree.o \
+	map.o \
+	ring.o \
 	\
-	./atomic.o \
-	./lock.o \
+	atomic.o \
+	lock.o \
 	\
-	./json.o \
-	./conf.o \
-	./args.o \
+	json.o \
+	conf.o \
+	args.o \
 	\
-	./time.o \
-	./cpu.o \
-	./compat.o
+	time.o \
+	cpu.o \
+	compat.o
 
-all: $(TESTER)
+default: $(TESTER)
 
 clean:
-	$(RM) $(TESTER) $(TEST_OBJ)
+	$(RM) $(TESTER) $(OBJ)
 
-TEST_CFLAGS := -I$(SRCDIR) \
-	-Wall -Wextra -Wno-return-local-addr \
+CFLAGS := -MMD -MP -I$(FFBASE) \
+	-Wall -Wextra -Wno-return-local-addr -Wno-multichar \
 	-DFF_DEBUG -g
 ifeq "$(COMPILER)" "gcc"
-	TEST_CFLAGS += -Wno-stringop-overflow
+	CFLAGS += -Wno-stringop-overflow
 endif
-TEST_CFLAGS += -msse4.2
+CFLAGS += -msse4.2
 ifeq "$(DEBUG)" "1"
-	TEST_CFLAGS += -O0 -DFFBASE_DEBUG
+	CFLAGS += -O0 -DFFBASE_DEBUG
 else
-	TEST_CFLAGS += -O3 -fno-strict-aliasing
+	CFLAGS += -O3 -fno-strict-aliasing
 endif
-TEST_CXXFLAGS := $(TEST_CFLAGS)
-TEST_CFLAGS += -std=gnu99
+CXXFLAGS := $(CFLAGS)
+CFLAGS += -std=gnu99
 
 ifeq "$(ASAN)" "1"
-	TEST_CFLAGS += -fsanitize=address
-	TEST_LDFLAGS += -fsanitize=address
+	CFLAGS += -fsanitize=address
+	LINKFLAGS += -fsanitize=address
 endif
 
-./str.o: $(SRCDIR)/test/str.c $(HDR)
-	$(C) -Wno-array-bounds $(TEST_CFLAGS) $< -o $@
+-include $(wildcard *.d)
 
-./%.o: $(SRCDIR)/test/%.c $(HDR)
-	$(C) $(TEST_CFLAGS) $< -o $@
+str.o: $(FFBASE)/test/str.c
+	$(C) -Wno-array-bounds $(CFLAGS) $< -o $@
 
-./%.o: $(SRCDIR)/test/%.cpp $(HDR)
-	$(CXX) $(TEST_CXXFLAGS) $< -o $@
+%.o: $(FFBASE)/test/%.c
+	$(C) $(CFLAGS) $< -o $@
 
-$(TESTER): $(TEST_OBJ)
-	$(LINK) $(TEST_LDFLAGS) $+ -o $@
+%.o: $(FFBASE)/test/%.cpp
+	$(CXX) $(CXXFLAGS) $< -o $@
+
+$(TESTER): $(OBJ)
+	$(LINK) $+ $(LINKFLAGS) -o $@

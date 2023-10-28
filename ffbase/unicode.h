@@ -557,7 +557,7 @@ static inline ffssize ffsz_utow_n(wchar_t *dst, ffsize cap_wchars, const char *s
 	ffsize cap = (cap_wchars != 0) ? cap_wchars-1 : 0;
 	ffssize r = ffutf8_to_utf16((char*)dst, cap * 2, s, len, FFUNICODE_UTF16LE);
 	if (dst == NULL)
-		return (r < 0) ? r : r+1;
+		return (r < 0) ? r : (r/2)+1;
 
 	if (cap_wchars == 0)
 		return 0;

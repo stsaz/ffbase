@@ -1,10 +1,8 @@
-# Global definitions for Makefile:
-# OS, compiler, utils
+# Global definitions for Makefile: OS, compiler, utils
 
 # Undefine built-in rules, suffixes and variables
 MAKEFLAGS += -Rr
 
-# Set OS
 ifndef OS
 	uname := $(shell uname)
 	ifeq "$(uname)" "Linux"
@@ -28,36 +26,45 @@ else ifeq "$(OS)" "windows"
 	SO := dll
 endif
 
-# Set CPU arch: amd64 (x86_64), x86 (i686), arm64 (aarch64)
 # Note: Windows: must set CPU=... manually
 CPU := amd64
 ifneq "$(OS)" "windows"
 	CPU := $(shell uname -m)
 	ifeq "$(CPU)" "x86_64"
 		CPU := amd64
-	else ifeq "$(CPU)" "i686"
-		CPU := x86
 	else ifeq "$(CPU)" "aarch64"
 		CPU := arm64
+	else ifeq "$(CPU)" "i686"
+		CPU := x86
 	endif
 endif
 
-# Set compiler
 COMPILER := clang
 ifeq "$(OS)" "linux"
 	COMPILER := gcc
 endif
 
-C := $(CROSS_PREFIX)gcc -c -pipe
-CXX := $(CROSS_PREFIX)g++ -c -pipe
-LINK := $(CROSS_PREFIX)gcc -pipe
-LINKXX := $(CROSS_PREFIX)g++ -pipe
-ifeq "$(COMPILER)" "clang"
-	C := clang -c
-	CXX := clang++ -c
-	LINK := clang
-	LINKXX := clang++
+C := clang -c
+CXX := clang++ -c
+LINK := clang
+LINKXX := clang++
+ifeq "$(COMPILER)" "gcc"
+	C := $(CROSS_PREFIX)gcc -c -pipe
+	CXX := $(CROSS_PREFIX)g++ -c -pipe
+	LINK := $(CROSS_PREFIX)gcc -pipe
+	LINKXX := $(CROSS_PREFIX)g++ -pipe
 endif
+
+CFLAGS :=
+CXXFLAGS :=
+
+LINKFLAGS :=
+ifeq "$(OS)" "linux"
+	LINKFLAGS := -Wl,-no-undefined
+else ifeq "$(OS)" "freebsd"
+	LINKFLAGS := -Wl,-no-undefined
+endif
+LINKXXFLAGS := $(LINKFLAGS)
 
 LINK_RPATH_ORIGIN :=
 LINK_INSTALLNAME_LOADERPATH :=
@@ -74,23 +81,17 @@ ifneq "$(OS)" "windows"
 	LINK_PTHREAD := -pthread
 endif
 
-LINKFLAGS :=
-ifeq "$(OS)" "linux"
-	LINKFLAGS := -Wl,-no-undefined
-else ifeq "$(OS)" "freebsd"
-	LINKFLAGS := -Wl,-no-undefined
+OBJCOPY := llvm-objcopy
+STRIP := llvm-strip
+AR := llvm-ar
+WINDRES := llvm-windres
+ifeq "$(COMPILER)" "gcc"
+	OBJCOPY := $(CROSS_PREFIX)objcopy
+	STRIP := $(CROSS_PREFIX)strip
+	AR := $(CROSS_PREFIX)ar
+	WINDRES := $(CROSS_PREFIX)windres
 endif
-LINKXXFLAGS := $(LINKFLAGS)
 
-# Set utils
-OBJCOPY := objcopy
-STRIP := strip
-ifeq "$(COMPILER)" "clang"
-	OBJCOPY := llvm-objcopy
-	STRIP := llvm-strip
-endif
-AR := $(CROSS_PREFIX)ar
-WINDRES := $(CROSS_PREFIX)windres
 MKDIR := mkdir -p
 RM := rm -rf
 CP := cp

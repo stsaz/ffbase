@@ -279,7 +279,7 @@ static int _ffargs_arg(struct ffargs *as, const struct ffarg *a, ffstr arg)
 	return 0;
 }
 
-static const struct ffarg* _ffargs_find(struct ffargs *as, ffstr arg, uint flags)
+static const struct ffarg* _ffargs_find(struct ffargs *as, ffstr arg, ffuint flags)
 {
 	ffuint i;
 	const struct ffarg *a;
@@ -295,7 +295,7 @@ static const struct ffarg* _ffargs_find(struct ffargs *as, ffstr arg, uint flags
 
 		} else if (r < 0) {
 			if ((flags & FFARGS_O_PARTIAL)
-				&& (uint)-r - 1 == arg.len // e.g. arg="-a", cursor="-abc"
+				&& (ffuint)-r - 1 == arg.len // e.g. arg="-a", cursor="-abc"
 				&& (ax->scheme[i+1].name[0] == '\0'
 					|| !ffsz_match(ax->scheme[i+1].name, arg.ptr, arg.len)))
 				return a;
@@ -348,7 +348,7 @@ static inline int ffargs_process_argv(struct ffargs *as, const struct ffarg *sch
 			continue;
 		}
 
-		for (uint ir = 0; ; ir++) {
+		for (ffuint ir = 0; ; ir++) {
 			FF_ASSERT(ir < 100); (void)ir;
 			if (!(a = _ffargs_find(as, arg, options)))
 				return -FFARGS_E_ARG;
@@ -426,7 +426,7 @@ static inline int ffargs_process_line(struct ffargs *as, const struct ffarg *sch
 			continue;
 		}
 
-		for (uint ir = 0; ; ir++) {
+		for (ffuint ir = 0; ; ir++) {
 			FF_ASSERT(ir < 100); (void)ir;
 			if (!(a = _ffargs_find(as, arg, options)))
 				return -FFARGS_E_ARG;

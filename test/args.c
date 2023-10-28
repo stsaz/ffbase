@@ -7,13 +7,13 @@
 
 struct com {
 	ffbyte sw;
-	uint _uint;
+	ffuint _uint;
 	int _int;
 	double _double;
 	ffstr str;
 	char *sz;
 	char *sz_copy;
-	uint done :1;
+	ffuint done :1;
 };
 
 int f_sw(struct com *com) {

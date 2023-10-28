@@ -366,6 +366,8 @@ void test_json()
 {
 	test_json_err();
 	test_json_unescape();
+#ifndef FF_WIN
 	test_json_rw();
 	test_json_scheme();
+#endif
 }

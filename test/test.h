@@ -68,6 +68,13 @@ static inline void test_check_str_sz(int ok, ffsize slen, const char *s, const c
 })
 
 #ifdef FF_WIN
+
+static inline int file_readall(const char *fn, ffstr *dst)
+{
+	(void)fn; (void)dst;
+	return -1;
+}
+
 #else
 
 /** Read file data into a new buffer */

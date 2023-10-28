@@ -166,10 +166,8 @@ static int _ffargs_value(struct ffargs *as, const struct ffarg *a, ffstr key, ff
 	case 'S':
 	case 's':
 		if (_FFARG_COPY(a)) {
-			ffstr copy = {};
-			if (NULL == ffstr_dup(&copy, val.ptr, val.len))
+			if (NULL == (val.ptr = ffsz_dupstr(&val)))
 				return _ffargs_err(as, FFARGS_E_NOMEM, "no memory");
-			val = copy;
 		}
 
 		if (t == 'S') {

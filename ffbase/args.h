@@ -101,6 +101,9 @@ enum FFARGS_OPT {
 
 	/** Fail on meeting duplicate argument unless it has '+' modifier */
 	FFARGS_O_DUPLICATES = 2,
+
+	/** Skip the first argument (for system command line it is the executable name) */
+	FFARGS_O_SKIP_FIRST = 4,
 };
 
 struct ffargs {
@@ -334,6 +337,10 @@ static inline int ffargs_process_argv(struct ffargs *as, const struct ffarg *sch
 	const struct ffarg *a;
 	int expecting_value = 0;
 	ffstr arg, key = {};
+
+	if (options & FFARGS_O_SKIP_FIRST)
+		as->argi++;
+
 	while (as->argi != as->argc) {
 
 		arg = FFSTR_Z(as->argv[as->argi]);
@@ -412,6 +419,10 @@ static inline int ffargs_process_line(struct ffargs *as, const struct ffarg *sch
 	const struct ffarg *a;
 	int expecting_value = 0;
 	ffstr arg, key = {};
+
+	if (options & FFARGS_O_SKIP_FIRST)
+		_ffargs_next(&as->line, &arg);
+
 	for (;;) {
 
 		if (_ffargs_next(&as->line, &arg))

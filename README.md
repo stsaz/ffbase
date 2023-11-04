@@ -29,38 +29,41 @@ All components follow this convention.
 
 ## Features
 
-```
 String/text:
-  string.h        String container
-  stringz.h       NULL-terminated string functions
-  unicode.h       Unicode functions
+
+	string.h        String container
+	stringz.h       NULL-terminated string functions
+	unicode.h       Unicode functions
 
 Containers:
-  slice.h         Simple array container
-  vector.h        Array container
-  sort.h          Array sorting (merge-sort)
-  chain.h         Simple chain
-  list.h          Doubly-linked list
-  rbtree.h        Red-black tree
-  map.h           Hash table
-  ringueue.h      Fixed-size lockless ring queue, multi-producer, multi-consumer
-  ring.h          Fixed-size lockless ring buffer, single-producer/consumer
+
+	slice.h         Simple array container
+	vector.h        Array container
+	sort.h          Array sorting (merge-sort)
+	chain.h         Simple chain
+	list.h          Doubly-linked list
+	rbtree.h        Red-black tree
+	map.h           Hash table
+	ringueue.h      Fixed-size lockless ring queue, multi-producer, multi-consumer
+	ring.h          Fixed-size lockless ring buffer, single-producer/consumer
 
 JSON:
-  json.h          Low-level JSON parser
-  json-scheme.h   JSON parser with scheme
-  json-writer.h   JSON writer
+
+	json.h          Low-level JSON parser
+	json-scheme.h   JSON parser with scheme
+	json-writer.h   JSON writer
 
 Atomic:
-  atomic.h        Atomic operations
-  lock.h          Spinlock
+
+	atomic.h        Atomic operations
+	lock.h          Spinlock
 
 Other:
-  args.h          Process command-line arguments
-  conf.h          Low-level key-value settings parser (SSE4.2)
-  time.h          Date/time functions
-  cpuid.h         Get CPU features
-```
+
+	args.h          Process command-line arguments
+	conf.h          Low-level key-value settings parser (SSE4.2)
+	time.h          Date/time functions
+	cpuid.h         Get CPU features
 
 ## Requirements:
 
@@ -181,17 +184,3 @@ Message:
 * `+ component: message` - new feature
 * `* component: message` - change, small improvement
 * `- component: message` - bugfix
-
-
-## License
-
-ffbase is in the public-domain.
-
-
-## History
-
-I started FFOS and FF libraries in 2013, and since then they've grown and become too complex to be used in small projects.  Also, it's impossible to just copy a couple of necessary files from FF, because the internal dependencies are quite deep.  I hope ffbase library will solve these problems.
-
-1. It's convenient to just copy several .h files into another project.
-2. There's no need to include its Makefile when using ffbase.
-3. ffbase's functionality is limited to base containers and algorithms, so it won't become too large.

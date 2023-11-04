@@ -1,10 +1,10 @@
 /** ffbase: JSON parser performance test
 2023, Simon Zolin */
 
-#include <FFOS/file.h>
-#include <FFOS/signal.h>
-#include <FFOS/std.h>
-#include <FFOS/ffos-extern.h>
+#include <ffsys/file.h>
+#include <ffsys/signal.h>
+#include <ffsys/std.h>
+#include <ffsys/globals.h>
 #include <ffbase/atomic.h>
 #include <ffbase/json.h>
 

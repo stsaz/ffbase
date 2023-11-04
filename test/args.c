@@ -111,6 +111,7 @@ void com_check(struct com *com)
 	x(com->_double == -123.1);
 	xseq(&com->str, "str str");
 	x(com->done == 1);
+	x(ffsz_eq(com->sz, "strz"));
 	x(ffsz_eq(com->sz_copy, "szcopy"));
 	ffmem_free(com->sz_copy);  com->sz_copy = NULL;
 }
@@ -123,15 +124,14 @@ void test_args()
 	char* argv[] = { "-str", "str str",  "-strz", "strz",  "-strcp", "szcopy",  "-uint", "123",  "-int", "-123",  "-float", "-123.1",  "-sw" };
 	xieq(ffargs_process_argv(&a, scheme_obj, &com, 0, argv, FF_COUNT(argv)), 0);
 	com_check(&com);
-	x(ffsz_eq(com.sz, "strz"));
 
 	ffmem_zero_obj(&a);  ffmem_zero_obj(&com);
 	xieq(ffargs_process_argv(&a, scheme_func, &com, 0, argv, FF_COUNT(argv)), 0);
 	com_check(&com);
-	x(ffsz_eq(com.sz, "strz"));
 
 	ffmem_zero_obj(&a);  ffmem_zero_obj(&com);
-	xieq(ffargs_process_line(&a, scheme_obj, &com, 0, " -str \"str str\"  -strcp szcopy  -uint 123  -int -123  -float -123.1  -sw "), 0);
+	char line[] = " -str \"str str\"  -strz strz  -strcp szcopy  -uint 123  -int -123  -float -123.1  -sw ";
+	xieq(ffargs_process_line(&a, scheme_obj, &com, 0, line), 0);
 	com_check(&com);
 
 	ffmem_zero_obj(&a);  ffmem_zero_obj(&com);

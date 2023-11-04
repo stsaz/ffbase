@@ -180,6 +180,9 @@ static int _ffargs_value(struct ffargs *as, const struct ffarg *a, ffstr key, ff
 				return uf.f_str(ax->obj, val);
 
 		} else {
+			if (val.ptr[val.len] != '\0')
+				val.ptr[val.len] = '\0';
+
 			if (off < MAX_OFF)
 				*u.sz = val.ptr;
 			else

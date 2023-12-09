@@ -125,7 +125,7 @@ static inline void* ffvec_alloc(ffvec *v, ffsize n, ffsize elsize)
 	return v->ptr;
 }
 
-#define ffvec_allocT(v, n, T)  ffvec_alloc(v, n, sizeof(T))
+#define ffvec_allocT(v, n, T)  ((T*)ffvec_alloc(v, n, sizeof(T)))
 
 /** Allocate and zero data in buffer */
 static inline void* ffvec_zalloc(ffvec *v, ffsize n, ffsize elsize)

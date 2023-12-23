@@ -4,7 +4,7 @@
 /*
 ffring_alloc ffring_free
 ffring_reset
-ffring_write ffring_write_all
+ffring_write ffring_writestr ffring_write_all
 ffring_write_begin ffring_write_all_begin
 ffring_write_finish
 ffring_read_begin ffring_read_all_begin
@@ -166,6 +166,11 @@ static inline ffsize ffring_write(ffring *b, const void *src, ffsize n)
 	ffmem_copy(d.ptr, src, d.len);
 	ffring_write_finish(b, wh);
 	return d.len;
+}
+
+static inline ffsize ffring_writestr(ffring *b, ffstr data)
+{
+	return ffring_write(b, data.ptr, data.len);
 }
 
 /** Write whole data

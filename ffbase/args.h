@@ -419,7 +419,7 @@ static inline int ffargs_process_line(struct ffargs *as, const struct ffarg *sch
 	as->options = options;
 	as->line = FFSTR_Z(line);
 
-	const struct ffarg *a;
+	const struct ffarg *a = NULL;
 	int expecting_value = 0;
 	ffstr arg, key = {};
 

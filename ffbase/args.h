@@ -2,6 +2,7 @@
 2023, Simon Zolin */
 
 /*
+ffarg_merge
 ffargs_process_argv
 ffargs_process_line
 */
@@ -77,6 +78,59 @@ struct ffarg {
 	/** Offset of a target field in a 'struct' or a function pointer */
 	const void *value;
 };
+
+/** Merge two sorted arrays into one */
+static inline ffssize ffarg_merge(struct ffarg *dst, ffsize cap
+	, const struct ffarg *a, ffsize na
+	, const struct ffarg *b, ffsize nb
+	, ffuint flags)
+{
+	(void)flags;
+	if (na + nb > cap) return -1;
+
+	ffssize n = 0;
+	ffsize ia = 0, ib = 0;
+	int r;
+
+	while (ia < na && ib < nb) {
+
+		if (a[ia].name[0] == '\0'
+			|| b[ib].name[0] == '\0') {
+
+			ffushort sa = *(ffushort*)a[ia].name
+				, sb = *(ffushort*)b[ib].name;
+
+			if (sa == sb)
+				return -1; // both arrays have the same key
+			else if (sa > sb)
+				r = -1;
+			else
+				r = 1;
+
+		} else {
+			r = ffsz_cmp(a[ia].name, b[ib].name);
+		}
+
+		if (r == 0)
+			return -1; // both arrays have the same key
+		else if (r < 0)
+			dst[n] = a[ia++];
+		else
+			dst[n] = b[ib++];
+
+		n++;
+	}
+
+	while (ia < na) {
+		dst[n++] = a[ia++];
+	}
+
+	while (ib < nb) {
+		dst[n++] = b[ib++];
+	}
+
+	return n;
+}
 
 enum FFARGS_E {
 	FFARGS_E_OK,

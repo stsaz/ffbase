@@ -116,6 +116,35 @@ void com_check(struct com *com)
 	ffmem_free(com->sz_copy);  com->sz_copy = NULL;
 }
 
+static void test_args_merge()
+{
+	static const struct ffarg a1[] = {
+		{ "123",	'1', NULL },
+		{ "456",	'1', NULL },
+		{ "\0\1",	'1', NULL },
+	};
+	static const struct ffarg a2[] = {
+		{ "234",	'1', NULL },
+		{ "345",	'1', NULL },
+		{ "567",	'1', NULL },
+		{ "\0",		'1', NULL },
+	};
+	struct ffarg a[FF_COUNT(a1) + FF_COUNT(a2)] = {};
+	xieq(FF_COUNT(a), ffarg_merge(a, FF_COUNT(a), a1, FF_COUNT(a1), a2, FF_COUNT(a2), 0));
+	static const char ar[][4] = {
+		"123",
+		"234",
+		"345",
+		"456",
+		"567",
+		"\0\1",
+		""
+	};
+	for (uint i = 0;  i < FF_COUNT(ar);  i++) {
+		x(!ffmem_cmp(a[i].name, ar[i], 4));
+	}
+}
+
 void test_args()
 {
 	struct com com = {};
@@ -155,4 +184,6 @@ void test_args()
 	ffmem_zero_obj(&a);  ffmem_zero_obj(&com);
 	xieq(ffargs_process_line(&a, scheme_obj, &com, FFARGS_O_PARTIAL, "-u 123 -s str"), -FFARGS_E_ARG);
 	xieq(com._uint, 123);
+
+	test_args_merge();
 }

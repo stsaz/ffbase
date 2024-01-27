@@ -69,6 +69,8 @@ static inline int fftime_cmp(const fftime *t1, const fftime *t2)
 	return 1;
 }
 
+static inline int fftime_cmp_val(fftime t1, fftime t2) { return fftime_cmp(&t1, &t2); }
+
 
 /** Date/time parts */
 typedef struct ffdatetime {

@@ -15,7 +15,7 @@ Detect OS
 Base types
 	ffbyte ffushort ffint ffuint ffint64 ffuint64 ffsize ffssize
 FF_ASSERT
-FF_EXTERN
+FF_EXTERN FF_INLINE_EXTERN
 ff_printf
 ffmin ffmin64
 ffmax
@@ -152,6 +152,12 @@ ffmem_copy ffmem_move
 	#define FF_EXTERN extern "C"
 #else
 	#define FF_EXTERN extern
+#endif
+
+#ifdef FFBASE_OPT_SIZE
+	#define FF_INLINE_EXTERN  FF_EXTERN
+#else
+	#define FF_INLINE_EXTERN  static inline
 #endif
 
 #define FF_EXPORT  __attribute__((visibility("default")))

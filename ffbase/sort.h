@@ -15,21 +15,13 @@
   1: (a > b) */
 typedef int (*ffsortcmp)(const void *a, const void *b, void *udata);
 
-#include <ffbase/sort-merge.h>
-
 /** Sort array elements.
 Uses merge-sort with insertion-sort.
 n: number of elements
 elsize: size of 1 element
 */
-static inline int ffsort(void *data, ffsize n, ffsize elsize, ffsortcmp cmp, void *udata)
-{
-	void *tmp;
-	if (NULL == (tmp = _ffmem_alloc_stackorheap(n * elsize)))
-		return -1;
+FF_INLINE_EXTERN int ffsort(void *data, ffsize n, ffsize elsize, ffsortcmp cmp, void *udata);
 
-	_ffsort_merge(tmp, data, n, elsize, cmp, udata);
-
-	_ffmem_free_stackorheap(tmp, n * elsize);
-	return 0;
-}
+#ifndef FFBASE_OPT_SIZE
+#include <ffbase/sort.c>
+#endif

@@ -127,11 +127,15 @@ To avoid copying the whole ffbase repo into your project while all you need is, 
 
 Use these preprocessor definitions to enable new functionality or to change the existing logic:
 
-* `FF_DEBUG` - use additional assert() checks when debugging
-* `FFBASE_HAVE_FFERR_STR` - enable "%E" for format strings
-* `_FFBASE_MEM_ALLOC` - don't define `ffmem_*` allocation functions (user must define them)
-* `FFBASE_MEM_ASSERT` - call assert() when memory allocation fails
-* To enable SSE4.2 code use `-msse4.2` compiler flag and provide storage for `int _ffcpu_features`.
+| Preprocessor Flag | Description |
+| --- | --- |
+| `FF_DEBUG` | Use additional `assert()` checks when debugging |
+| `FFBASE_HAVE_FFERR_STR` | Enable `"%E"` for format strings |
+| `_FFBASE_MEM_ALLOC` | Don't define `ffmem_*` allocation functions (user must define them) |
+| `FFBASE_MEM_ASSERT` | Call `assert()` when memory allocation fails |
+| `FFBASE_OPT_SIZE` | Mark heavy functions as `extern`.  User must compile the appropriate `.c` files manually. |
+
+To enable SSE4.2 code use `-msse4.2` compiler flag and provide storage for `int _ffcpu_features`.
 
 
 ## Develop

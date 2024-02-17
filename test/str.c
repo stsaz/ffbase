@@ -199,6 +199,12 @@ void test_ffstr_cmp()
 	x(0 == ffstr_icmp(&s, "abcdefghij", 10));
 	x(0 == ffstr_icmp(&s, "ABCDEFGHIJ", 10));
 	x(0 == ffstr_icmp2(&s, &s));
+
+	x(ffstr_cmp(&s, "ac", 2) < 0);
+	x(ffstr_cmp(&s, "aa", 2) > 0);
+	x(ffstr_cmp(&s, "Ac", 2) > 0);
+	x(ffstr_icmp(&s, "Ac", 2) < 0);
+	x(ffstr_icmp(&s, "AA", 2) > 0);
 }
 
 #if 0

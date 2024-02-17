@@ -856,7 +856,7 @@ static inline int ffstr_icmp(const ffstr *s, const char *cmp, ffsize n)
 	int r = ffs_icmp(s->ptr, cmp, ffmin(s->len, n));
 	if (r == 0 && s->len != n)
 		return (s->len < n) ? -1 : 1;
-	return 0;
+	return r;
 }
 
 static inline int ffstr_icmp2(const ffstr *s, const ffstr *cmp)

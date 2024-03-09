@@ -20,6 +20,7 @@ OBJ := \
 	str-fmt.o \
 	unicode.o \
 	\
+	fntree.o \
 	list.o \
 	rbtree.o \
 	map.o \

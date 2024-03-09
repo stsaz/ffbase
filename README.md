@@ -31,39 +31,50 @@ All components follow this convention.
 
 String/text:
 
-	string.h        String container
-	stringz.h       NULL-terminated string functions
-	unicode.h       Unicode functions
+| File | Description |
+| --- | --- |
+| [string.h](ffbase/string.h)   | String container |
+| [stringz.h](ffbase/stringz.h) | NULL-terminated string functions |
+| [unicode.h](ffbase/unicode.h) | Unicode functions |
 
 Containers:
 
-	slice.h         Simple array container
-	vector.h        Array container
-	sort.h          Array sorting (merge-sort)
-	chain.h         Simple chain
-	list.h          Doubly-linked list
-	rbtree.h        Red-black tree
-	map.h           Hash table
-	ringueue.h      Fixed-size lockless ring queue, multi-producer, multi-consumer
-	ring.h          Fixed-size lockless ring buffer, single-producer/consumer
+| File | Description |
+| --- | --- |
+| [slice.h](ffbase/slice.h)       | Simple array container |
+| [vector.h](ffbase/vector.h)     | Array container |
+| [sort.h](ffbase/sort.h)         | Array sorting (merge-sort) |
+| [chain.h](ffbase/chain.h)       | Simple chain |
+| [list.h](ffbase/list.h)         | Doubly-linked list |
+| [rbtree.h](ffbase/rbtree.h)     | Red-black tree |
+| [map.h](ffbase/map.h)           | Hash table |
+| [ringueue.h](ffbase/ringueue.h) | Fixed-size lockless ring queue, multi-producer, multi-consumer |
+| [ring.h](ffbase/ring.h)         | Fixed-size lockless ring buffer, single-producer/consumer |
+| [fntree.h](ffbase/fntree.h)     | File name tree with economical memory management |
 
 JSON:
 
-	json.h          Low-level JSON parser
-	json-scheme.h   JSON parser with scheme
-	json-writer.h   JSON writer
+| File | Description |
+| --- | --- |
+| [json.h](ffbase/json.h)               | Low-level JSON parser |
+| [json-scheme.h](ffbase/json-scheme.h) | JSON parser with scheme |
+| [json-writer.h](ffbase/json-writer.h) | JSON writer |
 
 Atomic:
 
-	atomic.h        Atomic operations
-	lock.h          Spinlock
+| File | Description |
+| --- | --- |
+| [atomic.h](ffbase/atomic.h) | Atomic operations |
+| [lock.h](ffbase/lock.h)     | Spinlock |
 
 Other:
 
-	args.h          Process command-line arguments
-	conf.h          Low-level key-value settings parser (SSE4.2)
-	time.h          Date/time functions
-	cpuid.h         Get CPU features
+| File | Description |
+| --- | --- |
+| [args.h](ffbase/args.h)   | Process command-line arguments |
+| [conf.h](ffbase/conf.h)   | Low-level key-value settings parser (SSE4.2) |
+| [time.h](ffbase/time.h)   | Date/time functions |
+| [cpuid.h](ffbase/cpuid.h) | Get CPU features |
 
 ## Requirements:
 

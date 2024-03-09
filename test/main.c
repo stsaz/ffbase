@@ -24,6 +24,7 @@ void test_rbtree();
 void test_vec();
 void test_map();
 void test_ring();
+void test_fntree();
 void test_json();
 void test_conf();
 void test_args();
@@ -175,7 +176,7 @@ static const struct test atests[] = {
 	T(slice), T(vec), T(sort),
 	T(str), T(strz),
 	T(unicode),
-	T(list), T(rbtree), T(map), T(ring),
+	T(list), T(rbtree), T(map), T(ring), T(fntree),
 	T(json), T(conf), T(args),
 	T(atomic), T(lock),
 	T(time),

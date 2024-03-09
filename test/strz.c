@@ -5,6 +5,60 @@
 #include <ffbase/stringz.h>
 #include <test/test.h>
 
+static void charr_find()
+{
+	const char sss[][4] = {
+		"a",
+		"b",
+		"c",
+		"c0",
+		"c1",
+		"c11",
+		"c111",
+		"d",
+		"e",
+	};
+	xieq(-1, ffcharr_findsorted(sss, FF_COUNT(sss), sizeof(sss[0]), "z", 1));
+	for (ffuint i = 0;  i != FF_COUNT(sss);  i++) {
+		xieq(i, ffcharr_findsorted(sss, FF_COUNT(sss), sizeof(sss[0]), sss[i], ffmin(ffsz_len(sss[i]), 4)));
+	}
+
+	static const struct {
+		char name[4];
+		uint val;
+	} arr[] = {
+		{"aa", 4},
+		{"bb", 3},
+		{"cc", 2},
+		{"dd", 1},
+	};
+	for (ffuint i = 0;  i != FF_COUNT(arr);  i++) {
+		xieq(i, ffcharr_find_sorted_padding(arr, FF_COUNT(arr), 4, 4, arr[i].name, 2));
+	}
+}
+
+static void szarr_find()
+{
+	const char *const ss[] = {
+		"a",
+		"b",
+		"c",
+		"d",
+		"e",
+	};
+
+	xieq(-1, ffszarr_find(ss, FF_COUNT(ss), "z", 1));
+	xieq(1, ffszarr_find(ss, FF_COUNT(ss), "b", 1));
+
+	xieq(-1, ffszarr_ifind(ss, FF_COUNT(ss), "z", 1));
+	xieq(4, ffszarr_ifind(ss, FF_COUNT(ss), "E", 1));
+
+	xieq(-1, ffszarr_findsorted(ss, FF_COUNT(ss), "z", 1));
+	xieq(1, ffszarr_findsorted(ss, FF_COUNT(ss), "b", 1));
+
+	xieq(-1, ffszarr_ifindsorted(ss, FF_COUNT(ss), "z", 1));
+	xieq(4, ffszarr_ifindsorted(ss, FF_COUNT(ss), "E", 1));
+}
 
 void test_strz()
 {
@@ -33,41 +87,8 @@ void test_strz()
 	x(!ffsz_matchz("key=val", "key1"));
 	x(!ffsz_matchz("key=val", "keykeykeykey"));
 
-	const char *const ss[] = {
-		"a",
-		"b",
-		"c",
-		"d",
-		"e",
-	};
-
-	xieq(-1, ffszarr_find(ss, FF_COUNT(ss), "z", 1));
-	xieq(1, ffszarr_find(ss, FF_COUNT(ss), "b", 1));
-
-	xieq(-1, ffszarr_ifind(ss, FF_COUNT(ss), "z", 1));
-	xieq(4, ffszarr_ifind(ss, FF_COUNT(ss), "E", 1));
-
-	xieq(-1, ffszarr_findsorted(ss, FF_COUNT(ss), "z", 1));
-	xieq(1, ffszarr_findsorted(ss, FF_COUNT(ss), "b", 1));
-
-	xieq(-1, ffszarr_ifindsorted(ss, FF_COUNT(ss), "z", 1));
-	xieq(4, ffszarr_ifindsorted(ss, FF_COUNT(ss), "E", 1));
-
-	const char sss[][4] = {
-		"a",
-		"b",
-		"c",
-		"c0",
-		"c1",
-		"c11",
-		"c111",
-		"d",
-		"e",
-	};
-	xieq(-1, ffcharr_findsorted(sss, FF_COUNT(sss), sizeof(sss[0]), "z", 1));
-	for (ffuint i = 0;  i != FF_COUNT(sss);  i++) {
-		xieq(i, ffcharr_findsorted(sss, FF_COUNT(sss), sizeof(sss[0]), sss[i], ffmin(ffsz_len(sss[i]), 4)));
-	}
+	szarr_find();
+	charr_find();
 
 	char buf[10];
 	xieq(4, ffsz_copyz(buf, 4, "12345"));

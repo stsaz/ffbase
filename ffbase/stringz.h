@@ -211,21 +211,22 @@ static inline ffssize ffszarr_ifindsorted(const char *const *ar, ffsize n, const
 }
 
 
-/** Search a string in char[n][elsize] array.
+/** Search a string in char[n][el_size+padding] array.
 Return -1 if not found */
-static inline ffssize ffcharr_findsorted(const void *ar, ffsize n, ffsize elsize, const char *search, ffsize search_len)
+static inline ffssize ffcharr_find_sorted_padding(const void *ar, ffsize n, ffsize el_size, ffsize padding, const char *search, ffsize search_len)
 {
-	if (search_len > elsize)
+	if (search_len > el_size)
 		return -1; // the string's too large for this array
 
 	ffsize start = 0;
 	while (start != n) {
 		ffsize i = start + (n - start) / 2;
-		int r = ffmem_cmp(search, (char*)ar + i * elsize, search_len);
+		const char *ptr = (char*)ar + i * (el_size + padding);
+		int r = ffmem_cmp(search, ptr, search_len);
 
 		if (r == 0
-			&& search_len != elsize
-			&& ((char*)ar)[i * elsize + search_len] != '\0')
+			&& search_len != el_size
+			&& ptr[search_len] != '\0')
 			r = -1; // found "01" in {0,1,2}
 
 		if (r == 0)
@@ -237,3 +238,6 @@ static inline ffssize ffcharr_findsorted(const void *ar, ffsize n, ffsize elsize
 	}
 	return -1;
 }
+
+#define ffcharr_findsorted(ar, n, el_size, search, search_len) \
+	ffcharr_find_sorted_padding(ar, n, el_size, 0, search, search_len)

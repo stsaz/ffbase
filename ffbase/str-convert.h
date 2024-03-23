@@ -307,7 +307,7 @@ static inline ffuint ffs_tofloat(const char *s, ffsize len, double *dst, ffuint 
 {
 	(void)flags;
 	double d = 0;
-	int minus, negexp = 0, exp = 0, e = 0, digits = 0;
+	int minus = 0, negexp = 0, exp = 0, e = 0, digits = 0;
 	ffsize i;
 	enum {
 		I_MINUS, I_INT, I_FRAC, I_EXPSIGN, I_EXP

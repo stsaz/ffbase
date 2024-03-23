@@ -16,6 +16,7 @@ Base types
 	ffbyte ffushort ffint ffuint ffint64 ffuint64 ffsize ffssize
 FF_ASSERT
 FF_EXTERN FF_INLINE_EXTERN
+ff_likely ff_unlikely
 ff_printf
 ffmin ffmin64
 ffmax
@@ -120,6 +121,9 @@ ffmem_copy ffmem_move
 	#include <windows.h>
 	#include <stdlib.h>
 #else
+	#ifndef _POSIX_C_SOURCE
+		#define _POSIX_C_SOURCE  200112L // for posix_memalign()
+	#endif
 	#include <stdlib.h>
 	#include <string.h>
 	#include <unistd.h>
@@ -161,6 +165,11 @@ ffmem_copy ffmem_move
 #endif
 
 #define FF_EXPORT  __attribute__((visibility("default")))
+
+
+#define ff_likely(x)  __builtin_expect(!!(x), 1)
+
+#define ff_unlikely(x)  __builtin_expect(!!(x), 0)
 
 
 #include <stdio.h>
@@ -536,13 +545,13 @@ static void ffmem_alignfree(void *ptr);
 
 
 /** Reserve stack buffer */
-#define ffmem_stack(size)  alloca(size)
+#define ffmem_stack(size)  __builtin_alloca(size)
 
 #define FFMEM_STACK_THRESHOLD  4096
 
 /** Reserve stack or allocate a heap buffer */
 #define _ffmem_alloc_stackorheap(size) \
-	((size) < FFMEM_STACK_THRESHOLD) ? alloca(size) : ffmem_alloc(size)
+	((size) < FFMEM_STACK_THRESHOLD) ? __builtin_alloca(size) : ffmem_alloc(size)
 
 #define _ffmem_free_stackorheap(ptr, size) \
 ({ \

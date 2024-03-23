@@ -242,7 +242,7 @@ static inline int ffconf_read(struct ffconf *c, ffstr *in, ffstr *out)
 			continue;
 
 		case I_BACKSLASH_X2: {
-			static const char char_to_hex[256] = {
+			static const signed char char_to_hex[256] = {
 				-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,
 				-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,0x0,0x1,0x2,0x3,0x4,0x5,0x6,0x7,0x8,0x9,-1,-1,-1,-1,-1,-1,
 				-1,0xa,0xb,0xc,0xd,0xe,0xf,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,

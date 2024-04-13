@@ -189,7 +189,7 @@ union _ffarg_val {
 	void *ptr;
 	char *b;		// '1'
 	int *i32;		// 'd', 'u'
-	ffint64 *i64;	// 'D', 'U'
+	ffint64 *i64;	// 'D', 'U', 'Z'
 	double *f64;	// 'F'
 	ffstr *s;		// 'S'
 	char **sz;		// 's'
@@ -218,6 +218,7 @@ static int _ffargs_value(struct ffargs *as, const struct ffarg *a, ffstr key, ff
 	ffuint64 i = 0;
 	double d;
 	ffuint f = 0;
+	int r;
 	switch (t) {
 
 	case 'S':
@@ -249,17 +250,34 @@ static int _ffargs_value(struct ffargs *as, const struct ffarg *a, ffstr key, ff
 		f |= FFS_INTSIGN;
 		// fallthrough
 	case 'U':
+	case 'Z':
 	case 'u':
-		if (t == 'D' || t == 'U')
+		if (t == 'D' || t == 'U' || t == 'Z')
 			f |= FFS_INT64;
 		else
 			f |= FFS_INT32;
 
-		if (!ffstr_toint(&val, &i, f))
-			return _ffargs_err(as, FFARGS_E_INT, "'%S': expected integer number, got '%S'", &key, &val);
+		r = ffs_toint(val.ptr, val.len, &i, f);
+		if (r == 0 || (ffuint)r != val.len) {
+
+			if (t == 'Z' && (ffuint)r + 1 == val.len) {
+				switch (val.ptr[val.len - 1] & ~0x20) {
+				case 'K': i *= 1024; break;
+				case 'M': i *= 1024*1024; break;
+				case 'G': i *= 1024*1024*1024; break;
+				default: r = 0; // error
+				}
+
+			} else {
+				r = 0; // error
+			}
+
+			if (r == 0)
+				return _ffargs_err(as, FFARGS_E_INT, "'%S': expected integer number, got '%S'", &key, &val);
+		}
 
 		if (off < MAX_OFF) {
-			if (t == 'D' || t == 'U')
+			if (t == 'D' || t == 'U' || t == 'Z')
 				*u.i64 = i;
 			else
 				*u.i32 = i;

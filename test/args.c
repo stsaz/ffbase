@@ -7,6 +7,7 @@
 
 struct com {
 	ffbyte sw;
+	ffuint64 _uint64;
 	ffuint _uint;
 	int _int;
 	double _double;
@@ -32,6 +33,10 @@ int f_sz_copy(struct com *com, const char *v) {
 	com->sz_copy = (char*)v;
 	return 0;
 }
+int f_size(struct com *com, ffuint64 v) {
+	com->_uint64 = v;
+	return 0;
+}
 int f_uint64(struct com *com, ffuint64 v) {
 	com->_uint = v;
 	return 0;
@@ -53,6 +58,7 @@ int f_done(struct com *com) {
 const struct ffarg scheme_obj[] = {
 	{ "-float",	'F',	O(_double) },
 	{ "-int",	'd',	O(_int) },
+	{ "-size",	'Z',	O(_uint64) },
 	{ "-str",	'S',	O(str) },
 	{ "-strcp",	'=s',	O(sz_copy) },
 	{ "-strz",	's',	O(sz) },
@@ -64,6 +70,7 @@ const struct ffarg scheme_obj[] = {
 const struct ffarg scheme_func[] = {
 	{ "-float",	'F',	f_float },
 	{ "-int",	'd',	f_int64 },
+	{ "-size",	'Z',	f_size },
 	{ "-str",	'S',	f_str },
 	{ "-strcp",	'=s',	f_sz_copy },
 	{ "-strz",	's',	f_sz },
@@ -106,6 +113,7 @@ const struct ffarg scheme_outer_func[] = {
 
 void com_check(struct com *com)
 {
+	xieq(com->_uint64, 123*1024*1024);
 	xieq(com->_uint, 123);
 	xieq(com->_int, -123);
 	x(com->_double == -123.1);
@@ -140,7 +148,7 @@ static void test_args_merge()
 		"\0\1",
 		""
 	};
-	for (uint i = 0;  i < FF_COUNT(ar);  i++) {
+	for (ffuint i = 0;  i < FF_COUNT(ar);  i++) {
 		x(!ffmem_cmp(a[i].name, ar[i], 4));
 	}
 }
@@ -150,7 +158,10 @@ void test_args()
 	struct com com = {};
 	struct ffargs a = {};
 
-	char* argv[] = { "-str", "str str",  "-strz", "strz",  "-strcp", "szcopy",  "-uint", "123",  "-int", "-123",  "-float", "-123.1",  "-sw" };
+	char* argv[] = { "-str", "str str",  "-strz", "strz",  "-strcp", "szcopy",
+		"-uint", "123",  "-int", "-123",  "-size", "123m",
+		"-float", "-123.1",  "-sw"
+	};
 	xieq(ffargs_process_argv(&a, scheme_obj, &com, 0, argv, FF_COUNT(argv)), 0);
 	com_check(&com);
 
@@ -159,7 +170,9 @@ void test_args()
 	com_check(&com);
 
 	ffmem_zero_obj(&a);  ffmem_zero_obj(&com);
-	char line[] = " -str \"str str\"  -strz strz  -strcp szcopy  -uint 123  -int -123  -float -123.1  -sw ";
+	char line[] = " -str \"str str\"  -strz strz  -strcp szcopy  "
+		"-uint 123  -int -123  -size 123m  "
+		"-float -123.1  -sw ";
 	xieq(ffargs_process_line(&a, scheme_obj, &com, 0, line), 0);
 	com_check(&com);
 

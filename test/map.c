@@ -117,7 +117,11 @@ void test_map()
 	ffmap_init(&m, &keyeq);
 
 	const char *s = "This is a test string!";
+#ifdef __SSE4_2__
+	xieq(456698728, ffmap_hash(s, ffsz_len(s)));
+#else
 	xieq(128329757, ffmap_hash(s, ffsz_len(s)));
+#endif
 
 	ffmap_grow(&m, 8);
 	ffmap_grow(&m, 24);

@@ -7,7 +7,11 @@
 #ifndef _FFBASE_BASE_H
 #include <ffbase/base.h>
 #endif
+#ifdef __SSE4_2__
+#include <ffbase/crc32.h>
+#else
 #include <ffbase/murmurhash3.h>
+#endif
 
 /*
 FFMAP_WALK
@@ -69,7 +73,11 @@ FFMAP_WALK(&map, it) {
 /** Get hash value */
 static inline ffuint ffmap_hash(const void *key, ffsize keylen)
 {
+#ifdef __SSE4_2__
+	return crc32c(0, key, keylen);
+#else
 	return murmurhash3(key, keylen, 0x12345678);
+#endif
 }
 
 /** Initialize container before use */

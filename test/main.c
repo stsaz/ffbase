@@ -4,6 +4,7 @@
 
 #include <ffbase/base.h>
 #include <ffbase/stringz.h>
+#include <ffbase/crc32.h>
 #include <test/test.h>
 #include <stdio.h>
 #define FFARRAY_FOREACH FF_FOREACH
@@ -158,6 +159,10 @@ void test_base()
 	x(2 == ffint_align_power2(2));
 	x(2 == ffint_align_power2(1));
 	x(2 == ffint_align_power2(0));
+
+#ifdef __SSE4_2__
+	xieq(1658535638, crc32c(0, "qwertyuiasdfghj", 15));
+#endif
 }
 
 void test_assert()

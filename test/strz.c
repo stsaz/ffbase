@@ -25,7 +25,7 @@ static void charr_find()
 
 	static const struct {
 		char name[4];
-		uint val;
+		ffuint val;
 	} arr[] = {
 		{"aa", 4},
 		{"bb", 3},

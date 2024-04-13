@@ -26,7 +26,7 @@ FFINT_DIVSAFE
 FF_SWAP
 FF_COUNT FFS_LEN
 FF_OFF FF_PTR
-FF_STRUCTPTR
+FF_CONTAINER
 FF_STRUCTALIGN
 Endian conversion:
 	ffint_be_cpu16 ffint_be_cpu32 ffint_be_cpu64
@@ -234,8 +234,9 @@ Return 0 on error */
 #define FF_PTR(struct_ptr, field_off)  ((void*)((char*)(struct_ptr) + (field_off)))
 
 /** Get struct pointer by its field pointer */
-#define FF_STRUCTPTR(struct_type, field_name, field_ptr) \
+#define FF_CONTAINER(struct_type, field_name, field_ptr) \
 	((struct_type*)((char*)field_ptr - FF_OFF(struct_type, field_name)))
+#define FF_STRUCTPTR  FF_CONTAINER
 
 /** Set alignment for a struct */
 #define FF_STRUCTALIGN(n)  __attribute__((aligned(n)))

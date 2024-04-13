@@ -111,6 +111,8 @@ static inline int ffsz_icmp(const char *sz, const char *cmpz)
 	}
 }
 
+#define ffsz_ieq(sz, cmpz)  (!ffsz_icmp(sz, cmpz))
+
 static inline int ffsz_eq(const char *sz, const char *cmpz)
 {
 	return !ffsz_cmp(sz, cmpz);

@@ -10,7 +10,7 @@
 #include <ffbase/string.h>
 
 /*
-ffsz_copyz ffsz_copyn
+ffsz_copyz ffsz_copyn ffsz_copystr
 ffsz_dupn ffsz_dup ffsz_dupstr
 ffsz_findchar
 ffsz_cmp ffsz_icmp ffsz_eq
@@ -47,6 +47,8 @@ static inline ffsize ffsz_copyn(char *dst, ffsize cap, const char *src, ffsize n
 	dst[n] = '\0';
 	return n + 1;
 }
+
+#define ffsz_copystr(dst, cap, str)  ffsz_copyn(dst, cap, (str)->ptr, (str)->len)
 
 /** Allocate memory and copy string */
 static inline char* ffsz_dupn(const char *src, ffsize n)

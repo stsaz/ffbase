@@ -18,6 +18,7 @@ ffatomic_load
 ffatomic_store
 ffatomic_fetch_add
 ffatomic_fetch_and
+ffatomic_fetch_or
 ffatomic_cmpxchg
 */
 
@@ -34,6 +35,11 @@ Return old value */
 Return old value */
 #define ffint_fetch_and(ptr, _and) \
 	__sync_fetch_and_and((volatile __typeof__(*ptr)*)(ptr), _and)
+
+/** Atomically perform OR bit operation.
+Return old value */
+#define ffint_fetch_or(ptr, _and) \
+	__sync_fetch_and_or((volatile __typeof__(*ptr)*)(ptr), _and)
 
 /** Compare and, if equal, set new value
 Return old value */
@@ -88,6 +94,13 @@ Return old value */
 static inline ffsize ffatomic_fetch_and(ffatomic *a, ffsize _and)
 {
 	return ffint_fetch_and(&a->val, _and);
+}
+
+/** Atomically perform OR bit operation.
+Return old value */
+static inline ffsize ffatomic_fetch_or(ffatomic *a, ffsize _and)
+{
+	return ffint_fetch_or(&a->val, _and);
 }
 
 /** Compare and, if equal, set new value

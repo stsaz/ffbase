@@ -1,4 +1,4 @@
-/** ffbase: fixed-size lockless ring buffer, single-producer/consumer
+/** ffbase: fixed-size lockless ring buffer, multi-producer, multi-consumer
 2022, Simon Zolin */
 
 /*
@@ -8,7 +8,7 @@ ffring_write ffring_writestr ffring_write_all
 ffring_write_begin ffring_write_all_begin
 ffring_write_finish
 ffring_read_begin ffring_read_all_begin
-ffring_read_finish
+ffring_read_finish_status ffring_read_finish
 */
 
 #pragma once
@@ -54,9 +54,6 @@ flags: enum FFRING_FLAGS
 Return NULL on error */
 static inline ffring* ffring_alloc(ffsize cap, ffuint flags)
 {
-	if (flags != (FFRING_1_READER | FFRING_1_WRITER))
-		return NULL;
-
 	cap = ffint_align_power2(cap);
 	ffring *b = (ffring*)ffmem_align(sizeof(ffring) + cap, 64);
 	if (b == NULL)
@@ -87,24 +84,44 @@ Return value for ffring_write_finish() */
 static inline ffring_head ffring_write_begin(ffring *b, ffsize n, ffstr *dst, ffsize *free)
 {
 	ffring_head wh;
-	wh.old = b->whead;
-	ffsize _free = b->cap + FFINT_READONCE(b->rtail) - wh.old;
-	ffcpu_fence_acquire();
+	ffsize i, _free, nc;
 
-	ffsize i = wh.old & b->mask;
-	if (n > _free)
-		n = _free;
-	if (i + n > b->cap)
-		n = b->cap - i;
+	// Reserve space for new data
+	for (;;) {
+		wh.old = FFINT_READONCE(b->whead);
+		ffcpu_fence_acquire(); // read 'whead' before 'rtail'
+		_free = b->cap + FFINT_READONCE(b->rtail) - wh.old;
+		if (ff_unlikely(_free == 0)) {
+			// Not enough space
+			dst->len = 0;
+			nc = 0;
+			wh.nu = wh.old; // allow ffring_write_finish()
+			goto end;
+		}
 
-	wh.nu = wh.old + n;
-	b->whead = wh.nu;
+		i = wh.old & b->mask;
+		nc = n;
+		if (nc > _free)
+			nc = _free;
+		if (i + nc > b->cap)
+			nc = b->cap - i;
+
+		wh.nu = wh.old + nc;
+		if (b->flags & FFRING_1_WRITER) {
+			b->whead = wh.nu;
+			break;
+		}
+		if (ff_likely(wh.old == ffint_cmpxchg(&b->whead, wh.old, wh.nu)))
+			break;
+		// Another writer has just reserved this space
+	}
 
 	dst->ptr = b->data + i;
-	dst->len = n;
+	dst->len = nc;
 
+end:
 	if (free != NULL)
-		*free = _free - n;
+		*free = _free - nc;
 	return wh;
 }
 
@@ -113,22 +130,31 @@ free: (output) amount of free space after the operation
 Return value for ffring_write_finish() */
 static inline ffring_head ffring_write_all_begin(ffring *b, ffsize n, ffstr *d1, ffstr *d2, ffsize *free)
 {
-	ffsize i;
 	ffring_head wh;
-	wh.old = b->whead;
-	ffsize _free = b->cap + FFINT_READONCE(b->rtail) - wh.old;
-	ffcpu_fence_acquire();
+	ffsize i, _free;
 
-	if (n > _free) {
-		// Not enough space
-		d1->len = d2->len = 0;
-		n = 0;
-		wh.nu = wh.old; // allow ffring_write_finish()
-		goto end;
+	// Reserve space for new data
+	for (;;) {
+		wh.old = FFINT_READONCE(b->whead);
+		ffcpu_fence_acquire(); // read 'whead' before 'rtail'
+		_free = b->cap + FFINT_READONCE(b->rtail) - wh.old;
+		if (ff_unlikely(n > _free)) {
+			// Not enough space
+			d1->len = d2->len = 0;
+			n = 0;
+			wh.nu = wh.old; // allow ffring_write_finish()
+			goto end;
+		}
+
+		wh.nu = wh.old + n;
+		if (b->flags & FFRING_1_WRITER) {
+			b->whead = wh.nu;
+			break;
+		}
+		if (ff_likely(wh.old == ffint_cmpxchg(&b->whead, wh.old, wh.nu)))
+			break;
+		// Another writer has just reserved this space
 	}
-
-	wh.nu = wh.old + n;
-	b->whead = wh.nu;
 
 	i = wh.old & b->mask;
 	d1->ptr = b->data + i;
@@ -147,11 +173,21 @@ end:
 }
 
 /** Commit reserved data.
+used_previously: (Optional) N of bytes used before the operation
 wh: return value from ffring_write*_begin() */
-static inline void ffring_write_finish(ffring *b, ffring_head wh)
+static inline void ffring_write_finish(ffring *b, ffring_head wh, ffsize *used_previously)
 {
-	ffcpu_fence_release();
+	// wait until previous writers finish their work
+	if (!(b->flags & FFRING_1_WRITER))
+		ffintz_wait_until_equal(&b->wtail, wh.old);
+
+	ffcpu_fence_release(); // write data before 'wtail'
 	FFINT_WRITEONCE(b->wtail, wh.nu);
+
+	if (used_previously != NULL) {
+		ffcpu_fence_acquire(); // write 'wtail' before reading 'rtail'
+		*used_previously = wh.old - FFINT_READONCE(b->rtail);
+	}
 }
 
 /** Write some data
@@ -164,7 +200,7 @@ static inline ffsize ffring_write(ffring *b, const void *src, ffsize n)
 		return 0;
 
 	ffmem_copy(d.ptr, src, d.len);
-	ffring_write_finish(b, wh);
+	ffring_write_finish(b, wh, NULL);
 	return d.len;
 }
 
@@ -185,7 +221,7 @@ static inline ffsize ffring_write_all(ffring *b, const void *src, ffsize n)
 	ffmem_copy(d1.ptr, src, d1.len);
 	if (d2.len != 0)
 		ffmem_copy(d2.ptr, (char*)src + d1.len, d2.len);
-	ffring_write_finish(b, wh);
+	ffring_write_finish(b, wh, NULL);
 	return n;
 }
 
@@ -195,24 +231,45 @@ Return value for ffring_read_finish() */
 static inline ffring_head ffring_read_begin(ffring *b, ffsize n, ffstr *dst, ffsize *used)
 {
 	ffring_head rh;
-	rh.old = b->rhead;
-	ffsize _used = FFINT_READONCE(b->wtail) - rh.old;
-	ffcpu_fence_acquire();
+	ffsize i, _used, nc;
 
-	ffsize i = rh.old & b->mask;
-	if (n > _used)
-		n = _used;
-	if (i + n > b->cap)
-		n = b->cap - i;
+	// Reserve data region
+	for (;;) {
+		rh.old = FFINT_READONCE(b->rhead);
+		ffcpu_fence_acquire(); // read 'rhead' before 'wtail'
+		_used = FFINT_READONCE(b->wtail) - rh.old;
+		if (_used == 0) {
+			// Not enough data
+			dst->len = 0;
+			nc = 0;
+			rh.nu = rh.old; // allow ffring_read_finish()
+			goto end;
+		}
 
-	rh.nu = rh.old + n;
-	b->rhead = rh.nu;
+		i = rh.old & b->mask;
+		nc = n;
+		if (nc > _used)
+			nc = _used;
+		if (i + nc > b->cap)
+			nc = b->cap - i;
+
+		rh.nu = rh.old + nc;
+		if (b->flags & FFRING_1_READER) {
+			b->rhead = rh.nu;
+			ffcpu_fence_acquire(); // read 'wtail' before data
+			break;
+		}
+		if (ff_likely(rh.old == ffint_cmpxchg(&b->rhead, rh.old, rh.nu)))
+			break;
+		// Another reader has just reserved this data region
+	}
 
 	dst->ptr = b->data + i;
-	dst->len = n;
+	dst->len = nc;
 
+end:
 	if (used != NULL)
-		*used = _used - n;
+		*used = _used - nc;
 	return rh;
 }
 
@@ -221,22 +278,32 @@ used: (output) amount of used space after the operation
 Return value for ffring_read_finish() */
 static inline ffring_head ffring_read_all_begin(ffring *b, ffsize n, ffstr *d1, ffstr *d2, ffsize *used)
 {
-	ffsize i;
 	ffring_head rh;
-	rh.old = b->rhead;
-	ffsize _used = FFINT_READONCE(b->wtail) - rh.old;
-	ffcpu_fence_acquire();
+	ffsize i, _used;
 
-	if (n > _used) {
-		// Not enough data
-		d1->len = d2->len = 0;
-		n = 0;
-		rh.nu = rh.old; // allow ffring_read_finish()
-		goto end;
+	// Reserve data region
+	for (;;) {
+		rh.old = FFINT_READONCE(b->rhead);
+		ffcpu_fence_acquire(); // read 'rhead' before 'wtail'
+		_used = FFINT_READONCE(b->wtail) - rh.old;
+		if (n > _used) {
+			// Not enough data
+			d1->len = d2->len = 0;
+			n = 0;
+			rh.nu = rh.old; // allow ffring_read_finish()
+			goto end;
+		}
+
+		rh.nu = rh.old + n;
+		if (b->flags & FFRING_1_READER) {
+			b->rhead = rh.nu;
+			ffcpu_fence_acquire(); // read 'wtail' before data
+			break;
+		}
+		if (ff_likely(rh.old == ffint_cmpxchg(&b->rhead, rh.old, rh.nu)))
+			break;
+		// Another reader has just reserved this data region
 	}
-
-	rh.nu = rh.old + n;
-	b->rhead = rh.nu;
 
 	i = rh.old & b->mask;
 	d1->ptr = b->data + i;
@@ -255,9 +322,23 @@ end:
 }
 
 /** Discard the locked data region.
+used_previously: (Optional) N of bytes used before the operation
 rh: return value from ffring_read*_begin() */
+static inline void ffring_read_finish_status(ffring *b, ffring_head rh, ffsize *used_previously)
+{
+	// wait until previous readers finish their work
+	if (!(b->flags & FFRING_1_READER))
+		ffintz_wait_until_equal(&b->rtail, rh.old);
+
+	FFINT_WRITEONCE(b->rtail, rh.nu);
+
+	if (used_previously != NULL) {
+		ffcpu_fence_acquire(); // write 'rtail' before reading 'wtail'
+		*used_previously = FFINT_READONCE(b->wtail) - rh.old;
+	}
+}
+
 static inline void ffring_read_finish(ffring *b, ffring_head rh)
 {
-	ffcpu_fence_release();
-	FFINT_WRITEONCE(b->rtail, rh.nu);
+	ffring_read_finish_status(b, rh, NULL);
 }

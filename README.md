@@ -49,7 +49,7 @@ Containers:
 | [rbtree.h](ffbase/rbtree.h)     | Red-black tree |
 | [map.h](ffbase/map.h)           | Hash table |
 | [ringueue.h](ffbase/ringueue.h) | Fixed-size lockless ring queue, multi-producer, multi-consumer |
-| [ring.h](ffbase/ring.h)         | Fixed-size lockless ring buffer, single-producer/consumer |
+| [ring.h](ffbase/ring.h)         | Fixed-size lockless ring buffer, multi-producer, multi-consumer |
 | [fntree.h](ffbase/fntree.h)     | File name tree with economical memory management |
 
 JSON:

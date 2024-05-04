@@ -123,6 +123,7 @@ static inline int _ffrq_fetch(ffringqueue *q, void **item, ffuint sr, ffuint *us
 	if (!sr)
 		ffint_wait_until_equal(&q->rtail, rh);
 
+	ffcpu_fence_release(); // read data before writing 'rtail'
 	FFINT_WRITEONCE(q->rtail, nrh);
 	if (used_ptr != NULL) {
 		ffcpu_fence(); // write 'rtail' before reading 'wtail'

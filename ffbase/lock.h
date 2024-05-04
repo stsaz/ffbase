@@ -43,6 +43,19 @@ static inline void ffint_wait_until_equal(ffuint *p, ffuint expected)
 	}
 }
 
+static inline void ffintz_wait_until_equal(ffsize *p, ffsize expected)
+{
+	for (;;) {
+		for (ffuint n = 0;  n != 2048;  n++) {
+			if (FFINT_READONCE(*p) == expected)
+				return;
+			ffcpu_pause();
+		}
+
+		ffthread_yield();
+	}
+}
+
 
 #define FFLOCK_SPIN  2048
 

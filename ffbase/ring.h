@@ -4,7 +4,7 @@
 /*
 ffring_alloc ffring_free
 ffring_reset
-ffring_write ffring_writestr ffring_write_all
+ffring_write ffring_writestr ffring_write_all ffring_write_all_str
 ffring_write_begin ffring_write_all_begin
 ffring_write_finish
 ffring_read_begin ffring_read_all_begin
@@ -223,6 +223,11 @@ static inline ffsize ffring_write_all(ffring *b, const void *src, ffsize n)
 		ffmem_copy(d2.ptr, (char*)src + d1.len, d2.len);
 	ffring_write_finish(b, wh, NULL);
 	return n;
+}
+
+static inline ffsize ffring_write_all_str(ffring *b, ffstr data)
+{
+	return ffring_write_all(b, data.ptr, data.len);
 }
 
 /** Lock contiguous data region with the maximum size of 'n' bytes.

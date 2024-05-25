@@ -192,6 +192,33 @@ static inline ffuint _ffs_fromint_sep1000(char *dst, ffsize cap, const char *src
 
 #define FFS_INTCAP  32
 
+static inline ffuint ffs_from_uint_10(ffuint64 i, char *dst, ffsize cap)
+{
+	char buf[32];
+	ffuint k = sizeof(buf);
+
+	if (i <= 0xffffffff) {
+		// 32-bit division can be faster on some CPUs
+		ffuint i4 = (ffuint)i;
+		do {
+			buf[--k] = (ffbyte)(i4 % 10 + '0');
+			i4 /= 10;
+		} while (i4 != 0);
+
+	} else {
+		do {
+			buf[--k] = (ffbyte)(i % 10 + '0');
+			i /= 10;
+		} while (i != 0);
+	}
+
+	ffuint len = sizeof(buf) - k;
+	if (len > cap)
+		return 0; // not enough space
+	ffmem_copy(dst, buf + k, len);
+	return len;
+}
+
 /** Convert integer to string.
 flags: enum FFS_FROMINT | FFS_INTWIDTH()
 Return N of bytes written;  0 on error */

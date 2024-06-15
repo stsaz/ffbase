@@ -9,6 +9,7 @@ ffring_write_begin ffring_write_all_begin
 ffring_write_finish
 ffring_read_begin ffring_read_all_begin
 ffring_read_finish_status ffring_read_finish
+ffring_read_discard
 */
 
 #pragma once
@@ -346,4 +347,21 @@ static inline void ffring_read_finish_status(ffring *b, ffring_head rh, ffsize *
 static inline void ffring_read_finish(ffring *b, ffring_head rh)
 {
 	ffring_read_finish_status(b, rh, NULL);
+}
+
+/** Read and discard all current data without breaking data integrity.
+Return N of bytes read. */
+static inline ffsize ffring_read_discard(ffring *b)
+{
+	ffsize used = b->cap;
+	for (;;) {
+		ffstr d1, d2;
+		ffring_head rh = ffring_read_all_begin(b, used, &d1, &d2, &used);
+		if (d1.len > 0) {
+			ffring_read_finish(b, rh);
+			return d1.len + d2.len;
+		}
+		if (used == 0)
+			return 0;
+	}
 }

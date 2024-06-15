@@ -78,7 +78,7 @@ ALGORITHMS
 	ffs_cmpz ffs_icmp ffs_icmpz ffs_matchz
 	ffs_split
 	ffs_findstr ffs_ifindstr ffs_findchar ffs_findany
-	ffs_rfindchar ffs_rfindstr ffs_rfindany
+	ffs_rfindchar ffws_rfindchar ffs_rfindstr ffs_rfindany
 	ffs_skipchar ffs_skipany ffs_skip_ranges
 	ffs_rskipany
 	ffs_lower ffs_upper ffs_titlecase
@@ -319,6 +319,18 @@ static inline ffssize ffs_findchar(const char *s, ffsize len, int search)
 Return the position from the beginning
   -1: not found */
 static inline ffssize ffs_rfindchar(const char *s, ffsize len, int search)
+{
+	for (ffssize i = len - 1;  i >= 0;  i--) {
+		if (search == s[i])
+			return i;
+	}
+	return -1;
+}
+
+/** Find character from the end
+Return the position from the beginning
+  -1: not found */
+static inline ffssize ffws_rfindchar(const wchar_t *s, ffsize len, wchar_t search)
 {
 	for (ffssize i = len - 1;  i >= 0;  i--) {
 		if (search == s[i])

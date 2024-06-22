@@ -124,14 +124,14 @@ Return 0 if equal
 static inline int ffs_cmpz(const char *s, ffsize len, const char *sz)
 {
 	for (ffsize i = 0;  i != len;  i++) {
-		int cl = s[i];
-		int cr = sz[i];
+		ffuint cl = (ffbyte)s[i];
+		ffuint cr = (ffbyte)sz[i];
 
 		if (cr == '\0')
 			return 1; // s > sz
 
 		if (cl != cr) {
-			if ((ffuint)cl < (ffuint)cr)
+			if (cl < cr)
 				return -1; // s < sz
 			return 1; // s > sz
 		}
@@ -149,8 +149,8 @@ Return 0 if equal
 static inline int ffs_icmp(const char *sl, const char *sr, ffsize n)
 {
 	for (ffsize i = 0;  i != n;  i++) {
-		int cl = sl[i];
-		int cr = sr[i];
+		ffuint cl = (ffbyte)sl[i];
+		ffuint cr = (ffbyte)sr[i];
 
 		if (cl != cr) {
 			if (cl >= 'A' && cl <= 'Z')
@@ -171,8 +171,8 @@ Return 0 if equal
 static inline int ffs_icmpz(const char *s, ffsize len, const char *sz)
 {
 	for (ffsize i = 0;  i != len;  i++) {
-		int cl = s[i];
-		int cr = sz[i];
+		ffuint cl = (ffbyte)s[i];
+		ffuint cr = (ffbyte)sz[i];
 
 		if (cr == '\0')
 			return 1; // s > sz

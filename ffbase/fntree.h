@@ -398,8 +398,10 @@ typedef struct fntree_cmp {
 /** Initialize comparator */
 static inline void fntree_cmp_init(fntree_cmp *c, const fntree_block *lb, const fntree_block *rb, fntree_cmp_func cmp, void *opaque)
 {
-	fntree_cur_next(&c->lc, lb);
-	fntree_cur_next(&c->rc, rb);
+	if (lb != NULL)
+		fntree_cur_next(&c->lc, lb);
+	if (lb != NULL)
+		fntree_cur_next(&c->rc, rb);
 	c->lc.curblock = lb;
 	c->rc.curblock = rb;
 	c->cmp = cmp;

@@ -96,6 +96,11 @@ static inline void ffslice_shift(ffslice *a, ffsize by, ffsize elsize)
 
 // WALK
 
+#define FFSLICE_FOR_T(a, it, T) \
+	for (it = (T*)(a)->ptr;  it != ffslice_endT(a, T);  )
+#define FFSLICE_FOR(a, it) \
+	FFSLICE_FOR_T(a, it, __typeof__(*it))
+
 /** Walk through array's elements */
 #define FFSLICE_WALK_T(a, it, T) \
 	for (it = (T*)(a)->ptr;  it != ffslice_endT(a, T);  it++)

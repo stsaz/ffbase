@@ -2,6 +2,7 @@
 2020, Simon Zolin
 */
 
+#define _GNU_SOURCE
 #include <ffbase/base.h>
 #include <ffbase/sort.h>
 #include <test/test.h>

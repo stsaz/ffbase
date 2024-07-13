@@ -400,7 +400,7 @@ static inline void fntree_cmp_init(fntree_cmp *c, const fntree_block *lb, const 
 {
 	if (lb != NULL)
 		fntree_cur_next(&c->lc, lb);
-	if (lb != NULL)
+	if (rb != NULL)
 		fntree_cur_next(&c->rc, rb);
 	c->lc.curblock = lb;
 	c->rc.curblock = rb;

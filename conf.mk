@@ -99,3 +99,4 @@ ifeq "$(OS)" "linux"
 	CP := cp -u
 endif
 SED := sed -i.old
+SUBMAKE := +$(MAKE) -f $(firstword $(MAKEFILE_LIST))

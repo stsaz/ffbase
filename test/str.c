@@ -543,6 +543,7 @@ static void test_str_wildcard()
 	x(0 == ffs_wildcard(STR("a*a*bb*c"), STR("aabcabbc"), 0));
 	x(0 != ffs_wildcard(STR("a*a*bbc*c"), STR("aabcabbc"), 0));
 	x(0 != ffs_wildcard(STR("*ab*"), STR("ac.ac"), 0));
+	x(0 != ffs_wildcard(STR("b*"), STR("abc"), 0));
 }
 
 void test_ffstr_replace()

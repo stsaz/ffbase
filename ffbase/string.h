@@ -696,6 +696,9 @@ static inline int ffs_wildcard(const char *pattern, ffsize pattern_len, const ch
 			is++;
 
 		} else {
+			if (astk == 0)
+				return 1; // no match
+
 			i = astk;
 			is = ++astk_is;
 		}

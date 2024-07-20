@@ -379,10 +379,27 @@ align: must be a power of 2 */
 #define ffint_align_ceil(n, align) \
 	ffint_align_floor((n) + (align) - 1, align)
 
-/** Return TRUE if number is a power of 2 */
+/** Return TRUE if number is a power of 2.
+Example:
+	4   (0100) &
+	4-1 (0011) =
+	0   (0000) => TRUE
+Example:
+	3   (0011) &
+	3-1 (0010) =
+	2   (0010) => FALSE
+*/
 #define ffint_ispower2(n)  ((n) >= 2 && (((n) - 1) & (n)) == 0)
 
-/** Align number to the next power of 2
+/** Align number to the next power of 2.
+Example:
+	6    (0110)
+	6-1  (0101) -> MSB=#3
+	1<<3 (1000) = 8
+Example:
+	4    (0100)
+	4-1  (0011) -> MSB=#2
+	1<<2 (0100) = 4
 Note: value n > 2^63 is not supported */
 static inline ffuint64 ffint_align_power2(ffuint64 n)
 {
@@ -437,6 +454,16 @@ static inline void ffmem_free(void *ptr)
 	HeapFree(GetProcessHeap(), 0, ptr);
 }
 
+static inline void* ffmem_align(ffsize size, ffsize align)
+{
+	return _aligned_malloc(size, align);
+}
+
+static inline void ffmem_alignfree(void *ptr)
+{
+	_aligned_free(ptr);
+}
+
 #else // UNIX:
 
 static inline void* ffmem_alloc(ffsize size)
@@ -459,42 +486,6 @@ static inline void ffmem_free(void *ptr)
 	free(ptr);
 }
 
-#endif
-
-#if defined FF_WIN || defined FF_ANDROID
-
-/* (allocated-start) (free space) (pointer to allocated-start) (aligned) ... (allocated-end) */
-static inline void* ffmem_align(ffsize size, ffsize align)
-{
-	if ((align % sizeof(void*)) != 0) {
-#ifdef FF_WIN
-		SetLastError(ERROR_INVALID_PARAMETER);
-#else
-		errno = EINVAL;
-#endif
-		return NULL;
-	}
-
-	void *buf;
-	if (NULL == (buf = ffmem_alloc(size + align + sizeof(void*))))
-		return NULL;
-
-	void *al = (void*)(ffsize)ffint_align_ceil2((ffsize)buf + sizeof(void*), align);
-	*((void**)al - 1) = buf; // remember the original pointer
-	return al;
-}
-
-static inline void ffmem_alignfree(void *ptr)
-{
-	if (ptr == NULL)
-		return;
-
-	void *buf = *((void**)ptr - 1);
-	ffmem_free(buf);
-}
-
-#else // #if defined FF_WIN || defined FF_ANDROID
-
 static inline void* ffmem_align(ffsize size, ffsize align)
 {
 	void *buf;
@@ -512,7 +503,6 @@ static inline void ffmem_alignfree(void *ptr)
 }
 
 #endif
-
 
 /** Allocate heap memory region
 Return NULL on error */

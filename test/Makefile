@@ -1,6 +1,6 @@
 # ffbase makefile
 
-FFBASE := ..
+FFBASE := $(dir $(firstword $(MAKEFILE_LIST)))..
 
 include $(FFBASE)/conf.mk
 

@@ -96,7 +96,7 @@ static fntree_entry* _fntr_ent_end(const fntree_block *b)
 static inline fntree_block* fntree_create(ffstr path)
 {
 	fntree_block *b;
-	ffuint cap = ffmax(path.len + 1, 512);
+	ffuint cap = ffmax(sizeof(fntree_block) + path.len + 1, 512);
 	cap = ffint_align_ceil2(cap, 512);
 	if (NULL == (b = (fntree_block*)ffmem_alloc(cap)))
 		return NULL;

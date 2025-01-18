@@ -429,6 +429,7 @@ enum FFS_FROMFLOAT {
 
 	// 0000 0x00 - flags
 	FFS_FLTZERO = 0x0100,
+	FFS_FLTKEEPSIGN = 0x0200,
 
 	// 00xx 0000 - width
 };
@@ -512,6 +513,7 @@ static inline ffuint ffs_fromfloat(double d, char *dst, ffsize cap, ffuint flags
 
 	} else {
 		ffuint iflags = (flags & FFS_FLTZERO) ? FFS_INTZERO : 0;
+		iflags |= (flags & FFS_FLTKEEPSIGN) ? FFS_INTKEEPSIGN : 0;
 		if (minus && num != 0) {
 			num = -(ffint64)num;
 			iflags |= FFS_INTSIGN;

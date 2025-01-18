@@ -57,7 +57,7 @@ void test_ffsz_allocfmt()
 	ffmem_free(s);
 }
 
-void test_ffstr_fmt()
+void test_ffstr_addfmt()
 {
 	ffstr s = {}, s1;
 	ffstr_alloc(&s, 64);
@@ -246,8 +246,127 @@ void test_ffstr_fmt()
 	// s.len = 0;
 
 	ffstr_free(&s);
+}
 
+void test_ffstr_matchfmt()
+{
+	ffstr in, s1 = {}, s2 = {};
+
+	ffstr_setz(&in, "asdf");
+	xieq(0, ffstr_matchfmt(&in, "%S", &s1));
+	xseq(&s1, "asdf");
+
+	ffstr_setz(&in, "asdf{#qwer}");
+	xieq(0, ffstr_matchfmt(&in, "%S{#%S}", &s1, &s2));
+	xseq(&s1, "asdf");
+	xseq(&s2, "qwer");
+
+	ffstr_setz(&in, "a{#b}{#c}");
+	xieq(5+1, ffstr_matchfmt(&in, "%S{#%S}", &s1, &s2));
+	xseq(&s1, "a");
+	xseq(&s2, "b");
+
+	ffstr_setz(&in, "a{#b{#c}");
+	xieq(0, ffstr_matchfmt(&in, "%S{#%S}", &s1, &s2));
+	xseq(&s1, "a");
+	xseq(&s2, "b{#c");
+
+	ffstr_setz(&in, "a#q}");
+	xieq(-1, ffstr_matchfmt(&in, "%S{#%S}", &s1, &s2));
+
+	ffstr_setz(&in, "a{#q");
+	xieq(-1, ffstr_matchfmt(&in, "%S{#%S}", &s1, &s2));
+
+	ffstr_setz(&in, "a b - c");
+	xieq(0, ffstr_matchfmt(&in, "%S - %S", &s1, &s2));
+	xseq(&s1, "a b");
+	xseq(&s2, "c");
+
+	ffstr_setz(&in, "a b - ");
+	xieq(0, ffstr_matchfmt(&in, "%S - ", &s1));
+	xseq(&s1, "a b");
+
+	ffstr_setz(&in, "");
+	xieq(-1, ffstr_matchfmt(&in, "%S{#%S}", &s1, &s2));
+
+	ffstr_setz(&in, "a");
+	xieq(0+1, ffstr_matchfmt(&in, "", &s1, &s2));
+
+	ffstr_setz(&in, "");
+	xieq(0, ffstr_matchfmt(&in, "", &s1, &s2));
+
+// width
+	ffstr_setz(&in, "abcd1234");
+	xieq(0, ffstr_matchfmt(&in, "%4S%S", &s1, &s2));
+	xseq(&s1, "abcd");
+	xseq(&s2, "1234");
+
+// width+u
+	ffuint u;
+	ffstr_setz(&in, "1234abcd");
+	xieq(0, ffstr_matchfmt(&in, "%4u%S", &u, &s2));
+	xieq(1234, u);
+	xseq(&s2, "abcd");
+
+// u
+	ffstr_setz(&in, "1234 abcd");
+	xieq(0, ffstr_matchfmt(&in, "%u %S", &u, &s2));
+	xieq(1234, u);
+	xseq(&s2, "abcd");
+
+// U
+	ffuint64 u64;
+	ffstr_setz(&in, "1234 abcd");
+	xieq(0, ffstr_matchfmt(&in, "%U %S", &u64, &s2));
+	xieq(1234, u64);
+	xseq(&s2, "abcd");
+
+// d
+	int i;
+	ffstr_setz(&in, "-1234 abcd");
+	xieq(0, ffstr_matchfmt(&in, "%d %S", &i, &s2));
+	xieq(-1234, i);
+	xseq(&s2, "abcd");
+
+// D
+	ffint64 i64;
+	ffstr_setz(&in, "-1234 abcd");
+	xieq(0, ffstr_matchfmt(&in, "%D %S", &i64, &s2));
+	xieq(-1234, i64);
+	xseq(&s2, "abcd");
+
+// xu
+	ffstr_setz(&in, "12ab abcd");
+	xieq(0, ffstr_matchfmt(&in, "%xu %S", &u, &s2));
+	xieq(0x12ab, u);
+	xseq(&s2, "abcd");
+
+// xU
+	ffstr_setz(&in, "12ab abcd");
+	xieq(0, ffstr_matchfmt(&in, "%xU %S", &u64, &s2));
+	xieq(0x12ab, u64);
+	xseq(&s2, "abcd");
+
+// width+xu
+	ffstr_setz(&in, "12ababcd");
+	xieq(0, ffstr_matchfmt(&in, "%4xu%S", &u, &s2));
+	xieq(0x12ab, u);
+	xseq(&s2, "abcd");
+
+// bad format
+	ffstr_setz(&in, "asdf");
+	xieq(-1, ffstr_matchfmt(&in, "%"));
+	xieq(-1, ffstr_matchfmt(&in, "%x"));
+	xieq(-1, ffstr_matchfmt(&in, "%S%S", &s1));
+	xieq(-1, ffstr_matchfmt(&in, "%u%S", &s1));
+	xieq(-1, ffstr_matchfmt(&in, "%xu%S", &s1));
+}
+
+void test_ffstr_fmt()
+{
+	test_ffstr_addfmt();
 	test_ffstr_fmtcap();
 	test_ffsz_allocfmt();
 	test_ffs_format_r0();
+	test_ffstr_matchfmt();
 }

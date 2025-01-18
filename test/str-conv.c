@@ -244,6 +244,9 @@ void test_ffstr_fromfloat()
 	x(ffstr_from_float(&s, 20, -0.123456789123456789, prec));	xseq(&s, "-0.12345678912345678");
 	x(!ffstr_from_float(&s, 19, -0.123456789123456789, prec));
 
+	x(ffstr_from_float(&s, sizeof(buf), -0.123, 3 | FFS_FLTKEEPSIGN));	xseq(&s, "-0.123");
+	x(ffstr_from_float(&s, sizeof(buf), +0.123, 3 | FFS_FLTKEEPSIGN));	xseq(&s, "+0.123");
+
 	x(ffstr_from_float(&s, sizeof(buf), 0.000123456789123456789, prec));	xseq(&s, "0.00012345678912346");
 
 	x(ffstr_from_float(&s, sizeof(buf), INFINITY, prec));	xseq(&s, "inf");

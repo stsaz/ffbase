@@ -25,6 +25,7 @@ OBJ := \
 	rbtree.o \
 	map.o \
 	ring.o \
+	stream.o \
 	\
 	atomic.o \
 	lock.o \

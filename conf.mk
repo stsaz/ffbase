@@ -69,7 +69,7 @@ LINKXXFLAGS := $(LINKFLAGS)
 LINK_RPATH_ORIGIN :=
 LINK_INSTALLNAME_LOADERPATH :=
 ifeq "$(OS)" "linux"
-	LINK_RPATH_ORIGIN := '-Wl,-rpath,$$ORIGIN' -Wl,--disable-new-dtags
+	LINK_RPATH_ORIGIN := '-Wl,-rpath,$$ORIGIN'
 else ifeq "$(OS)" "freebsd"
 	LINK_RPATH_ORIGIN := '-Wl,-rpath,$$ORIGIN'
 else ifeq "$(OS)" "apple"

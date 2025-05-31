@@ -109,7 +109,7 @@ static inline int file_writeall(const char *fn, const void *data, ffsize len)
 {
 	int rc = -1;
 	int f;
-	if (-1 == (f = open(fn, O_CREAT | O_EXCL | O_TRUNC | O_WRONLY, 0666)))
+	if (-1 == (f = open(fn, O_CREAT | O_TRUNC | O_WRONLY, 0666)))
 		return -1;
 
 	if (len != (ffsize)write(f, data, len))

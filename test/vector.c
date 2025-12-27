@@ -1,11 +1,24 @@
-/** ffbase: list.h & chain.h tester
+/** ffbase: vector.h tester
 2020, Simon Zolin
 */
 
 #include <ffbase/base.h>
-#include <ffbase/vector.h>
 #include <test/test.h>
+#include <ffbase/vector.h>
 
+static void test_vec_ins()
+{
+	ffvec v = {};
+	const char a[] = { 1, 2, 3, 4 };
+	x(2 == ffvec_insert(&v, v.len, a, 2, 1)); // initial
+	x(2 == ffvec_insert(&v, v.len, a + 2, 2, 1)); // end
+	x(!ffmem_cmp(v.ptr, a, 4));
+	x(2 == ffvec_insert(&v, 0, a + 2, 2, 1)); // begin
+	const char a2[] = { 3, 4, 1, 2, 3, 4 };
+	x(v.len == 6);
+	x(!ffmem_cmp(v.ptr, a2, 6));
+	ffvec_free(&v);
+}
 
 void test_vec()
 {
@@ -47,4 +60,6 @@ void test_vec()
 	x(NULL != ffvec_growtwiceT(&v, 6, char));
 	xieq(10, v.cap);
 	ffvec_free(&v);
+
+	test_vec_ins();
 }

@@ -288,3 +288,18 @@ static inline ffsize ffvec_addchar(ffvec *v, char ch)
 #define ffvec_addfmt(v, fmt, ...)  ffstr_growfmt((ffstr*)(v), &(v)->cap, fmt, ##__VA_ARGS__)
 #define ffvec_addfmtv(v, fmt, va)  ffstr_growfmtv((ffstr*)(v), &(v)->cap, fmt, va)
 #endif
+
+/** Add data into array: a[off..] = src[]
+Return N of elements copied */
+static inline ffsize ffvec_insert(ffvec *v, ffsize off, const void *src, ffsize n, ffsize elsize)
+{
+	FF_ASSERT(off <= v->len);
+	if (!ffvec_grow(v, n, elsize))
+		return 0;
+	void *dst = (char*)v->ptr + off * elsize;
+	if (off != v->len)
+		ffmem_move((char*)v->ptr + (off + n) * elsize, dst, (v->len - off) * elsize);
+	ffmem_copy(dst, src, n * elsize);
+	v->len += n;
+	return n;
+}

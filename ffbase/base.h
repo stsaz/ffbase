@@ -54,6 +54,7 @@ ffmem_stack
 ffmem_cmp ffmem_fill ffmem_findbyte
 ffmem_zero ffmem_zero_obj
 ffmem_copy ffmem_move
+ffcpu_prefetch_l1 ffcpu_prefetch_l2
 */
 
 /* Detect CPU */
@@ -167,8 +168,12 @@ ffmem_copy ffmem_move
 #define FF_EXPORT  __attribute__((visibility("default")))
 
 
+/** Expect the expression to be mostly true,
+ placing the branch closer to the current execution pointer. */
 #define ff_likely(x)  __builtin_expect(!!(x), 1)
 
+/** Expect the expression to be mostly false,
+ placing the branch farther. */
 #define ff_unlikely(x)  __builtin_expect(!!(x), 0)
 
 
@@ -587,6 +592,13 @@ static inline ffsize ffmem_ncopy(void *dst, ffsize cap, const void *src, ffsize 
 
 /** Safely copy data (overlapping regions) */
 #define ffmem_move(dst, src, len)  (void) memmove(dst, src, len)
+
+
+/** Begin loading data at `ptr` to L1 (and L2) cache */
+#define ffcpu_prefetch_l1(ptr)  __builtin_prefetch(ptr, 0, 3)
+
+/** Begin loading data at `ptr` to L2 cache */
+#define ffcpu_prefetch_l2(ptr)  __builtin_prefetch(ptr, 0, 2)
 
 FF_EXTERN int _ffcpu_features;
 

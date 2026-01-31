@@ -35,6 +35,16 @@ static void charr_find()
 	for (ffuint i = 0;  i != FF_COUNT(arr);  i++) {
 		xieq(i, ffcharr_find_sorted_padding(arr, FF_COUNT(arr), 4, 4, arr[i].name, 2));
 	}
+
+	static const char names[][3] = {
+		"AA",
+		"BB",
+		"CC",
+		"DD",
+	};
+	for (ffuint i = 0;  i != FF_COUNT(arr);  i++) {
+		xieq(i, ffcharr_ifind_sorted_padding(arr, FF_COUNT(arr), 4, 4, names[i], 2));
+	}
 }
 
 static void szarr_find()

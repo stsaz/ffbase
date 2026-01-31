@@ -7,6 +7,7 @@
 
 struct com {
 	ffbyte sw;
+	ffbyte _boolean;
 	ffuint64 _uint64;
 	ffuint _uint;
 	int _int;
@@ -19,6 +20,10 @@ struct com {
 
 int f_sw(struct com *com) {
 	com->sw = 1;
+	return 0;
+}
+int f_bool(struct com *com, ffuint64 v) {
+	com->_boolean = !!v;
 	return 0;
 }
 int f_str(struct com *com, ffstr v) {
@@ -56,6 +61,7 @@ int f_done(struct com *com) {
 
 #define O(m)  (void*)(ffsize)FF_OFF(struct com, m)
 const struct ffarg scheme_obj[] = {
+	{ "-bool",	'b',	O(_boolean) },
 	{ "-float",	'F',	O(_double) },
 	{ "-int",	'd',	O(_int) },
 	{ "-size",	'Z',	O(_uint64) },
@@ -68,6 +74,7 @@ const struct ffarg scheme_obj[] = {
 };
 
 const struct ffarg scheme_func[] = {
+	{ "-bool",	'b',	f_bool },
 	{ "-float",	'F',	f_float },
 	{ "-int",	'd',	f_int64 },
 	{ "-size",	'Z',	f_size },
@@ -113,6 +120,7 @@ const struct ffarg scheme_outer_func[] = {
 
 void com_check(struct com *com)
 {
+	xieq(com->_boolean, 1);
 	xieq(com->_uint64, 123*1024*1024);
 	xieq(com->_uint, 123);
 	xieq(com->_int, -123);
@@ -160,6 +168,7 @@ void test_args()
 
 	char* argv[] = { "-str", "str str",  "-strz", "strz",  "-strcp", "szcopy",
 		"-uint", "123",  "-int", "-123",  "-size", "123m",
+		"-bool", "1",
 		"-float", "-123.1",  "-sw"
 	};
 	xieq(ffargs_process_argv(&a, scheme_obj, &com, 0, argv, FF_COUNT(argv)), 0);
@@ -172,6 +181,7 @@ void test_args()
 	ffmem_zero_obj(&a);  ffmem_zero_obj(&com);
 	char line[] = " -str \"str str\"  -strz strz  -strcp szcopy  "
 		"-uint 123  -int -123  -size 123m  "
+		"-bool 1 "
 		"-float -123.1  -sw ";
 	xieq(ffargs_process_line(&a, scheme_obj, &com, 0, line), 0);
 	com_check(&com);

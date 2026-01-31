@@ -43,7 +43,8 @@ void main(int argc, const char **argv)
 #include <ffbase/string.h>
 #include <ffbase/stringz.h>
 
-#define _FFARG_MAXNAME 20
+#define _FFARG_MAXNAME  20
+#define _FFARG_MAX_OFF  (64*1024)
 
 struct ffarg {
 	/** Argument name.
@@ -54,6 +55,7 @@ struct ffarg {
 
 	/**
 	'1'		switch, byte
+	'b'		0 or 1, byte
 	'u'		unsigned int-32
 	'd'		signed int-32
 	'U'		unsigned int-64
@@ -137,6 +139,7 @@ enum FFARGS_E {
 	FFARGS_E_ARG,
 	FFARGS_E_DUP,
 	FFARGS_E_VAL,
+	FFARGS_E_BOOL,
 	FFARGS_E_INT,
 	FFARGS_E_FLOAT,
 	FFARGS_E_REDIR,
@@ -187,7 +190,7 @@ static int _ffargs_err(struct ffargs *as, int e, const char *fmt, ...)
 
 union _ffarg_val {
 	void *ptr;
-	char *b;		// '1'
+	char *b;		// '1', 'b'
 	int *i32;		// 'd', 'u'
 	ffint64 *i64;	// 'D', 'U', 'Z'
 	double *f64;	// 'F'
@@ -209,7 +212,6 @@ static int _ffargs_value(struct ffargs *as, const struct ffarg *a, ffstr key, ff
 {
 	struct ffarg_ctx *ax = &as->ax;
 
-	const ffuint MAX_OFF = 64*1024;
 	ffsize off = (ffsize)a->value;
 	union _ffarg_val u = { .ptr = FF_PTR(ax->obj, off) };
 	union _ffarg_func uf = { .ptr = a->value };
@@ -229,7 +231,7 @@ static int _ffargs_value(struct ffargs *as, const struct ffarg *a, ffstr key, ff
 		}
 
 		if (t == 'S') {
-			if (off < MAX_OFF)
+			if (off < _FFARG_MAX_OFF)
 				*u.s = val;
 			else
 				return uf.f_str(ax->obj, val);
@@ -238,11 +240,25 @@ static int _ffargs_value(struct ffargs *as, const struct ffarg *a, ffstr key, ff
 			if (val.ptr[val.len] != '\0')
 				val.ptr[val.len] = '\0';
 
-			if (off < MAX_OFF)
+			if (off < _FFARG_MAX_OFF)
 				*u.sz = val.ptr;
 			else
 				return uf.f_sz(ax->obj, val.ptr);
 		}
+		break;
+
+	case 'b':
+		if (val.len == 1 && *val.ptr == '0')
+			i = 0;
+		else if (val.len == 1 && *val.ptr == '1')
+			i = 1;
+		else
+			return _ffargs_err(as, FFARGS_E_BOOL, "'%S': expected boolean, got '%S'", &key, &val);
+
+		if (off < _FFARG_MAX_OFF)
+			*u.b = !!i;
+		else
+			return uf.f_int64(ax->obj, !!i);
 		break;
 
 	case 'D':
@@ -276,7 +292,7 @@ static int _ffargs_value(struct ffargs *as, const struct ffarg *a, ffstr key, ff
 				return _ffargs_err(as, FFARGS_E_INT, "'%S': expected integer number, got '%S'", &key, &val);
 		}
 
-		if (off < MAX_OFF) {
+		if (off < _FFARG_MAX_OFF) {
 			if (t == 'D' || t == 'U' || t == 'Z')
 				*u.i64 = i;
 			else
@@ -290,7 +306,7 @@ static int _ffargs_value(struct ffargs *as, const struct ffarg *a, ffstr key, ff
 		if (!ffstr_to_float(&val, &d))
 			return _ffargs_err(as, FFARGS_E_FLOAT, "'%S': expected number, got '%S'", &key, &val);
 
-		if (off < MAX_OFF)
+		if (off < _FFARG_MAX_OFF)
 			*u.f64 = d;
 		else
 			return uf.f_float(ax->obj, d);
@@ -309,7 +325,6 @@ static int _ffargs_arg(struct ffargs *as, const struct ffarg *a, ffstr arg)
 {
 	struct ffarg_ctx *ax = &as->ax;
 
-	const ffuint MAX_OFF = 64*1024;
 	ffsize off = (ffsize)a->value;
 	union _ffarg_val u = { .ptr = FF_PTR(ax->obj, off) };
 	union _ffarg_func uf = { .ptr = a->value };
@@ -330,7 +345,7 @@ static int _ffargs_arg(struct ffargs *as, const struct ffarg *a, ffstr arg)
 		as->ax.scheme = (struct ffarg*)a->value;  break;
 
 	case '1':
-		if (off < MAX_OFF)
+		if (off < _FFARG_MAX_OFF)
 			*u.b = 1;
 		else
 			return uf.f_sw(ax->obj);
@@ -502,6 +517,7 @@ static inline int ffargs_process_line(struct ffargs *as, const struct ffarg *sch
 
 		if (_ffargs_next(&as->line, &arg))
 			break;
+		as->argi++;
 
 		if (expecting_value) {
 			expecting_value = 0;

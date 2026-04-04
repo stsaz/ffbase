@@ -62,4 +62,9 @@ void test_vec()
 	ffvec_free(&v);
 
 	test_vec_ins();
+
+	x(!!ffvec_alloc_align(&v, 64, 64, 1));
+	x(((size_t)v.ptr & 64) == 0);
+	*(char*)v.ptr = 0xff;
+	ffvec_free_align(&v);
 }

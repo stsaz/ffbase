@@ -23,6 +23,8 @@ ALLOCATE
 	ffvec_alloc ffvec_allocT ffvec_zalloc ffvec_zallocT
 	ffvec_realloc ffvec_reallocT ffvec_grow ffvec_growT ffvec_growhalf ffvec_growtwiceT
 	ffvec_free
+	ffvec_alloc_align ffvec_alloc_alignT
+	ffvec_free_align
 COPY
 	ffvec_push ffvec_pushT ffvec_add ffvec_addT ffvec_add2T
 	ffvec_addchar
@@ -227,6 +229,40 @@ static inline void ffvec_free(ffvec *v)
 	v->ptr = NULL;
 	v->len = 0;
 }
+
+
+/** Free aligned memory region. */
+static inline void ffvec_free_align(ffvec *v)
+{
+	if (v->cap != 0) {
+		FF_ASSERT(v->ptr != NULL);
+		FF_ASSERT(v->len <= v->cap);
+		ffmem_alignfree(v->ptr);
+		v->cap = 0;
+	}
+	v->ptr = NULL;
+	v->len = 0;
+}
+
+/** Allocate aligned memory region; call ffvec_free_align() to free.
+WARNING: don't call ffvec_realloc() or ffvec_free()! */
+static inline void* ffvec_alloc_align(ffvec *v, ffsize n, ffsize align, ffsize elsize)
+{
+	if (n == 0)
+		n = 1;
+	ffsize bytes;
+	if (__builtin_mul_overflow(n, elsize, &bytes))
+		return NULL;
+
+	ffvec_free_align(v);
+	if (!(v->ptr = ffmem_align(bytes, align)))
+		return NULL;
+
+	v->cap = n;
+	return v->ptr;
+}
+
+#define ffvec_alloc_alignT(v, n, align, T)  ((T*)ffvec_alloc_align(v, n, align, sizeof(T)))
 
 
 // COPY

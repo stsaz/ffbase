@@ -204,6 +204,64 @@ void test_ring_io_all(ffring *rb)
 	x(used == 0);
 }
 
+void test_ring_io_min(ffring *rb)
+{
+	ffstr s1, s2;
+	ffring_head h;
+	ffsize used;
+
+	// "" -> "12345"
+	ffring_write_all(rb, "12345", 5);
+
+	// "12345"
+	h = ffring_read_min_begin(rb, 6, &s1, &s2, &used);
+	x(s1.len == 0);
+	x(s2.len == 0);
+	x(used == 5);
+	ffring_read_finish(rb, h);
+
+	// "12345"
+	h = ffring_read_all_begin(rb, 5, &s1, &s2, &used);
+	ffring_read_finish(rb, h);
+
+	// "....."
+	ffring_write_all(rb, "6789", 4);
+
+	// "9....678"
+	h = ffring_read_min_begin(rb, 2, &s1, &s2, &used);
+	xseq(&s1, "678");
+	xseq(&s2, "9");
+	x(used == 0);
+	ffring_read_finish(rb, h);
+}
+
+void test_ring_io_max(ffring *rb)
+{
+	ffstr s1, s2;
+	ffring_head h;
+	ffsize used;
+
+	// "" -> "12345"
+	ffring_write_all(rb, "12345", 5);
+
+	// "12345"
+	h = ffring_read_max_begin(rb, 3, &s1, &s2, &used);
+	xseq(&s1, "123");
+	x(s2.len == 0);
+	x(used == 2);
+	ffring_read_finish(rb, h);
+
+	// "...45"
+	ffring_write_all(rb, "6789", 4);
+
+	// "9..45678"
+	h = ffring_read_max_begin(rb, 7, &s1, &s2, &used);
+	xseq(&s1, "45678");
+	xseq(&s2, "9");
+	x(used == 0);
+	ffring_read_finish(rb, h);
+}
+
 void test_rq()
 {
 	ffringqueue *q = ffrq_alloc(10);
@@ -249,8 +307,15 @@ void test_ring()
 	rb->flags = 0;
 	ffring_reset(rb);
 	test_ring_io_all(rb);
+
 	ffring_reset(rb);
 	test_ring_io_some(rb);
+
+	ffring_reset(rb);
+	test_ring_io_min(rb);
+
+	ffring_reset(rb);
+	test_ring_io_max(rb);
 
 	ffring_free(rb);
 

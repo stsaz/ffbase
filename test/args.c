@@ -200,6 +200,12 @@ void test_args()
 	xseq(&com.str, "any");
 
 	ffmem_zero_obj(&a);  ffmem_zero_obj(&com);
+	xieq(ffargs_process_line(&a, scheme_any, &com, 0, "-uint 123 -- -uint"), 0);
+	x(!!(a.flags & FFARG_F_DASHDASH));
+	xieq(com._uint, 123);
+	xseq(&com.str, "-uint");
+
+	ffmem_zero_obj(&a);  ffmem_zero_obj(&com);
 	xieq(ffargs_process_line(&a, scheme_any_redirect, &com, 0, "-uint 123  any"), 0);
 	xieq(com._uint, 123);
 	xseq(&com.str, "any");

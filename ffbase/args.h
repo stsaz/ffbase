@@ -170,6 +170,7 @@ struct ffargs {
 	struct ffarg_ctx ax;
 	ffuint options; // enum FFARGS_OPT
 	ffuint used_bits[2];
+	ffuint flags; // enum FFARG_F
 	char error[250];
 };
 
@@ -177,6 +178,10 @@ struct ffargs {
 #define _FFARG_ANY(a)  (a->name[0] == '\0' && a->name[1] == '\1')
 #define _FFARG_MULTI(a)  ((a->flags & 0xff00) >> 8 == '+')
 #define _FFARG_COPY(a)  ((a->flags & 0xff00) >> 8 == '=')
+
+enum FFARG_F {
+	FFARG_F_DASHDASH = 1,
+};
 
 /** Set error message */
 static int _ffargs_err(struct ffargs *as, int e, const char *fmt, ...)
@@ -323,6 +328,11 @@ static int _ffargs_value(struct ffargs *as, const struct ffarg *a, ffstr key, ff
 /** Process argument */
 static int _ffargs_arg(struct ffargs *as, const struct ffarg *a, ffstr arg)
 {
+	if ((void*)a == as
+		&& (as->flags & FFARG_F_DASHDASH)) {
+		return 0; // skip "--" argument
+	}
+
 	struct ffarg_ctx *ax = &as->ax;
 
 	ffsize off = (ffsize)a->value;
@@ -376,6 +386,18 @@ static const struct ffarg* _ffargs_find(struct ffargs *as, ffstr arg, ffuint fla
 	const struct ffarg *a;
 	const struct ffarg_ctx *ax = &as->ax;
 
+	if (!(as->flags & FFARG_F_DASHDASH)) {
+		if (ffstr_eq(&arg, "--", 2)) {
+			as->flags |= FFARG_F_DASHDASH;
+			return (struct ffarg*)as; // For the caller to transparently handle the "--" argument
+		}
+	} else {
+		// Pass the argument to "\0\1" handler
+		for (i = 0;  ax->scheme[i].name[0] != '\0';  i++) {
+		}
+		goto any;
+	}
+
 	for (i = 0;  ax->scheme[i].name[0] != '\0';  i++) {
 		a = &ax->scheme[i];
 
@@ -396,6 +418,7 @@ static const struct ffarg* _ffargs_find(struct ffargs *as, ffstr arg, ffuint fla
 		}
 	}
 
+any:
 	if (!(a = (ax->scheme[i].name[1] == '\1') ? &ax->scheme[i] : NULL))
 		_ffargs_err(as, FFARGS_E_ARG, "unknown argument '%S'", &arg);
 	return a;

@@ -360,7 +360,7 @@ static inline int ffbit_array_test(const void *d, ffsize bit)
 }
 
 /** Set bit and return its previous value */
-static inline int ffbit_array_set(const void *d, ffsize bit)
+static inline int ffbit_array_set(void *d, ffsize bit)
 {
 	ffbyte *b = (ffbyte*)d + bit / 8;
 	bit = 7 - (bit % 8);

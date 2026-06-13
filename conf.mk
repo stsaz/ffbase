@@ -56,14 +56,25 @@ ifeq "$(COMPILER)" "gcc"
 endif
 
 CFLAGS :=
-CXXFLAGS :=
-
 LINKFLAGS :=
-ifeq "$(OS)" "linux"
-	LINKFLAGS := -Wl,-no-undefined
-else ifeq "$(OS)" "freebsd"
-	LINKFLAGS := -Wl,-no-undefined
+
+ifeq "$(COMPILER)" "clang"
+	ifeq "$(CPU)" "arm64"
+		CFLAGS += -target aarch64-linux-gnu
+		LINKFLAGS += -target aarch64-linux-gnu
+	else ifeq "$(OS)" "windows"
+		CFLAGS += -target x86_64-w64-mingw32
+		LINKFLAGS += -target x86_64-w64-mingw32
+	endif
 endif
+
+ifeq "$(OS)" "linux"
+	LINKFLAGS += -Wl,-no-undefined
+else ifeq "$(OS)" "freebsd"
+	LINKFLAGS += -Wl,-no-undefined
+endif
+
+CXXFLAGS := $(CFLAGS)
 LINKXXFLAGS := $(LINKFLAGS)
 
 LINK_RPATH_ORIGIN :=

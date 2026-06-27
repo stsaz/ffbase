@@ -6,13 +6,8 @@
 #include <ffbase/stringz.h>
 #include <test/test.h>
 
-void test_ffstr_fmtcap()
+void test_ffs_format_cap()
 {
-	xieq(-6-1, ffs_format(NULL, 0, "%s", NULL));
-	xieq(-6-1, ffs_format(NULL, 0, "%s", "abcdef"));
-	xieq(-7-1, ffs_format(NULL, 0, "%7s", "abcdef"));
-	xieq(-5-1, ffs_format(NULL, 0, "%*s", (ffsize)5, "abcdef"));
-	xieq(-1-1, ffs_format(NULL, 0, "%*s1", (ffsize)0, "abcdef"));
 	xieq(-1-1, ffs_format(NULL, 0, "%%"));
 	xieq(-1-1, ffs_format(NULL, 0, "%c", 'C'));
 	xieq(-5-1, ffs_format(NULL, 0, "%5c", 'C'));
@@ -34,6 +29,32 @@ void test_ffstr_fmtcap()
 
 	xieq(-32-1-32-1, ffs_format(NULL, 0, "%f", (double)123.456));
 }
+
+void test_ffs_format()
+{
+	test_ffs_format_cap();
+
+	xieq(-6-1, ffs_format(NULL, 0, "%s", NULL));
+	xieq(-6-1, ffs_format(NULL, 0, "%s", "abcdef"));
+	xieq(-7-1, ffs_format(NULL, 0, "%7s", "abcdef"));
+	xieq(-5-1, ffs_format(NULL, 0, "%*s", (ffsize)5, "abcdef"));
+	xieq(-1-1, ffs_format(NULL, 0, "%*s1", (ffsize)0, "abcdef"));
+
+	char s[16];
+	s[5] = '\0';
+	x(-11 == ffs_format(s, 5, "%s", "0123456789") && !ffmem_cmp(s, "01234", 5+1));
+	x(10 == ffs_format(s, 11, "%s", "0123456789") && !ffmem_cmp(s, "0123456789", 10));
+
+	s[5] = '\0';
+	x(-11 == ffs_format(s, 5, "%*s", (ffsize)10, "0123456789") && !ffmem_cmp(s, "01234", 5+1));
+	x(10 == ffs_format(s, 11, "%*s", (ffsize)10, "0123456789") && !ffmem_cmp(s, "0123456789", 10));
+
+	ffstr ss = FFSTR_INITZ("0123456789");
+	s[5] = '\0';
+	x(-11 == ffs_format(s, 5, "%S", &ss) && !ffmem_cmp(s, "01234", 5+1));
+	x(10 == ffs_format(s, 11, "%S", &ss) && !ffmem_cmp(s, "0123456789", 10));
+}
+
 
 void test_ffs_format_r0()
 {
@@ -365,7 +386,7 @@ void test_ffstr_matchfmt()
 void test_ffstr_fmt()
 {
 	test_ffstr_addfmt();
-	test_ffstr_fmtcap();
+	test_ffs_format();
 	test_ffsz_allocfmt();
 	test_ffs_format_r0();
 	test_ffstr_matchfmt();

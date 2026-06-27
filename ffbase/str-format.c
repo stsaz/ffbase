@@ -116,16 +116,15 @@ ffssize ffs_formatv(char *dst, ffsize cap, const char *fmt, va_list va)
 #endif
 		case 's': {
 			const char *sz = va_arg(va, char*);
+			if (sz == NULL)
+				sz = "(null)";
 
 			if (have_width) {
-				if (len + width < cap)
-					ffmem_copy(dst + len, sz, width);
+				if (len < cap)
+					ffmem_copy(dst + len, sz, ffmin(width, cap - len));
 				r = width;
 
 			} else {
-				if (sz == NULL)
-					sz = "(null)";
-
 				if (len < cap) {
 					r = _ffs_copyz(dst + len, cap - len, sz);
 					if (len + r >= cap)
@@ -143,8 +142,8 @@ ffssize ffs_formatv(char *dst, ffsize cap, const char *fmt, va_list va)
 		case 'S': {
 			const ffstr *s = va_arg(va, ffstr*);
 
-			if (len + s->len < cap)
-				ffmem_copy(dst + len, s->ptr, s->len);
+			if (len < cap)
+				ffmem_copy(dst + len, s->ptr, ffmin(s->len, cap - len));
 			len += s->len;
 
 			r = width - s->len;

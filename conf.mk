@@ -64,7 +64,7 @@ ifeq "$(COMPILER)" "clang"
 		LINKFLAGS += -target aarch64-linux-gnu
 	else ifeq "$(OS)" "windows"
 		CFLAGS += -target x86_64-w64-mingw32
-		LINKFLAGS += -target x86_64-w64-mingw32 -fuse-ld=lld
+		LINKFLAGS += -target x86_64-w64-mingw32
 	endif
 endif
 

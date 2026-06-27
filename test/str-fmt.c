@@ -25,7 +25,7 @@ void test_ffs_format_cap()
 	xieq(-32-1, ffs_format(NULL, 0, "%10xU", (ffint64)0x1234abcd));
 	xieq(-32-1, ffs_format(NULL, 0, "%010xU", (ffint64)0x1234abcd));
 	xieq(-32-1, ffs_format(NULL, 0, "%,U", (ffint64)123456789));
-	xieq(-32-1, ffs_format(NULL, 0, "%p", (ffsize)0x1234af));
+	xieq(-(sizeof(void*)*2)-1, ffs_format(NULL, 0, "%p", (ffsize)0x1234af));
 
 	xieq(-32-1-32-1, ffs_format(NULL, 0, "%f", (double)123.456));
 }

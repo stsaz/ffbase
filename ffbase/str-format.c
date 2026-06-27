@@ -30,6 +30,7 @@ ffssize ffs_formatv(char *dst, ffsize cap, const char *fmt, va_list va)
 			have_width = 1;
 		}
 
+		// Parse behaviour modifiers and data width
 		for (;;) {
 			switch (*fmt) {
 			case 'x':
@@ -71,44 +72,210 @@ ffssize ffs_formatv(char *dst, ffsize cap, const char *fmt, va_list va)
 			break;
 		}
 
+		// Phase 1: Write data while there's enough output space
+		if (len < cap) {
+			switch (*fmt) {
+
+			case 'U':
+				n = va_arg(va, ffuint64);
+				break;
+			case 'D':
+				n = va_arg(va, ffint64);
+				iflags |= FFS_INTSIGN;
+				break;
+
+			case 'u':
+				n = va_arg(va, ffuint);
+				break;
+			case 'd':
+				n = va_arg(va, int);
+				iflags |= FFS_INTSIGN;
+				break;
+
+			case 'L':
+				n = va_arg(va, ffsize);
+				break;
+
+			case 'p':
+				n = va_arg(va, ffsize);
+				iflags |= FFS_INTHEX | FFS_INTZERO;
+				width = sizeof(void*) * 2;
+				break;
+
+			case 'F':
+			case 'f': {
+				double d = va_arg(va, double);
+				ffuint fzero = (iflags & FFS_INTZERO) ? FFS_FLTZERO : 0;
+				r = ffs_fromfloat(d, dst + len, cap - len, FFS_FLTWIDTH(width) | fzero | prec);
+				len += (r != 0) ? r : FFS_FLTCAP;
+				continue;
+			}
+
+
+#if !defined FF_WIN && defined _FFBASE_UNICODE_H
+			case 'q':
+#endif
+			case 's': {
+				const char *sz = va_arg(va, char*);
+				if (sz == NULL)
+					sz = "(null)";
+
+				if (have_width) {
+					ffmem_copy(dst + len, sz, ffmin(width, cap - len));
+					len += width;
+
+				} else {
+					r = _ffs_copyz(dst + len, cap - len, sz);
+					if (len + r >= cap)
+						r = ffsz_len(sz);
+					len += r;
+				}
+				continue;
+			}
+
+			case 'S': {
+				const ffstr *s = va_arg(va, ffstr*);
+
+				ffmem_copy(dst + len, s->ptr, ffmin(s->len, cap - len));
+				len += s->len;
+
+				r = width - s->len;
+				if (r > 0) {
+					if (len + r < cap)
+						ffmem_fill(dst + len, ' ', r);
+					len += r;
+				}
+				continue;
+			}
+
+#if defined FF_WIN && defined _FFBASE_UNICODE_H
+			case 'q': {
+				const wchar_t *sz = va_arg(va, wchar_t*);
+
+				r = -1;
+				if (have_width) {
+					r = ffs_wtou(dst + len, cap - len, sz, width);
+					if (r < 0)
+						r = ffs_wtou(NULL, 0, sz, width);
+
+				} else {
+					if (sz == NULL)
+						sz = L"(null)";
+
+					r = ffs_wtouz(dst + len, cap - len, sz);
+					if (r < 0)
+						r = ffs_wtouz(NULL, 0, sz);
+				}
+
+				if (r > 0)
+					len += r;
+				continue;
+			}
+#endif
+
+
+			case 'b': {
+				FF_ASSERT(have_width);
+				FF_ASSERT(iflags & FFS_INTHEX);
+				if (ff_unlikely(!have_width || !(iflags & FFS_INTHEX)))
+					return 0; // width and 'x|X' must be specified
+
+				const void *d = va_arg(va, void*);
+				ffs_fromhex(dst + len, cap - len, d, width, iflags & FFS_INTHEXUP);
+				len += width * 2;
+				continue;
+			}
+
+
+			case 'c': {
+				int ch = va_arg(va, int);
+				if (have_width) {
+					ffmem_fill(dst + len, ch, width);
+					len += width;
+				} else {
+					dst[len] = ch;
+					len++;
+				}
+				continue;
+			}
+
+			case '%':
+				dst[len] = '%';
+				len++;
+				continue;
+
+			case 'Z':
+				dst[len] = '\0';
+				len++;
+				continue;
+
+#ifdef FFBASE_HAVE_FFERR_STR
+			case 'E': {
+				// "(%u) %s", errno, strerror(errno)
+				int e = va_arg(va, int);
+				if (len + 3 < cap) {
+					r = ffs_fromint(e, dst + len + 1, cap - (len + 1), 0);
+					if (r != 0) {
+						dst[len++] = '(';
+						len += r;
+						dst[len++] = ')';
+						dst[len++] = ' ';
+
+						if (0 == fferr_str(e, dst + len, cap - len))
+							r = ffsz_len(dst + len);
+						else
+							r = 255;
+					} else {
+						r = 3 + FFS_INTCAP + 255;
+					}
+				} else {
+					r = 3 + FFS_INTCAP + 255;
+				}
+				len += r;
+				continue;
+			}
+#endif
+
+			default:
+				FF_ASSERT(0);
+				return 0; // bad format string
+			}
+
+			r = ffs_fromint(n, dst + len, cap - len, iflags | FFS_INTWIDTH(width));
+			len += (r != 0) ? r : FFS_INTCAP;
+			continue;
+		}
+
+		// Phase 2: Count the required buffer capacity after we've hit the limit
 		switch (*fmt) {
 
 		case 'U':
-			n = va_arg(va, ffuint64);
-			break;
 		case 'D':
-			n = va_arg(va, ffint64);
-			iflags |= FFS_INTSIGN;
+			va_arg(va, ffint64);
+			len += ffmax(FFS_INTCAP, width);
 			break;
 
 		case 'u':
-			n = va_arg(va, ffuint);
-			break;
 		case 'd':
-			n = va_arg(va, int);
-			iflags |= FFS_INTSIGN;
+			va_arg(va, int);
+			len += ffmax(FFS_INTCAP, width);
 			break;
 
 		case 'L':
-			n = va_arg(va, ffsize);
+			va_arg(va, ffsize);
+			len += ffmax(FFS_INTCAP, width);
 			break;
 
 		case 'p':
-			n = va_arg(va, ffsize);
-			iflags |= FFS_INTHEX | FFS_INTZERO;
-			width = sizeof(void*) * 2;
+			va_arg(va, ffsize);
+			len += sizeof(void*) * 2;
 			break;
 
 		case 'F':
-		case 'f': {
-			double d = va_arg(va, double);
-			if (len < cap) {
-				ffuint fzero = (iflags & FFS_INTZERO) ? FFS_FLTZERO : 0;
-				r = ffs_fromfloat(d, dst + len, cap - len, FFS_FLTWIDTH(width) | fzero | prec);
-			}
-			len += (r != 0) ? r : FFS_FLTCAP;
-			continue;
-		}
+		case 'f':
+			va_arg(va, double);
+			len += FFS_FLTCAP;
+			break;
 
 
 #if !defined FF_WIN && defined _FFBASE_UNICODE_H
@@ -118,148 +285,63 @@ ffssize ffs_formatv(char *dst, ffsize cap, const char *fmt, va_list va)
 			const char *sz = va_arg(va, char*);
 			if (sz == NULL)
 				sz = "(null)";
-
-			if (have_width) {
-				if (len < cap)
-					ffmem_copy(dst + len, sz, ffmin(width, cap - len));
-				r = width;
-
-			} else {
-				if (len < cap) {
-					r = _ffs_copyz(dst + len, cap - len, sz);
-					if (len + r >= cap)
-						r = ffsz_len(sz);
-
-				} else {
-					r = ffsz_len(sz);
-				}
-			}
-
-			len += r;
-			continue;
+			len += (have_width) ? width : ffsz_len(sz);
+			break;
 		}
 
 		case 'S': {
 			const ffstr *s = va_arg(va, ffstr*);
-
-			if (len < cap)
-				ffmem_copy(dst + len, s->ptr, ffmin(s->len, cap - len));
-			len += s->len;
-
-			r = width - s->len;
-			if (r > 0) {
-				if (len + r < cap)
-					ffmem_fill(dst + len, ' ', r);
-				len += r;
-			}
-			continue;
+			len += ffmax(s->len, width);
+			break;
 		}
 
 #if defined FF_WIN && defined _FFBASE_UNICODE_H
 		case 'q': {
 			const wchar_t *sz = va_arg(va, wchar_t*);
 
-			r = -1;
-			if (have_width) {
-				if (len < cap)
-					r = ffs_wtou(dst + len, cap - len, sz, width);
-				if (r < 0)
-					r = ffs_wtou(NULL, 0, sz, width);
-
-			} else {
+			if (have_width)
+				r = ffs_wtou(NULL, 0, sz, width);
+			else {
 				if (sz == NULL)
 					sz = L"(null)";
-
-				if (len < cap)
-					r = ffs_wtouz(dst + len, cap - len, sz);
-				if (r < 0)
-					r = ffs_wtouz(NULL, 0, sz);
+				r = ffs_wtouz(NULL, 0, sz);
 			}
-
 			if (r > 0)
 				len += r;
-			continue;
+			break;
 		}
 #endif
 
-
-		case 'b': {
+		case 'b':
 			FF_ASSERT(have_width);
 			FF_ASSERT(iflags & FFS_INTHEX);
-			if (!have_width)
-				return 0; // width must be specified
-			if (!(iflags & FFS_INTHEX))
-				return 0; // 'x|X' must be specified
-
-			const void *d = va_arg(va, void*);
-			if (len + width * 2 < cap)
-				ffs_fromhex(dst + len, cap - len, d, width, iflags & FFS_INTHEXUP);
+			if (ff_unlikely(!have_width || !(iflags & FFS_INTHEX)))
+				return 0; // width and 'x|X' must be specified
+			va_arg(va, void*);
 			len += width * 2;
-			continue;
-		}
+			break;
 
-
-		case 'c': {
-			int ch = va_arg(va, int);
-			if (have_width) {
-				if (len + width < cap)
-					ffmem_fill(dst + len, ch, width);
-				len += width;
-			} else {
-				if (len < cap)
-					dst[len] = ch;
-				len++;
-			}
-			continue;
-		}
+		case 'c':
+			va_arg(va, int);
+			len += (have_width) ? width : 1;
+			break;
 
 		case '%':
-			if (len < cap)
-				dst[len] = '%';
-			len++;
-			continue;
-
 		case 'Z':
-			if (len < cap)
-				dst[len] = '\0';
 			len++;
-			continue;
+			break;
 
 #ifdef FFBASE_HAVE_FFERR_STR
-		case 'E': {
-			// "(%u) %s", errno, strerror(errno)
-			int e = va_arg(va, int);
-			if (len + 3 < cap) {
-				r = ffs_fromint(e, dst + len + 1, cap - (len + 1), 0);
-				if (r != 0) {
-					dst[len++] = '(';
-					len += r;
-					dst[len++] = ')';
-					dst[len++] = ' ';
-
-					if (0 == fferr_str(e, dst + len, cap - len))
-						r = ffsz_len(dst + len);
-					else
-						r = 255;
-				} else {
-					r = 3 + FFS_INTCAP + 255;
-				}
-			} else {
-				r = 3 + FFS_INTCAP + 255;
-			}
-			len += r;
-			continue;
-		}
+		case 'E':
+			va_arg(va, int);
+			len += 3 + FFS_INTCAP + 255;
+			break;
 #endif
 
 		default:
 			FF_ASSERT(0);
 			return 0; // bad format string
 		}
-
-		if (len < cap)
-			r = ffs_fromint(n, dst + len, cap - len, iflags | FFS_INTWIDTH(width));
-		len += (r != 0) ? r : FFS_INTCAP;
 	}
 
 	if (len >= cap)

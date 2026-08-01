@@ -3,6 +3,8 @@
 */
 
 /*
+ffutf8_size
+ffutf8_len
 ffutf8_encode
 ffutf8_decode
 ffutf8_valid
@@ -72,6 +74,23 @@ static inline ffuint ffutf8_size(ffuint ch)
 	else
 		n = 0;
 	return n;
+}
+
+/** Get the length of UTF-8 character.
+Return 0 on error */
+static inline ffuint ffutf8_len(const char *utf8, ffsize len)
+{
+	if (len == 0)
+		return 0;
+	ffuint d = (ffbyte)utf8[0];
+	if ((d & 0x80) == 0)
+		return 1;
+
+	// e.g. 110xxxxx -> 001xxxxx, 1111110x -> 0000001x
+	ffuint n = ffbit_find32(~(d << 24) & 0xfe000000);
+	if (!(n >= 3 && n <= 7))
+		return 0; // invalid first byte
+	return n - 1;
 }
 
 /** Convert 31-bit number to UTF-8

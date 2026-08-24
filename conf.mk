@@ -39,9 +39,10 @@ ifneq "$(OS)" "windows"
 	endif
 endif
 
-COMPILER := clang
 ifeq "$(OS)" "linux"
-	COMPILER := gcc
+	COMPILER ?= gcc
+else
+	COMPILER ?= clang
 endif
 
 C := clang -c
@@ -59,7 +60,8 @@ CFLAGS :=
 LINKFLAGS :=
 
 ifeq "$(COMPILER)" "clang"
-	ifeq "$(CPU)" "arm64"
+	ifeq "$(OS)" "apple"
+	else ifeq "$(CPU)" "arm64"
 		CFLAGS += -target aarch64-linux-gnu
 		LINKFLAGS += -target aarch64-linux-gnu
 	else ifeq "$(OS)" "windows"
@@ -101,6 +103,9 @@ ifeq "$(COMPILER)" "gcc"
 	STRIP := $(CROSS_PREFIX)strip
 	AR := $(CROSS_PREFIX)ar
 	WINDRES := $(CROSS_PREFIX)windres
+else ifeq "$(OS)" "apple"
+	STRIP := strip
+	AR := ar
 endif
 
 MKDIR := mkdir -p
@@ -110,4 +115,8 @@ ifeq "$(OS)" "linux"
 	CP := cp -u
 endif
 SED := sed -i.old
+SHA256SUM := sha256sum
+ifeq "$(OS)" "apple"
+	SHA256SUM := shasum -a 256
+endif
 SUBMAKE := +$(MAKE) -f $(firstword $(MAKEFILE_LIST))

@@ -106,6 +106,9 @@ ffcpu_prefetch_l1 ffcpu_prefetch_l2
 	#ifdef ANDROID
 		#define FF_ANDROID
 	#endif
+	#ifndef _POSIX_C_SOURCE
+		#define _POSIX_C_SOURCE  200112L // for posix_memalign()
+	#endif
 
 #elif defined __unix__
 	#define FF_UNIX
@@ -122,9 +125,6 @@ ffcpu_prefetch_l1 ffcpu_prefetch_l2
 	#include <windows.h>
 	#include <stdlib.h>
 #else
-	#ifndef _POSIX_C_SOURCE
-		#define _POSIX_C_SOURCE  200112L // for posix_memalign()
-	#endif
 	#include <stdlib.h>
 	#include <string.h>
 	#include <unistd.h>

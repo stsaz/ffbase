@@ -754,6 +754,13 @@ void b()
 #define FFSTR_Z(sz) \
 	({ ffstr __s = { ffsz_len(sz), (char*)(sz) }; __s; })
 
+/** Get substring at offset. */
+static inline ffstr ffstr_substr(const ffstr *s, ffsize off)
+{
+	FF_ASSERT(off <= s->len);
+	return (ffstr){ s->len - off, s->ptr + off };
+}
+
 /** Set data pointer and length: s = {data, length} */
 #define ffstr_set(s, data, n) \
 do { \

@@ -730,7 +730,10 @@ static inline ffsize _ffsz_nlen(const char *s, ffsize maxlen)
 // SET
 // Note: don't use these functions for the string with allocated buffer.
 
-/** ffstr s = FFSTR_INITZ("string") */
+/** ffstr s = FFSTR_Z("string") */
+#define FFSTR_Z(sz) \
+	(ffstr){ ffsz_len(sz), (char*)(sz) }
+
 #define FFSTR_INITZ(sz) \
 	{ ffsz_len(sz), (char*)(sz) }
 #define FFSTR_INIT(s) \
@@ -743,16 +746,6 @@ static inline ffsize _ffsz_nlen(const char *s, ffsize maxlen)
 /** ffstr s = FFSTR_INITSTR(ffstr) */
 #define FFSTR_INITSTR(str) \
 	{ (str)->len, (char*)(str)->ptr }
-
-/**
-void a(ffstr s) { ... }
-void b()
-{
-	a(FFSTR_Z("string"));
-}
-*/
-#define FFSTR_Z(sz) \
-	({ ffstr __s = { ffsz_len(sz), (char*)(sz) }; __s; })
 
 /** Get substring at offset. */
 static inline ffstr ffstr_substr(const ffstr *s, ffsize off)

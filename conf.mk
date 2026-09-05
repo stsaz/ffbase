@@ -115,8 +115,10 @@ ifeq "$(OS)" "linux"
 	CP := cp -u
 endif
 SED := sed -i.old
+SHA1SUM := sha1sum
 SHA256SUM := sha256sum
 ifeq "$(OS)" "apple"
+	SHA1SUM := shasum -a 1
 	SHA256SUM := shasum -a 256
 endif
 SUBMAKE := +$(MAKE) -f $(firstword $(MAKEFILE_LIST))

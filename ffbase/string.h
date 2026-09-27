@@ -734,6 +734,10 @@ static inline ffsize _ffsz_nlen(const char *s, ffsize maxlen)
 #define FFSTR_Z(sz) \
 	(ffstr){ ffsz_len(sz), (char*)(sz) }
 
+/** ffstr s = FFSTR_N("string", 6) */
+#define FFSTR_N(s, n) \
+	(ffstr){ n, (char*)(s) }
+
 #define FFSTR_INITZ(sz) \
 	{ ffsz_len(sz), (char*)(sz) }
 #define FFSTR_INIT(s) \

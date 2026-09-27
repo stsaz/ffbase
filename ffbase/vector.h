@@ -25,6 +25,8 @@ ALLOCATE
 	ffvec_free
 	ffvec_alloc_align ffvec_alloc_alignT
 	ffvec_free_align
+FAST COPY
+	ffvec_catchar ffvec_catz ffvec_catstr ffvec_catf
 COPY
 	ffvec_push ffvec_pushT ffvec_add ffvec_addT ffvec_add2T
 	ffvec_addchar
@@ -47,6 +49,9 @@ typedef struct ffvec {
 
 /** The number of free elements */
 #define ffvec_unused(v)  (((v)->cap != 0) ? (v)->cap - (v)->len : 0)
+
+/** Type-cast to ffstr. */
+#define ffvec_str(v)  *(ffstr*)(v)
 
 
 // SET
@@ -195,7 +200,7 @@ static inline void* ffvec_realloc(ffvec *v, ffsize n, ffsize elsize)
 	return v->ptr;
 }
 
-#define ffvec_reallocT(v, n, T)  ffvec_realloc(v, n, sizeof(T))
+#define ffvec_reallocT(v, n, T)  ((T*)ffvec_realloc(v, n, sizeof(T)))
 
 /** Grow memory buffer.
 Return NULL on error (existing memory buffer is preserved if length is not 0) */
@@ -265,6 +270,50 @@ static inline void* ffvec_alloc_align(ffvec *v, ffsize n, ffsize align, ffsize e
 #define ffvec_alloc_alignT(v, n, align, T)  ((T*)ffvec_alloc_align(v, n, align, sizeof(T)))
 
 
+// FAST COPY
+
+/** Fast append char.
+Return N of bytes copied */
+static inline ffsize ffvec_catchar(ffvec *v, char c)
+{
+	if (v->len >= v->cap)
+		return 0;
+	((char*)v->ptr)[v->len++] = c;
+	return 1;
+}
+
+/** Fast append NULL-terminated string.
+Return N of bytes copied */
+static inline ffsize ffvec_catz(ffvec *v, const char *sz)
+{
+	ffsize n = _ffs_copyz((char*)v->ptr + v->len, v->cap - v->len, sz);
+	v->len += n;
+	return n;
+}
+
+/** Fast append string.
+Return N of bytes copied */
+static inline ffsize ffvec_catstr(ffvec *v, const ffstr *s)
+{
+	ffsize n = ffmem_ncopy((char*)v->ptr + v->len, v->cap - v->len, s->ptr, s->len);
+	v->len += n;
+	return n;
+}
+
+/** Fast append formatted string.
+Return N of bytes copied */
+static inline ffsize ffvec_catf(ffvec *v, const char *fmt, ...)
+{
+	va_list va;
+	va_start(va, fmt);
+	ffssize n = ffs_formatv((char*)v->ptr + v->len, v->cap - v->len, fmt, va);
+	va_end(va);
+	if (n < 0)
+		n = 0;
+	v->len += n;
+	return n;
+}
+
 // COPY
 
 /** Add a new (uninitialized) element and return its pointer: &a[len++]
@@ -330,7 +379,7 @@ Return N of elements copied */
 static inline ffsize ffvec_insert(ffvec *v, ffsize off, const void *src, ffsize n, ffsize elsize)
 {
 	FF_ASSERT(off <= v->len);
-	if (!ffvec_grow(v, n, elsize))
+	if (NULL == ffvec_grow(v, n, elsize))
 		return 0;
 	void *dst = (char*)v->ptr + off * elsize;
 	if (off != v->len)

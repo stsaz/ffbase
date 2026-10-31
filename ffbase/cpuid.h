@@ -10,6 +10,59 @@ ffcpu_rdtsc
 
 #pragma once
 #include <ffbase/base.h>
+
+#ifdef FF_ARM64
+
+#define FFCPUID_FEATURES  0
+
+enum FFCPUID_FEAT {
+	FFCPUID_AES = 1, // AES-GCM
+};
+
+struct ffcpuid {
+	unsigned long hwcap2;
+};
+
+#ifdef FF_LINUX
+
+#include <sys/auxv.h>
+#define HWCAP2_AES  (1 << 0)
+#define HWCAP2_PMULL  (1 << 1)
+unsigned long getauxval(unsigned long type) __attribute__((weak));
+
+static inline int ffcpuid(struct ffcpuid *c, ffuint flags)
+{
+	if (getauxval == NULL)
+		return -1;
+	c->hwcap2 = getauxval(AT_HWCAP2);
+	return 0;
+}
+
+static inline int ffcpuid_feat(struct ffcpuid *c, ffuint val)
+{
+	if (val == FFCPUID_AES)
+		return (c->hwcap2 & HWCAP2_AES) && (c->hwcap2 & HWCAP2_PMULL);
+	return 0;
+}
+
+#elif defined FF_APPLE
+
+static inline int ffcpuid(struct ffcpuid *c, ffuint flags)
+{
+	return 0;
+}
+
+static inline int ffcpuid_feat(struct ffcpuid *c, ffuint val)
+{
+	if (val == FFCPUID_AES)
+		return 1;
+	return 0;
+}
+
+#endif
+
+#else // AMD64:
+
 #include <x86intrin.h>
 #include <immintrin.h>
 
@@ -20,6 +73,7 @@ enum FFCPUID_FEAT {
 	FFCPUID_SSE41 = 19,
 	FFCPUID_SSE42 = 20,
 	FFCPUID_POPCNT = 23,
+	FFCPUID_AES = 25, // AES-NI
 	//edx
 	FFCPUID_MMX = 32 + 23,
 	FFCPUID_SSE = 32 + 25,
@@ -133,3 +187,5 @@ static inline ffuint64 ffcpu_rdtsc()
 {
 	return __rdtsc();
 }
+
+#endif
